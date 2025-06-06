@@ -26,45 +26,46 @@
 
                 <div class="progress-section">
                     <h3>Metas do Dia</h3>
-                    <div class="progress-bar-container">
-                        <label for="calories-progress">Calorias:</label>
+                    <div class="progress-item-detail" id="calories-detail">
+                        <span class="detail-label">Calorias:</span>
+                        <span class="detail-value" id="calories-num">0 / 0 Kcal</span>
                         <div class="progress-bar-wrapper">
                             <div class="progress-bar" id="calories-progress"></div>
-                            <span class="progress-text" id="calories-text">0 / 0 Kcal</span>
                         </div>
                     </div>
-                    <div class="progress-bar-container">
-                        <label for="protein-progress">Proteína:</label>
+                    <div class="progress-item-detail" id="protein-detail">
+                        <span class="detail-label">Proteína:</span>
+                        <span class="detail-value" id="protein-num">0 / 0 g</span>
                         <div class="progress-bar-wrapper">
                             <div class="progress-bar" id="protein-progress"></div>
-                            <span class="progress-text" id="protein-text">0 / 0 g</span>
                         </div>
                     </div>
-                    <div class="progress-bar-container">
-                        <label for="carbs-progress">Carboidratos:</label>
+                    <div class="progress-item-detail" id="carbs-detail">
+                        <span class="detail-label">Carboidratos:</span>
+                        <span class="detail-value" id="carbs-num">0 / 0 g</span>
                         <div class="progress-bar-wrapper">
                             <div class="progress-bar" id="carbs-progress"></div>
-                            <span class="progress-text" id="carbs-text">0 / 0 g</span>
                         </div>
                     </div>
-                    <div class="progress-bar-container">
-                        <label for="fats-progress">Gorduras:</label>
+                    <div class="progress-item-detail" id="fats-detail">
+                        <span class="detail-label">Gorduras:</span>
+                        <span class="detail-value" id="fats-num">0 / 0 g</span>
                         <div class="progress-bar-wrapper">
                             <div class="progress-bar" id="fats-progress"></div>
-                            <span class="progress-text" id="fats-text">0 / 0 g</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="progress-section">
                     <h3>Meta de Peso</h3>
-                    <div class="progress-bar-container">
-                        <label for="weight-progress">Progresso de Peso:</label>
+                    <div class="progress-item-detail">
+                        <span class="detail-label">Progresso de Peso:</span>
+                        <span class="detail-value" id="weight-num">0 Kg / 0 Kg</span>
                         <div class="progress-bar-wrapper">
                             <div class="progress-bar" id="weight-progress"></div>
-                            <span class="progress-text" id="weight-text">0 Kg / 0 Kg (Faltam 0 Kg)</span>
                         </div>
                     </div>
+                    <p id="weight-remaining-text"></p>
                     <p id="weight-prediction-text"></p>
                 </div>
             </section>
@@ -78,10 +79,10 @@
 
             <section id="weight-page" class="page-content">
                 <h2>Acompanhamento de Peso</h2>
-                <div class="input-group">
-                    <label for="new-current-weight">Peso Atual (Kg):</label>
+                <div class="input-group-inline">
+                    <label for="new-current-weight">Registrar Peso (Kg):</label>
                     <input type="number" step="0.1" id="new-current-weight" placeholder="Insira seu peso atual">
-                    <button id="add-weight-entry-btn" class="main-btn small-btn">Registrar Peso</button>
+                    <button id="add-weight-entry-btn" class="main-btn small-btn">Registrar</button>
                 </div>
                 <div id="weight-history-chart">
                     <p>Aqui você veria um gráfico de sua evolução de peso.</p>
@@ -144,12 +145,16 @@
                             </select>
                         </div>
                         <div class="input-group">
-                            <label for="current-weight">Peso Atual (Kg):</label>
+                            <label for="current-weight-settings">Peso Atual (Kg):</label>
                             <input type="number" step="0.1" id="current-weight-settings" required>
                         </div>
                         <div class="input-group">
                             <label for="target-weight">Peso Objetivo (Kg):</label>
                             <input type="number" step="0.1" id="target-weight" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="target-date">Data Final da Meta de Peso:</label>
+                            <input type="date" id="target-date" required>
                         </div>
                         <div class="input-group">
                             <label for="activity-factor">Nível de Atividade:</label>
