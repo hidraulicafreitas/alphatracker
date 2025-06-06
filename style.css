@@ -21,7 +21,7 @@ body {
     min-height: 100vh;
     padding: 20px;
     box-sizing: border-box;
-    overflow-y: scroll; /* Adicionado para permitir scroll em telas menores */
+    overflow-y: scroll;
 }
 
 .app-container {
@@ -56,6 +56,8 @@ nav {
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 15px;
     margin-bottom: 20px;
+    flex-wrap: wrap; /* Permite que os botões quebrem a linha */
+    gap: 10px; /* Espaçamento entre os botões */
 }
 
 nav button {
@@ -68,6 +70,8 @@ nav button {
     transition: all 0.3s ease;
     border-radius: 8px;
     font-weight: bold;
+    flex-grow: 1; /* Permite que os botões cresçam para preencher o espaço */
+    min-width: 100px; /* Garante um tamanho mínimo para cada botão */
 }
 
 nav button:hover,
@@ -108,6 +112,12 @@ h2 {
     width: fit-content;
     margin: 20px auto;
     text-transform: uppercase;
+}
+
+.main-btn.small-btn {
+    padding: 10px 20px;
+    font-size: 1em;
+    margin: 15px auto;
 }
 
 .main-btn:hover {
@@ -447,6 +457,48 @@ form {
     color: var(--vibrant-orange);
 }
 
+/* Settings Page Specifics */
+.settings-section {
+    background-color: var(--accent-blue);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.settings-section h3 {
+    color: var(--vibrant-orange);
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.settings-form {
+    padding: 0;
+    margin: 0;
+}
+
+/* Weight Page - New Current Weight Input */
+#weight-page .input-group {
+    display: flex;
+    flex-direction: row; /* Alinha o input e botão na mesma linha */
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+}
+
+#weight-page .input-group label {
+    display: none; /* Esconde a label para o layout inline */
+}
+
+#weight-page #new-current-weight {
+    flex-grow: 1; /* Permite que o input preencha o espaço */
+}
+
+
 /* Responsividade */
 @media (max-width: 600px) {
     .app-container {
@@ -483,5 +535,14 @@ form {
 
     .add-food-form {
         flex-direction: column;
+    }
+
+    #weight-page .input-group {
+        flex-direction: column; /* Volta para coluna em telas pequenas */
+        align-items: stretch;
+    }
+
+    #weight-page .input-group label {
+        display: block; /* Mostra a label novamente */
     }
 }
