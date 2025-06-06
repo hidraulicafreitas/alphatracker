@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💪 ALPHA TRACKER - Controle de Macros e Dieta</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>💪 ALPHA TRACKER</h1>
+            <nav>
+                <button id="nav-home" class="active">Início</button>
+                <button id="nav-meals">Refeições</button>
+                <button id="nav-weight">Peso</button>
+                <button id="nav-checkin">Check-in</button>
+            </nav>
+        </header>
+
+        <main id="app-content">
+            <section id="home-page" class="page-content active">
+                <h2>Bem-vindo, <span id="user-name">Guerreiro</span>!</h2>
+                <button id="register-profile-btn" class="main-btn">Cadastrar/Atualizar Perfil</button>
+
+                <div class="progress-section">
+                    <h3>Metas do Dia</h3>
+                    <div class="progress-bar-container">
+                        <label for="calories-progress">Calorias:</label>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="calories-progress"></div>
+                            <span class="progress-text" id="calories-text">0 / 0 Kcal</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <label for="protein-progress">Proteína:</label>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="protein-progress"></div>
+                            <span class="progress-text" id="protein-text">0 / 0 g</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <label for="carbs-progress">Carboidratos:</label>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="carbs-progress"></div>
+                            <span class="progress-text" id="carbs-text">0 / 0 g</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <label for="fats-progress">Gorduras:</label>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="fats-progress"></div>
+                            <span class="progress-text" id="fats-text">0 / 0 g</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <h3>Meta de Peso</h3>
+                    <div class="progress-bar-container">
+                        <label for="weight-progress">Progresso de Peso:</label>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="weight-progress"></div>
+                            <span class="progress-text" id="weight-text">0 Kg / 0 Kg (Faltam 0 Kg)</span>
+                        </div>
+                    </div>
+                    <p id="weight-prediction-text"></p>
+                </div>
+            </section>
+
+            <section id="profile-page" class="page-content">
+                <h2>Cadastro de Perfil</h2>
+                <form id="profile-form">
+                    <div class="input-group">
+                        <label for="name">Nome:</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="age">Idade:</label>
+                        <input type="number" id="age" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="height">Altura (cm):</label>
+                        <input type="number" id="height" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="gender">Sexo:</label>
+                        <select id="gender" required>
+                            <option value="male">Masculino</option>
+                            <option value="female">Feminino</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="current-weight">Peso Atual (Kg):</label>
+                        <input type="number" step="0.1" id="current-weight" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="target-weight">Peso Objetivo (Kg):</label>
+                        <input type="number" step="0.1" id="target-weight" required>
+                    </div>
+                    <button type="submit" class="main-btn">Salvar Perfil e Calcular Metas</button>
+                </form>
+            </section>
+
+            <section id="meals-page" class="page-content">
+                <h2>Minhas Refeições</h2>
+                <button id="add-meal-group-btn" class="main-btn">Adicionar Grupo de Refeição</button>
+                <div id="meal-groups-container">
+                    </div>
+            </section>
+
+            <section id="weight-page" class="page-content">
+                <h2>Acompanhamento de Peso</h2>
+                <div id="weight-history-chart">
+                    <p>Aqui você veria um gráfico de sua evolução de peso.</p>
+                    <ul id="weight-history-list"></ul>
+                </div>
+            </section>
+
+            <section id="checkin-page" class="page-content">
+                <h2>Check-in Diário</h2>
+                <div class="checkin-item">
+                    <input type="checkbox" id="check-sleep">
+                    <label for="check-sleep">Dormiu bem?</label>
+                    <div class="check-animation" data-animation="sleep"></div>
+                </div>
+                <div class="checkin-item">
+                    <input type="checkbox" id="check-workout">
+                    <label for="check-workout">Fez o treino?</label>
+                    <div class="check-animation" data-animation="workout"></div>
+                </div>
+                <div class="checkin-item">
+                    <input type="checkbox" id="check-diet">
+                    <label for="check-diet">Dieta corretamente?</label>
+                    <div class="check-animation" data-animation="diet"></div>
+                </div>
+                <div class="checkin-item">
+                    <input type="checkbox" id="check-nofap">
+                    <label for="check-nofap">NoFap firme?</label>
+                    <div class="check-animation" data-animation="nofap"></div>
+                </div>
+                <button id="save-checkin-btn" class="main-btn">Salvar Check-in</button>
+                <div id="checkin-history">
+                    <h3>Histórico de Check-ins</h3>
+                    <ul id="checkin-history-list"></ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
