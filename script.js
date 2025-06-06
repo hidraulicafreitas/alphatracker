@@ -12,19 +12,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const newCurrentWeightInput = document.getElementById('new-current-weight');
     const addCustomFoodForm = document.getElementById('add-custom-food-form');
 
-    // Elementos de progresso
+    // Elementos de progresso na Home Page
     const userNameSpan = document.getElementById('user-name');
     const caloriesProgressBar = document.getElementById('calories-progress');
-    const caloriesText = document.getElementById('calories-text');
+    const caloriesNum = document.getElementById('calories-num');
     const proteinProgressBar = document.getElementById('protein-progress');
-    const proteinText = document.getElementById('protein-text');
+    const proteinNum = document.getElementById('protein-num');
     const carbsProgressBar = document.getElementById('carbs-progress');
-    const carbsText = document.getElementById('carbs-text');
+    const carbsNum = document.getElementById('carbs-num');
     const fatsProgressBar = document.getElementById('fats-progress');
-    const fatsText = document.getElementById('fats-text');
+    const fatsNum = document.getElementById('fats-num');
     const weightProgressBar = document.getElementById('weight-progress');
-    const weightText = document.getElementById('weight-text');
+    const weightNum = document.getElementById('weight-num');
+    const weightRemainingText = document.getElementById('weight-remaining-text'); // Novo elemento para o que falta
     const weightPredictionText = document.getElementById('weight-prediction-text');
+
+    // Campo de data final da meta
+    const targetDateInput = document.getElementById('target-date');
 
     // --- Dados do Aplicativo (simulando um "banco de dados" com LocalStorage) ---
     let userProfile = JSON.parse(localStorage.getItem('userProfile')) || null;
@@ -41,54 +45,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // "Banco de dados" de alimentos comum e personalizado
     let foodDatabase = JSON.parse(localStorage.getItem('foodDatabase')) || [
+        // Carnes (novas adições)
+        { name: 'Picanha Grelhada', kcalPer100g: 290, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 20 },
+        { name: 'Alcatra Grelhada', kcalPer100g: 190, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 9 },
+        { name: 'Maminha Grelhada', kcalPer100g: 210, proteinPer100g: 27, carbsPer100g: 0, fatsPer100g: 11 },
+        { name: 'Costela Bovina Assada', kcalPer100g: 350, proteinPer100g: 25, carbsPer100g: 0, fatsPer100g: 28 },
+        { name: 'Pato Assado', kcalPer100g: 337, proteinPer100g: 19, carbsPer100g: 0, fatsPer100g: 28 },
+        { name: 'Cordeiro Assado', kcalPer100g: 250, proteinPer100g: 25, carbsPer100g: 0, fatsPer100g: 16 },
+        { name: 'Carne Seca Cozida', kcalPer100g: 260, proteinPer100g: 35, carbsPer100g: 0, fatsPer100g: 13 },
+        { name: 'Linguiça de Frango', kcalPer100g: 230, proteinPer100g: 15, carbsPer100g: 1, fatsPer100g: 18 },
+        { name: 'Linguiça de Porco', kcalPer100g: 320, proteinPer100g: 14, carbsPer100g: 2, fatsPer100g: 28 },
+        { name: 'Bacon Frito', kcalPer100g: 540, proteinPer100g: 37, carbsPer100g: 0, fatsPer100g: 42 },
+        { name: 'Filé de Tilápia Grelhado', kcalPer100g: 128, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 2.7 },
+        { name: 'Sardinha em Lata (óleo, drenada)', kcalPer100g: 208, proteinPer100g: 25, carbsPer100g: 0, fatsPer100g: 12 },
+        { name: 'Atum em Lata (água, drenado)', kcalPer100g: 100, proteinPer100g: 23, carbsPer100g: 0, fatsPer100g: 1 },
+        { name: 'Salmão Cozido', kcalPer100g: 170, proteinPer100g: 25, carbsPer100g: 0, fatsPer100g: 7 },
+        { name: 'Camarão Cozido', kcalPer100g: 85, proteinPer100g: 20, carbsPer100g: 0, fatsPer100g: 0.5 },
+        { name: 'Ostra', kcalPer100g: 81, proteinPer100g: 9, carbsPer100g: 4.8, fatsPer100g: 2.3 },
+        { name: 'Lagosta', kcalPer100g: 89, proteinPer100g: 19, carbsPer100g: 0, fatsPer100g: 0.5 },
         // Frutas
         { name: 'Maçã', kcalPer100g: 52, proteinPer100g: 0.3, carbsPer100g: 14, fatsPer100g: 0.2 },
         { name: 'Banana', kcalPer100g: 89, proteinPer100g: 1.1, carbsPer100g: 22.8, fatsPer100g: 0.3 },
         { name: 'Laranja', kcalPer100g: 47, proteinPer100g: 0.9, carbsPer100g: 11.8, fatsPer100g: 0.1 },
         { name: 'Morango', kcalPer100g: 32, proteinPer100g: 0.7, carbsPer100g: 7.7, fatsPer100g: 0.3 },
         { name: 'Abacate', kcalPer100g: 160, proteinPer100g: 2, carbsPer100g: 8.5, fatsPer100g: 14.7 },
-        // Vegetais
-        { name: 'Brócolis Cozido', kcalPer100g: 55, proteinPer100g: 3.7, carbsPer100g: 11.2, fatsPer100g: 0.6 },
-        { name: 'Cenoura Crua', kcalPer100g: 41, proteinPer100g: 0.9, carbsPer100g: 9.6, fatsPer100g: 0.2 },
-        { name: 'Tomate', kcalPer100g: 18, proteinPer100g: 0.9, carbsPer100g: 3.9, fatsPer100g: 0.2 },
-        { name: 'Espinafre Cozido', kcalPer100g: 23, proteinPer100g: 2.9, carbsPer100g: 3.6, fatsPer100g: 0.4 },
-        { name: 'Pepino', kcalPer100g: 15, proteinPer100g: 0.7, carbsPer100g: 3.6, fatsPer100g: 0.1 },
-        // Proteínas
-        { name: 'Frango Grelhado (Peito)', kcalPer100g: 165, proteinPer100g: 31, carbsPer100g: 0, fatsPer100g: 3.6 },
-        { name: 'Bife Grelhado (Patinho)', kcalPer100g: 200, proteinPer100g: 29, carbsPer100g: 0, fatsPer100g: 9 },
-        { name: 'Salmão Grelhado', kcalPer100g: 208, proteinPer100g: 20, carbsPer100g: 0, fatsPer100g: 13 },
-        { name: 'Ovo Cozido', kcalPer100g: 155, proteinPer100g: 13, carbsPer100g: 1.1, fatsPer100g: 11 },
-        { name: 'Whey Protein (isolado)', kcalPer100g: 370, proteinPer100g: 80, carbsPer100g: 5, fatsPer100g: 5 },
-        { name: 'Iogurte Natural Desnatado', kcalPer100g: 59, proteinPer100g: 10, carbsPer100g: 3.6, fatsPer100g: 0.4 },
-        { name: 'Queijo Cottage', kcalPer100g: 98, proteinPer100g: 11, carbsPer100g: 3.4, fatsPer100g: 4.3 },
-        { name: 'Lentilha Cozida', kcalPer100g: 116, proteinPer100g: 9, carbsPer100g: 20, fatsPer100g: 0.4 },
-        // Carboidratos
-        { name: 'Arroz Branco Cozido', kcalPer100g: 130, proteinPer100g: 2.7, carbsPer100g: 28, fatsPer100g: 0.3 },
-        { name: 'Batata Doce Cozida', kcalPer100g: 86, proteinPer100g: 1.6, carbsPer100g: 20, fatsPer100g: 0.1 },
-        { name: 'Aveia em Flocos', kcalPer100g: 389, proteinPer100g: 16.9, carbsPer100g: 66.3, fatsPer100g: 6.9 },
-        { name: 'Pão Integral', kcalPer100g: 265, proteinPer100g: 13, carbsPer100g: 45, fatsPer100g: 3.5 },
-        { name: 'Macarrão Cozido', kcalPer100g: 158, proteinPer100g: 5.8, carbsPer100g: 31, fatsPer100g: 0.9 },
-        { name: 'Quinoa Cozida', kcalPer100g: 120, proteinPer100g: 4.4, carbsPer100g: 21, fatsPer100g: 1.9 },
-        // Gorduras e Outros
-        { name: 'Azeite de Oliva Extra Virgem', kcalPer100g: 884, proteinPer100g: 0, carbsPer100g: 0, fatsPer100g: 100 },
-        { name: 'Pasta de Amendoim Natural', kcalPer100g: 588, proteinPer100g: 25, carbsPer100g: 20, fatsPer100g: 50 },
-        { name: 'Amêndoas', kcalPer100g: 579, proteinPer100g: 21, carbsPer100g: 21, fatsPer100g: 49 },
-        { name: 'Castanha do Pará', kcalPer100g: 659, proteinPer100g: 14, carbsPer100g: 12, fatsPer100g: 66 },
-        { name: 'Leite Semi-desnatado', kcalPer100g: 47, proteinPer100g: 3.2, carbsPer100g: 4.8, fatsPer100g: 1.6 },
-        { name: 'Manteiga de Amendoim', kcalPer100g: 588, proteinPer100g: 25, carbsPer100g: 20, fatsPer100g: 50 },
-        { name: 'Pão Francês', kcalPer100g: 280, proteinPer100g: 8, carbsPer100g: 56, fatsPer100g: 2 },
-        { name: 'Feijão Carioca Cozido', kcalPer100g: 76, proteinPer100g: 4.8, carbsPer100g: 13.6, fatsPer100g: 0.5 },
-        { name: 'Pizza de Mussarela', kcalPer100g: 266, proteinPer100g: 11, carbsPer100g: 33, fatsPer100g: 10 },
-        { name: 'Hambúrguer (carne)', kcalPer100g: 250, proteinPer100g: 20, carbsPer100g: 0, fatsPer100g: 18 },
-        { name: 'Batata Frita', kcalPer100g: 312, proteinPer100g: 3.4, carbsPer100g: 41, fatsPer100g: 15 },
-        { name: 'Refrigerante Cola', kcalPer100g: 42, proteinPer100g: 0, carbsPer100g: 10.6, fatsPer100g: 0 },
-        { name: 'Chocolate ao Leite', kcalPer100g: 535, proteinPer100g: 7, carbsPer100g: 59, fatsPer100g: 30 },
-        { name: 'Açúcar Refinado', kcalPer100g: 400, proteinPer100g: 0, carbsPer100g: 100, fatsPer100g: 0 },
-        { name: 'Café (sem açúcar)', kcalPer100g: 1, proteinPer100g: 0.1, carbsPer100g: 0, fatsPer100g: 0 },
-        { name: 'Chá (sem açúcar)', kcalPer100g: 1, proteinPer100g: 0, carbsPer100g: 0.3, fatsPer100g: 0 },
-        { name: 'Mel', kcalPer100g: 304, proteinPer100g: 0.3, carbsPer100g: 82.4, fatsPer100g: 0 },
-        { name: 'Geléia de Fruta', kcalPer100g: 270, proteinPer100g: 0.5, carbsPer100g: 70, fatsPer100g: 0.1 },
-        { name: 'Queijo Minas Frescal', kcalPer100g: 260, proteinPer100g: 17, carbsPer100g: 2, fatsPer100g: 20 },
         { name: 'Pêssego', kcalPer100g: 39, proteinPer100g: 0.9, carbsPer100g: 9.5, fatsPer100g: 0.3 },
         { name: 'Uva', kcalPer100g: 69, proteinPer100g: 0.7, carbsPer100g: 18, fatsPer100g: 0.2 },
         { name: 'Pera', kcalPer100g: 57, proteinPer100g: 0.4, carbsPer100g: 15, fatsPer100g: 0.1 },
@@ -101,6 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Ameixa', kcalPer100g: 46, proteinPer100g: 0.7, carbsPer100g: 11, fatsPer100g: 0.3 },
         { name: 'Tangerina', kcalPer100g: 53, proteinPer100g: 0.8, carbsPer100g: 13, fatsPer100g: 0.3 },
         { name: 'Limão', kcalPer100g: 29, proteinPer100g: 1.1, carbsPer100g: 9, fatsPer100g: 0.3 },
+        // Vegetais
+        { name: 'Brócolis Cozido', kcalPer100g: 55, proteinPer100g: 3.7, carbsPer100g: 11.2, fatsPer100g: 0.6 },
+        { name: 'Cenoura Crua', kcalPer100g: 41, proteinPer100g: 0.9, carbsPer100g: 9.6, fatsPer100g: 0.2 },
+        { name: 'Tomate', kcalPer100g: 18, proteinPer100g: 0.9, carbsPer100g: 3.9, fatsPer100g: 0.2 },
+        { name: 'Espinafre Cozido', kcalPer100g: 23, proteinPer100g: 2.9, carbsPer100g: 3.6, fatsPer100g: 0.4 },
+        { name: 'Pepino', kcalPer100g: 15, proteinPer100g: 0.7, carbsPer100g: 3.6, fatsPer100g: 0.1 },
         { name: 'Abobrinha', kcalPer100g: 17, proteinPer100g: 1.2, carbsPer100g: 3.1, fatsPer100g: 0.3 },
         { name: 'Berinjela', kcalPer100g: 25, proteinPer100g: 1, carbsPer100g: 6, fatsPer100g: 0.2 },
         { name: 'Pimentão Verde', kcalPer100g: 20, proteinPer100g: 0.9, carbsPer100g: 4.6, fatsPer100g: 0.2 },
@@ -110,12 +96,69 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Couve-flor Cozida', kcalPer100g: 25, proteinPer100g: 1.9, carbsPer100g: 4.9, fatsPer100g: 0.3 },
         { name: 'Repolho Cru', kcalPer100g: 25, proteinPer100g: 1.3, carbsPer100g: 5.8, fatsPer100g: 0.1 },
         { name: 'Cogumelos Paris', kcalPer100g: 22, proteinPer100g: 3.1, carbsPer100g: 3.3, fatsPer100g: 0.3 },
-        { name: 'Creme de Leite (25% gordura)', kcalPer100g: 240, proteinPer100g: 2.3, carbsPer100g: 3.6, fatsPer100g: 25 },
+        { name: 'Abóbora Cozida', kcalPer100g: 26, proteinPer100g: 1, carbsPer100g: 6.5, fatsPer100g: 0.1 },
+        { name: 'Inhame Cozido', kcalPer100g: 118, proteinPer100g: 1.5, carbsPer100g: 27.5, fatsPer100g: 0.2 },
+        { name: 'Mandioca Cozida', kcalPer100g: 160, proteinPer100g: 1.4, carbsPer100g: 38, fatsPer100g: 0.3 },
+        // Proteínas
+        { name: 'Frango Grelhado (Peito)', kcalPer100g: 165, proteinPer100g: 31, carbsPer100g: 0, fatsPer100g: 3.6 },
+        { name: 'Bife Grelhado (Patinho)', kcalPer100g: 200, proteinPer100g: 29, carbsPer100g: 0, fatsPer100g: 9 },
+        { name: 'Ovo Cozido', kcalPer100g: 155, proteinPer100g: 13, carbsPer100g: 1.1, fatsPer100g: 11 },
+        { name: 'Whey Protein (isolado)', kcalPer100g: 370, proteinPer100g: 80, carbsPer100g: 5, fatsPer100g: 5 },
+        { name: 'Iogurte Natural Desnatado', kcalPer100g: 59, proteinPer100g: 10, carbsPer100g: 3.6, fatsPer100g: 0.4 },
+        { name: 'Queijo Cottage', kcalPer100g: 98, proteinPer100g: 11, carbsPer100g: 3.4, fatsPer100g: 4.3 },
+        { name: 'Lentilha Cozida', kcalPer100g: 116, proteinPer100g: 9, carbsPer100g: 20, fatsPer100g: 0.4 },
+        { name: 'Queijo Minas Frescal', kcalPer100g: 260, proteinPer100g: 17, carbsPer100g: 2, fatsPer100g: 20 },
         { name: 'Queijo Muçarela', kcalPer100g: 300, proteinPer100g: 22, carbsPer100g: 2.2, fatsPer100g: 22 },
         { name: 'Peito de Peru Defumado', kcalPer100g: 100, proteinPer100g: 22, carbsPer100g: 1, fatsPer100g: 1.5 },
+        { name: 'Tofu Firme', kcalPer100g: 76, proteinPer100g: 8, carbsPer100g: 1.9, fatsPer100g: 4.8 },
+        { name: 'Edamame', kcalPer100g: 122, proteinPer100g: 11, carbsPer100g: 10, fatsPer100g: 5 },
+        { name: 'Salsicha de Frango', kcalPer100g: 260, proteinPer100g: 11, carbsPer100g: 2, fatsPer100g: 23 },
+        { name: 'Presunto Cozido', kcalPer100g: 145, proteinPer100g: 18, carbsPer100g: 1, fatsPer100g: 8 },
+        { name: 'Bacalhau Cozido', kcalPer100g: 105, proteinPer100g: 23, carbsPer100g: 0, fatsPer100g: 1 },
+        { name: 'Soja Cozida', kcalPer100g: 172, proteinPer100g: 18, carbsPer100g: 9, fatsPer100g: 9 },
+        // Carboidratos
+        { name: 'Arroz Branco Cozido', kcalPer100g: 130, proteinPer100g: 2.7, carbsPer100g: 28, fatsPer100g: 0.3 },
+        { name: 'Batata Doce Cozida', kcalPer100g: 86, proteinPer100g: 1.6, carbsPer100g: 20, fatsPer100g: 0.1 },
+        { name: 'Aveia em Flocos', kcalPer100g: 389, proteinPer100g: 16.9, carbsPer100g: 66.3, fatsPer100g: 6.9 },
+        { name: 'Pão Integral', kcalPer100g: 265, proteinPer100g: 13, carbsPer100g: 45, fatsPer100g: 3.5 },
+        { name: 'Macarrão Cozido', kcalPer100g: 158, proteinPer100g: 5.8, carbsPer100g: 31, fatsPer100g: 0.9 },
+        { name: 'Quinoa Cozida', kcalPer100g: 120, proteinPer100g: 4.4, carbsPer100g: 21, fatsPer100g: 1.9 },
+        { name: 'Pão Francês', kcalPer100g: 280, proteinPer100g: 8, carbsPer100g: 56, fatsPer100g: 2 },
+        { name: 'Feijão Carioca Cozido', kcalPer100g: 76, proteinPer100g: 4.8, carbsPer100g: 13.6, fatsPer100g: 0.5 },
+        { name: 'Cuscuz Marroquino Cozido', kcalPer100g: 112, proteinPer100g: 3.8, carbsPer100g: 23, fatsPer100g: 0.2 },
+        { name: 'Grão de Bico Cozido', kcalPer100g: 164, proteinPer100g: 8.9, carbsPer100g: 27, fatsPer100g: 2.6 },
+        { name: 'Milho Cozido', kcalPer100g: 86, proteinPer100g: 3.2, carbsPer100g: 19, fatsPer100g: 1.2 },
+        { name: 'Ervilha Cozida', kcalPer100g: 81, proteinPer100g: 5.4, carbsPer100g: 14.5, fatsPer100g: 0.4 },
+        { name: 'Feijão Fradinho Cozido', kcalPer100g: 130, proteinPer100g: 8.5, carbsPer100g: 23, fatsPer100g: 0.5 },
+        { name: 'Cuscuz de Milho Cozido', kcalPer100g: 113, proteinPer100g: 3.4, carbsPer100g: 24, fatsPer100g: 0.5 },
+        { name: 'Pão Sírio', kcalPer100g: 260, proteinPer100g: 9, carbsPer100g: 50, fatsPer100g: 2 },
+        { name: 'Torrada Integral', kcalPer100g: 380, proteinPer100g: 12, carbsPer100g: 65, fatsPer100g: 8 },
+        { name: 'Granola', kcalPer100g: 470, proteinPer100g: 10, carbsPer100g: 65, fatsPer100g: 20 },
+        { name: 'Barrinha de Cereal (comum)', kcalPer100g: 400, proteinPer100g: 5, carbsPer100g: 70, fatsPer100g: 10 },
+        { name: 'Biscoito Cream Cracker', kcalPer100g: 430, proteinPer100g: 9, carbsPer100g: 68, fatsPer100g: 14 },
         { name: 'Arroz Integral Cozido', kcalPer100g: 112, proteinPer100g: 2.6, carbsPer100g: 23.5, fatsPer100g: 0.9 },
         { name: 'Pão de Forma Branco', kcalPer100g: 265, proteinPer100g: 8, carbsPer100g: 49, fatsPer100g: 3 },
-        { name: 'Gelatina em Pó (sem açúcar)', kcalPer100g: 350, proteinPer100g: 85, carbsPer100g: 0, fatsPer100g: 0 },
+        { name: 'Pão de Centeio', kcalPer100g: 250, proteinPer100g: 8.5, carbsPer100g: 48, fatsPer100g: 2 },
+        { name: 'Pão de Milho', kcalPer100g: 270, proteinPer100g: 7, carbsPer100g: 50, fatsPer100g: 4 },
+        { name: 'Cereal Matinal (açucarado)', kcalPer100g: 380, proteinPer100g: 5, carbsPer100g: 85, fatsPer100g: 2 },
+        // Gorduras e Outros
+        { name: 'Azeite de Oliva Extra Virgem', kcalPer100g: 884, proteinPer100g: 0, carbsPer100g: 0, fatsPer100g: 100 },
+        { name: 'Pasta de Amendoim Natural', kcalPer100g: 588, proteinPer100g: 25, carbsPer100g: 20, fatsPer100g: 50 },
+        { name: 'Amêndoas', kcalPer100g: 579, proteinPer100g: 21, carbsPer100g: 21, fatsPer100g: 49 },
+        { name: 'Castanha do Pará', kcalPer100g: 659, proteinPer100g: 14, carbsPer100g: 12, fatsPer100g: 66 },
+        { name: 'Leite Semi-desnatado', kcalPer100g: 47, proteinPer100g: 3.2, carbsPer100g: 4.8, fatsPer100g: 1.6 },
+        { name: 'Manteiga de Amendoim', kcalPer100g: 588, proteinPer100g: 25, carbsPer100g: 20, fatsPer100g: 50 },
+        { name: 'Pizza de Mussarela', kcalPer100g: 266, proteinPer100g: 11, carbsPer100g: 33, fatsPer100g: 10 },
+        { name: 'Hambúrguer (carne)', kcalPer100g: 250, proteinPer100g: 20, carbsPer100g: 0, fatsPer100g: 18 },
+        { name: 'Batata Frita', kcalPer100g: 312, proteinPer100g: 3.4, carbsPer100g: 41, fatsPer100g: 15 },
+        { name: 'Refrigerante Cola', kcalPer100g: 42, proteinPer100g: 0, carbsPer100g: 10.6, fatsPer100g: 0 },
+        { name: 'Chocolate ao Leite', kcalPer100g: 535, proteinPer100g: 7, carbsPer100g: 59, fatsPer100g: 30 },
+        { name: 'Açúcar Refinado', kcalPer100g: 400, proteinPer100g: 0, carbsPer100g: 100, fatsPer100g: 0 },
+        { name: 'Café (sem açúcar)', kcalPer100g: 1, proteinPer100g: 0.1, carbsPer100g: 0, fatsPer100g: 0 },
+        { name: 'Chá (sem açúcar)', kcalPer100g: 1, proteinPer100g: 0, carbsPer100g: 0.3, fatsPer100g: 0 },
+        { name: 'Mel', kcalPer100g: 304, proteinPer100g: 0.3, carbsPer100g: 82.4, fatsPer100g: 0 },
+        { name: 'Geléia de Fruta', kcalPer100g: 270, proteinPer100g: 0.5, carbsPer100g: 70, fatsPer100g: 0.1 },
+        { name: 'Creme de Leite (25% gordura)', kcalPer100g: 240, proteinPer100g: 2.3, carbsPer100g: 3.6, fatsPer100g: 25 },
         { name: 'Oleo de Coco', kcalPer100g: 892, proteinPer100g: 0, carbsPer100g: 0, fatsPer100g: 100 },
         { name: 'Manteiga', kcalPer100g: 717, proteinPer100g: 0.9, carbsPer100g: 0.1, fatsPer100g: 81 },
         { name: 'Pipoca (sem manteiga)', kcalPer100g: 375, proteinPer100g: 11, carbsPer100g: 78, fatsPer100g: 4 },
@@ -129,15 +172,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Bolo de Chocolate', kcalPer100g: 400, proteinPer100g: 5, carbsPer100g: 55, fatsPer100g: 18 },
         { name: 'Sorvete de Baunilha', kcalPer100g: 207, proteinPer100g: 3.5, carbsPer100g: 24, fatsPer100g: 11 },
         { name: 'Requeijão Cremoso', kcalPer100g: 240, proteinPer100g: 9, carbsPer100g: 2, fatsPer100g: 22 },
-        { name: 'Salsicha de Frango', kcalPer100g: 260, proteinPer100g: 11, carbsPer100g: 2, fatsPer100g: 23 },
-        { name: 'Presunto Cozido', kcalPer100g: 145, proteinPer100g: 18, carbsPer100g: 1, fatsPer100g: 8 },
+        { name: 'Salsicha de Carne Bovina', kcalPer100g: 290, proteinPer100g: 12, carbsPer100g: 2, fatsPer100g: 26 },
+        { name: 'Mortadela', kcalPer100g: 280, proteinPer100g: 10, carbsPer100g: 2, fatsPer100g: 25 },
         { name: 'Pão de Queijo', kcalPer100g: 330, proteinPer100g: 10, carbsPer100g: 40, fatsPer100g: 15 },
         { name: 'Tapioca (com queijo)', kcalPer100g: 250, proteinPer100g: 12, carbsPer100g: 30, fatsPer100g: 8 },
-        { name: 'Cuscuz Marroquino Cozido', kcalPer100g: 112, proteinPer100g: 3.8, carbsPer100g: 23, fatsPer100g: 0.2 },
-        { name: 'Grão de Bico Cozido', kcalPer100g: 164, proteinPer100g: 8.9, carbsPer100g: 27, fatsPer100g: 2.6 },
-        { name: 'Milho Cozido', kcalPer100g: 86, proteinPer100g: 3.2, carbsPer100g: 19, fatsPer100g: 1.2 },
-        { name: 'Ervilha Cozida', kcalPer100g: 81, proteinPer100g: 5.4, carbsPer100g: 14.5, fatsPer100g: 0.4 },
-        { name: 'Feijão Fradinho Cozido', kcalPer100g: 130, proteinPer100g: 8.5, carbsPer100g: 23, fatsPer100g: 0.5 },
         { name: 'Castanha de Caju', kcalPer100g: 553, proteinPer100g: 18, carbsPer100g: 30, fatsPer100g: 44 },
         { name: 'Nozes', kcalPer100g: 654, proteinPer100g: 15, carbsPer100g: 14, fatsPer100g: 65 },
         { name: 'Pistache', kcalPer100g: 562, proteinPer100g: 20, carbsPer100g: 28, fatsPer100g: 45 },
@@ -148,55 +186,18 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Açaí (polpa pura)', kcalPer100g: 80, proteinPer100g: 1, carbsPer100g: 4, fatsPer100g: 6 },
         { name: 'Guaraná em Pó', kcalPer100g: 329, proteinPer100g: 14, carbsPer100g: 65, fatsPer100g: 3 },
         { name: 'Pasta de Castanha de Caju', kcalPer100g: 580, proteinPer100g: 18, carbsPer100g: 30, fatsPer100g: 46 },
-        { name: 'Cuscuz de Milho Cozido', kcalPer100g: 113, proteinPer100g: 3.4, carbsPer100g: 24, fatsPer100g: 0.5 },
-        { name: 'Pão Sírio', kcalPer100g: 260, proteinPer100g: 9, carbsPer100g: 50, fatsPer100g: 2 },
-        { name: 'Torrada Integral', kcalPer100g: 380, proteinPer100g: 12, carbsPer100g: 65, fatsPer100g: 8 },
-        { name: 'Granola', kcalPer100g: 470, proteinPer100g: 10, carbsPer100g: 65, fatsPer100g: 20 },
-        { name: 'Barrinha de Cereal (comum)', kcalPer100g: 400, proteinPer100g: 5, carbsPer100g: 70, fatsPer100g: 10 },
-        { name: 'Biscoito Cream Cracker', kcalPer100g: 430, proteinPer100g: 9, carbsPer100g: 68, fatsPer100g: 14 },
-        { name: 'Arroz com Feijão (prato)', kcalPer100g: 160, proteinPer100g: 7, carbsPer100g: 28, fatsPer100g: 2 },
         { name: 'Lasanha de Frango', kcalPer100g: 130, proteinPer100g: 7, carbsPer100g: 10, fatsPer100g: 6 },
         { name: 'Pizza Calabresa', kcalPer100g: 280, proteinPer100g: 10, carbsPer100g: 30, fatsPer100g: 13 },
         { name: 'Coxinha de Frango', kcalPer100g: 350, proteinPer100g: 10, carbsPer100g: 30, fatsPer100g: 20 },
         { name: 'Pão de Mel', kcalPer100g: 350, proteinPer100g: 4, carbsPer100g: 60, fatsPer100g: 10 },
         { name: 'Pudim de Leite', kcalPer100g: 180, proteinPer100g: 5, carbsPer100g: 25, fatsPer100g: 7 },
         { name: 'Sorvete de Chocolate', kcalPer100g: 220, proteinPer100g: 4, carbsPer100g: 28, fatsPer100g: 12 },
-        { name: 'Salsicha de Carne Bovina', kcalPer100g: 290, proteinPer100g: 12, carbsPer100g: 2, fatsPer100g: 26 },
-        { name: 'Mortadela', kcalPer100g: 280, proteinPer100g: 10, carbsPer100g: 2, fatsPer100g: 25 },
-        { name: 'Linguiça de Frango', kcalPer100g: 230, proteinPer100g: 15, carbsPer100g: 1, fatsPer100g: 18 },
-        { name: 'Atum em Lata (água)', kcalPer100g: 100, proteinPer100g: 23, carbsPer100g: 0, fatsPer100g: 1 },
-        { name: 'Sardinha em Lata (óleo)', kcalPer100g: 208, proteinPer100g: 25, carbsPer100g: 0, fatsPer100g: 12 },
-        { name: 'Bacalhau Cozido', kcalPer100g: 105, proteinPer100g: 23, carbsPer100g: 0, fatsPer100g: 1 },
-        { name: 'Camarão Cozido', kcalPer100g: 85, proteinPer100g: 20, carbsPer100g: 0, fatsPer100g: 0.5 },
-        { name: 'Tilápia Grelhada', kcalPer100g: 128, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 2.7 },
-        { name: 'Picanha Grelhada', kcalPer100g: 290, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 20 },
-        { name: 'Costelinha de Porco', kcalPer100g: 300, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 22 },
-        { name: 'Pé de Frango Cozido', kcal100g: 215, protein100g: 20, carbs100g: 0, fats100g: 15 },
-        { name: 'Omelete (2 ovos)', kcalPer100g: 150, proteinPer100g: 12, carbsPer100g: 1, fatsPer100g: 11 },
-        { name: 'Tofu Firme', kcalPer100g: 76, proteinPer100g: 8, carbsPer100g: 1.9, fatsPer100g: 4.8 },
-        { name: 'Edamame', kcalPer100g: 122, proteinPer100g: 11, carbsPer100g: 10, fatsPer100g: 5 },
-        { name: 'Pão de Centeio', kcalPer100g: 250, proteinPer100g: 8.5, carbsPer100g: 48, fatsPer100g: 2 },
-        { name: 'Pão de Milho', kcalPer100g: 270, proteinPer100g: 7, carbsPer100g: 50, fatsPer100g: 4 },
-        { name: 'Cereal Matinal (açucarado)', kcalPer100g: 380, proteinPer100g: 5, carbsPer100g: 85, fatsPer100g: 2 },
-        { name: 'Barra de Proteína', kcalPer100g: 350, proteinPer100g: 30, carbsPer100g: 30, fatsPer100g: 15 },
         { name: 'Leite Integral', kcalPer100g: 61, proteinPer100g: 3.2, carbsPer100g: 4.8, fatsPer100g: 3.3 },
         { name: 'Creme de Leite Light', kcalPer100g: 120, proteinPer100g: 2.5, carbsPer100g: 4, fatsPer100g: 10 },
         { name: 'Maionese', kcalPer100g: 680, proteinPer100g: 0.8, carbsPer100g: 0.6, fatsPer100g: 74 },
         { name: 'Ketchup', kcalPer100g: 100, proteinPer100g: 1.2, carbsPer100g: 24, fatsPer100g: 0.2 },
         { name: 'Mostarda', kcalPer100g: 66, proteinPer100g: 4.5, carbsPer100g: 6.5, fatsPer100g: 3.5 },
         { name: 'Molho Barbecue', kcalPer100g: 130, proteinPer100g: 1, carbsPer100g: 30, fatsPer100g: 0.5 },
-        { name: 'Melancia', kcalPer100g: 30, proteinPer100g: 0.6, carbsPer100g: 7.6, fatsPer100g: 0.2 },
-        { name: 'Pêssego', kcalPer100g: 39, proteinPer100g: 0.9, carbsPer100g: 9.5, fatsPer100g: 0.3 },
-        { name: 'Cenoura Cozida', kcalPer100g: 35, proteinPer100g: 0.8, carbsPer100g: 8.2, fatsPer100g: 0.1 },
-        { name: 'Ervilha Fresca', kcalPer100g: 81, proteinPer100g: 5.4, carbsPer100g: 14.5, fatsPer100g: 0.4 },
-        { name: 'Abóbora Cozida', kcalPer100g: 26, proteinPer100g: 1, carbsPer100g: 6.5, fatsPer100g: 0.1 },
-        { name: 'Inhame Cozido', kcalPer100g: 118, proteinPer100g: 1.5, carbsPer100g: 27.5, fatsPer100g: 0.2 },
-        { name: 'Mandioca Cozida', kcalPer100g: 160, proteinPer100g: 1.4, carbsPer100g: 38, fatsPer100g: 0.3 },
-        { name: 'Grão de Bico Cozido', kcalPer100g: 164, proteinPer100g: 8.9, carbsPer100g: 27, fatsPer100g: 2.6 },
-        { name: 'Feijão Preto Cozido', kcalPer100g: 132, proteinPer100g: 8.9, carbsPer100g: 23.7, fatsPer100g: 0.5 },
-        { name: 'Soja Cozida', kcalPer100g: 172, proteinPer100g: 18, carbsPer100g: 9, fatsPer100g: 9 },
-        { name: 'Leite de Amêndoas (sem açúcar)', kcalPer100g: 15, proteinPer100g: 0.5, carbsPer100g: 0.5, fatsPer100g: 1 },
-        { name: 'Leite de Coco', kcalPer100g: 230, proteinPer100g: 2.3, carbsPer100g: 5.5, fatsPer100g: 24 },
         { name: 'Suco de Abacaxi Natural', kcalPer100g: 50, proteinPer100g: 0.4, carbsPer100g: 12.4, fatsPer100g: 0.1 },
         { name: 'Suco de Uva Integral', kcalPer100g: 70, proteinPer100g: 0.3, carbsPer100g: 17, fatsPer100g: 0.1 },
         { name: 'Gelatina Diet', kcalPer100g: 10, proteinPer100g: 2, carbsPer100g: 0, fatsPer100g: 0 },
@@ -217,11 +218,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCheckinHistory();
         renderWeightHistory();
         updateWeightPrediction();
-        populateFoodSelects(); // Popula os selects de alimentos ao iniciar
     }
 
     function checkDailyReset() {
-        const today = new Date().toLocaleDateString();
+        const today = new Date().toLocaleDateString('pt-BR'); // Formato BR
         if (dailyData.date !== today) {
             console.log("Reiniciando dados diários...");
             dailyData = {
@@ -258,6 +258,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('current-weight-settings').value = userProfile.currentWeight;
             document.getElementById('target-weight').value = userProfile.targetWeight;
             document.getElementById('activity-factor').value = userProfile.activityFactor;
+            // Preenche a data final da meta
+            if (userProfile.targetDate) {
+                targetDateInput.value = userProfile.targetDate;
+            }
         } else {
             userNameSpan.textContent = 'Guerreiro';
             // Se não tiver perfil, abre a página de cadastro automaticamente
@@ -288,9 +292,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentWeight = parseFloat(document.getElementById('current-weight-settings').value);
         const targetWeight = parseFloat(document.getElementById('target-weight').value);
         const activityFactor = parseFloat(document.getElementById('activity-factor').value);
+        const targetDate = document.getElementById('target-date').value; // Nova data final da meta
 
-        if (!name || isNaN(age) || isNaN(height) || isNaN(currentWeight) || isNaN(targetWeight) || isNaN(activityFactor)) {
-            alert('Por favor, preencha todos os campos do perfil corretamente.');
+        if (!name || isNaN(age) || isNaN(height) || isNaN(currentWeight) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
+            alert('Por favor, preencha todos os campos do perfil corretamente, incluindo a data final da meta.');
             return;
         }
 
@@ -304,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetFats = Math.round((targetCalories * 0.20) / 9);
 
         userProfile = {
-            name, age, height, gender, currentWeight, targetWeight, activityFactor,
+            name, age, height, gender, currentWeight, targetWeight, activityFactor, targetDate,
             dailyCaloricNeeds: Math.round(dailyCaloricNeeds),
             targetCalories,
             targetProtein,
@@ -327,16 +332,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateProgressBars() {
         if (!userProfile) {
-            caloriesText.textContent = '0 / 0 Kcal';
+            caloriesNum.textContent = '0 / 0 Kcal';
             caloriesProgressBar.style.width = '0%';
-            proteinText.textContent = '0 / 0 g';
+            proteinNum.textContent = '0 / 0 g';
             proteinProgressBar.style.width = '0%';
-            carbsText.textContent = '0 / 0 g';
+            carbsNum.textContent = '0 / 0 g';
             carbsProgressBar.style.width = '0%';
-            fatsText.textContent = '0 / 0 g';
+            fatsNum.textContent = '0 / 0 g';
             fatsProgressBar.style.width = '0%';
-            weightText.textContent = '0 Kg / 0 Kg (Faltam 0 Kg)';
+            weightNum.textContent = '0 Kg / 0 Kg';
             weightProgressBar.style.width = '0%';
+            weightRemainingText.textContent = '';
             return;
         }
 
@@ -344,117 +350,131 @@ document.addEventListener('DOMContentLoaded', () => {
         let caloriesPercentage = (dailyData.consumedCalories / userProfile.targetCalories) * 100;
         caloriesPercentage = Math.min(caloriesPercentage, 100);
         caloriesProgressBar.style.width = `${caloriesPercentage}%`;
-        caloriesText.textContent = `${dailyData.consumedCalories} / ${userProfile.targetCalories} Kcal`;
+        caloriesNum.textContent = `${dailyData.consumedCalories} / ${userProfile.targetCalories} Kcal`;
         caloriesProgressBar.style.backgroundColor = dailyData.consumedCalories > userProfile.targetCalories ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
         // Proteína
         let proteinPercentage = (dailyData.consumedProtein / userProfile.targetProtein) * 100;
         proteinPercentage = Math.min(proteinPercentage, 100);
         proteinProgressBar.style.width = `${proteinPercentage}%`;
-        proteinText.textContent = `${dailyData.consumedProtein} / ${userProfile.targetProtein} g`;
+        proteinNum.textContent = `${dailyData.consumedProtein.toFixed(1)} / ${userProfile.targetProtein} g`;
         proteinProgressBar.style.backgroundColor = dailyData.consumedProtein > userProfile.targetProtein ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
         // Carboidratos
         let carbsPercentage = (dailyData.consumedCarbs / userProfile.targetCarbs) * 100;
         carbsPercentage = Math.min(carbsPercentage, 100);
         carbsProgressBar.style.width = `${carbsPercentage}%`;
-        carbsText.textContent = `${dailyData.consumedCarbs} / ${userProfile.targetCarbs} g`;
+        carbsNum.textContent = `${dailyData.consumedCarbs.toFixed(1)} / ${userProfile.targetCarbs} g`;
         carbsProgressBar.style.backgroundColor = dailyData.consumedCarbs > userProfile.targetCarbs ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
         // Gorduras
         let fatsPercentage = (dailyData.consumedFats / userProfile.targetFats) * 100;
         fatsPercentage = Math.min(fatsPercentage, 100);
         fatsProgressBar.style.width = `${fatsPercentage}%`;
-        fatsText.textContent = `${dailyData.consumedFats} / ${userProfile.targetFats} g`;
+        fatsNum.textContent = `${dailyData.consumedFats.toFixed(1)} / ${userProfile.targetFats} g`;
         fatsProgressBar.style.backgroundColor = dailyData.consumedFats > userProfile.targetFats ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
         // Peso
-        const currentWeight = userProfile.currentWeight; // Peso do perfil, atualizado pelo último registro
+        const currentWeight = userProfile.currentWeight; // Peso do perfil, que será o último peso registrado
         const targetWeight = userProfile.targetWeight;
         let weightProgress;
 
         if (weightHistory.length > 0) {
             const lastRecordedWeight = weightHistory[weightHistory.length - 1].weight;
-            if (currentWeight > targetWeight) { // Perder peso
-                weightProgress = ((currentWeight - lastRecordedWeight) / (currentWeight - targetWeight)) * 100;
-                weightProgress = 100 - Math.min(weightProgress, 100); // Inverte para progresso de perda
-                weightProgressBar.style.width = `${weightProgress}%`;
-                weightProgressBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
-                const remaining = (lastRecordedWeight - targetWeight).toFixed(1);
-                weightText.textContent = `${lastRecordedWeight} Kg / ${targetWeight} Kg (Faltam ${remaining} Kg)`;
+            userProfile.currentWeight = lastRecordedWeight; // Garante que o peso do perfil seja o mais recente
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
 
-            } else if (currentWeight < targetWeight) { // Ganhar peso
-                weightProgress = ((lastRecordedWeight - currentWeight) / (targetWeight - currentWeight)) * 100;
-                weightProgress = Math.min(weightProgress, 100);
-                weightProgressBar.style.width = `${weightProgress}%`;
-                weightProgressBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
+            const totalWeightDiff = Math.abs(userProfile.currentWeight - targetWeight);
+            const initialWeight = weightHistory[0].weight;
+
+            if (initialWeight === targetWeight) { // Caso a meta já seja o peso inicial
+                weightProgress = 100;
+                weightRemainingText.textContent = `Meta de peso é ${targetWeight.toFixed(1)} Kg.`;
+            } else if (userProfile.currentWeight > targetWeight) { // Perder peso
+                // Progresso baseado na diferença entre o peso inicial e o atual, em relação ao total a perder
+                const progressToLose = initialWeight - lastRecordedWeight;
+                const totalToLose = initialWeight - targetWeight;
+                weightProgress = (progressToLose / totalToLose) * 100;
+                weightProgress = Math.max(0, Math.min(weightProgress, 100)); // Garante que esteja entre 0 e 100
+                const remaining = (lastRecordedWeight - targetWeight).toFixed(1);
+                weightRemainingText.textContent = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
+
+            } else if (userProfile.currentWeight < targetWeight) { // Ganhar peso
+                const progressToGain = lastRecordedWeight - initialWeight;
+                const totalToGain = targetWeight - initialWeight;
+                weightProgress = (progressToGain / totalToGain) * 100;
+                weightProgress = Math.max(0, Math.min(weightProgress, 100)); // Garante que esteja entre 0 e 100
                 const remaining = (targetWeight - lastRecordedWeight).toFixed(1);
-                weightText.textContent = `${lastRecordedWeight} Kg / ${targetWeight} Kg (Faltam ${remaining} Kg)`;
+                weightRemainingText.textContent = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
             } else { // Já está na meta
-                weightProgressBar.style.width = '100%';
-                weightProgressBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
-                weightText.textContent = `${targetWeight} Kg / ${targetWeight} Kg (Meta Atingida!)`;
+                weightProgress = 100;
+                weightRemainingText.textContent = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
             }
+
+            weightProgressBar.style.width = `${weightProgress}%`;
+            weightProgressBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
+            weightNum.textContent = `${lastRecordedWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
+
         } else {
-            weightText.textContent = `${currentWeight} Kg / ${targetWeight} Kg (Faltam ${Math.abs(currentWeight - targetWeight).toFixed(1)} Kg)`;
+            weightNum.textContent = `${currentWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
             weightProgressBar.style.width = '0%';
+            weightRemainingText.textContent = `Faltam ${Math.abs(currentWeight - targetWeight).toFixed(1)} Kg para atingir sua meta.`;
         }
     }
 
 
     function updateWeightPrediction() {
-        if (!userProfile || weightHistory.length < 2) {
-            weightPredictionText.textContent = 'Registre mais pesos para uma previsão.';
+        if (!userProfile || weightHistory.length < 2 || !userProfile.targetDate) {
+            weightPredictionText.textContent = 'Registre mais pesos e defina a data final da meta para uma previsão.';
             return;
         }
+
+        const lastWeight = weightHistory[weightHistory.length - 1].weight;
+        const targetWeight = userProfile.targetWeight;
+        const targetDate = new Date(userProfile.targetDate + 'T23:59:59'); // Para incluir o dia inteiro
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Zera hora para comparação de datas
 
         const initialWeightEntry = weightHistory[0];
-        const lastWeightEntry = weightHistory[weightHistory.length - 1];
-
         const initialWeight = initialWeightEntry.weight;
-        const lastWeight = lastWeightEntry.weight;
-
         const initialDate = new Date(initialWeightEntry.date);
-        const lastDate = new Date(lastWeightEntry.date);
+        initialDate.setHours(0, 0, 0, 0);
 
-        // Calcula a diferença em dias
-        const daysPassed = (lastDate - initialDate) / (1000 * 60 * 60 * 24);
+        const daysTotal = (targetDate - today) / (1000 * 60 * 60 * 24);
+        const daysPassedSinceStart = (today - initialDate) / (1000 * 60 * 60 * 24);
 
-        if (daysPassed <= 0) {
-            weightPredictionText.textContent = 'Aguardando mais dados para a previsão de peso.';
+        if (daysTotal <= 0) {
+            weightPredictionText.textContent = 'A data final da meta deve ser no futuro.';
+            if (Math.abs(lastWeight - targetWeight) < 0.1) {
+                weightPredictionText.textContent = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
+            } else if (today > targetDate) {
+                weightPredictionText.textContent = `A data da sua meta (${userProfile.targetDate}) já passou. Você terminou em ${lastWeight.toFixed(1)} Kg.`;
+            }
             return;
         }
 
-        const weightChangeRatePerDay = (lastWeight - initialWeight) / daysPassed;
-        const targetWeight = userProfile.targetWeight;
-        const remainingWeightChange = targetWeight - lastWeight;
+        const requiredChangePerDay = (targetWeight - initialWeight) / ((targetDate - initialDate) / (1000 * 60 * 60 * 24));
+        const expectedWeightToday = initialWeight + (requiredChangePerDay * daysPassedSinceStart);
 
-        if (Math.abs(weightChangeRatePerDay) < 0.005) { // Quase nenhuma mudança
-            weightPredictionText.textContent = 'Não há mudança de peso significativa para fazer uma previsão.';
-            return;
+        let statusMessage = '';
+        if (Math.abs(lastWeight - targetWeight) < 0.1) {
+            statusMessage = `**Meta atingida!** Seu peso atual é ${lastWeight.toFixed(1)} Kg.`;
+        } else if (Math.abs(lastWeight - expectedWeightToday) < 0.5) { // Margem de erro de 0.5kg
+            statusMessage = `Você está no caminho certo! Seu peso atual (${lastWeight.toFixed(1)} Kg) está próximo do esperado (${expectedWeightToday.toFixed(1)} Kg).`;
+        } else if (userProfile.targetWeight > userProfile.currentWeight) { // Meta de ganho
+            if (lastWeight > expectedWeightToday) {
+                statusMessage = `Você está adiantado na sua meta de ganho de peso! Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+            } else {
+                statusMessage = `Você está um pouco atrasado na sua meta de ganho de peso. Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+            }
+        } else { // Meta de perda
+            if (lastWeight < expectedWeightToday) {
+                statusMessage = `Você está adiantado na sua meta de perda de peso! Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+            } else {
+                statusMessage = `Você está um pouco atrasado na sua meta de perda de peso. Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+            }
         }
-
-        // Se está perdendo peso e a meta é menor que o peso atual
-        if (weightChangeRatePerDay < 0 && targetWeight < lastWeight) {
-            const estimatedDaysToTarget = Math.round(remainingWeightChange / weightChangeRatePerDay); // Será negativo
-            const targetDate = new Date();
-            targetDate.setDate(targetDate.getDate() + Math.abs(estimatedDaysToTarget));
-            weightPredictionText.textContent = `Seu peso atual é ${lastWeight} Kg. Com base no seu ritmo, você pode atingir ${targetWeight} Kg por volta de ${targetDate.toLocaleDateString()}.`;
-        }
-        // Se está ganhando peso e a meta é maior que o peso atual
-        else if (weightChangeRatePerDay > 0 && targetWeight > lastWeight) {
-            const estimatedDaysToTarget = Math.round(remainingWeightChange / weightChangeRatePerDay);
-            const targetDate = new Date();
-            targetDate.setDate(targetDate.getDate() + estimatedDaysToTarget);
-            weightPredictionText.textContent = `Seu peso atual é ${lastWeight} Kg. Com base no seu ritmo, você pode atingir ${targetWeight} Kg por volta de ${targetDate.toLocaleDateString()}.`;
-        }
-        // Se já atingiu a meta ou está indo na direção errada
-        else if ((targetWeight <= lastWeight && weightChangeRatePerDay < 0) || (targetWeight >= lastWeight && weightChangeRatePerDay > 0)) {
-            weightPredictionText.textContent = `Parabéns! Você está no caminho certo para sua meta de ${targetWeight} Kg ou já a atingiu!`;
-        }
-        else {
-            weightPredictionText.textContent = `Sua meta é ${targetWeight} Kg. Revise sua estratégia para atingir seu objetivo.`;
-        }
+        weightPredictionText.textContent = statusMessage;
     }
 
 
@@ -471,24 +491,22 @@ document.addEventListener('DOMContentLoaded', () => {
             mealGroupDiv.innerHTML = `
                 <h4>
                     ${group.name}
-                    <span class="meal-total-macros">Total: ${group.totalKcal} Kcal | P: ${group.totalProtein}g | C: ${group.totalCarbs}g | G: ${group.totalFats}g</span>
+                    <span class="meal-total-macros">Total: ${group.totalKcal} Kcal | P: ${group.totalProtein.toFixed(1)}g | C: ${group.totalCarbs.toFixed(1)}g | G: ${group.totalFats.toFixed(1)}g</span>
                 </h4>
                 <ul class="meal-items-list" id="meal-list-${groupIndex}">
                     ${group.foods.map((food, foodIndex) => `
                         <li class="meal-item">
                             <div class="meal-item-details">
                                 ${food.name} (${food.quantity}g)
-                                <span>${food.kcal} Kcal | P: ${food.protein}g | C: ${food.carbs}g | G: ${food.fats}g</span>
+                                <span>${food.kcal} Kcal | P: ${food.protein.toFixed(1)}g | C: ${food.carbs.toFixed(1)}g | G: ${food.fats.toFixed(1)}g</span>
                             </div>
                             <button data-group-index="${groupIndex}" data-food-index="${foodIndex}">Remover</button>
                         </li>
                     `).join('')}
                 </ul>
                 <form class="add-food-form" data-group-index="${groupIndex}">
-                    <select class="food-select">
-                        <option value="">Selecione um alimento</option>
-                        ${foodDatabase.sort((a,b) => a.name.localeCompare(b.name)).map(food => `<option value="${food.name}">${food.name}</option>`).join('')}
-                    </select>
+                    <input type="text" class="food-search-input" placeholder="Buscar alimento..." list="food-suggestions-${groupIndex}">
+                    <datalist id="food-suggestions-${groupIndex}"></datalist>
                     <input type="number" class="food-quantity" placeholder="Quantidade (g)" required>
                     <button type="submit">Adicionar Alimento</button>
                 </form>
@@ -504,8 +522,39 @@ document.addEventListener('DOMContentLoaded', () => {
         // Adiciona listeners para adicionar alimento
         mealGroupsContainer.querySelectorAll('.add-food-form').forEach(form => {
             form.addEventListener('submit', addFoodItem);
+            const searchInput = form.querySelector('.food-search-input');
+            const dataList = form.querySelector(`datalist#food-suggestions-${form.dataset.groupIndex}`);
+
+            searchInput.addEventListener('input', () => handleFoodSearch(searchInput, dataList));
+            searchInput.addEventListener('change', (e) => { // Preenche automaticamente ao selecionar da lista
+                if (foodDatabase.some(food => food.name === e.target.value)) {
+                    // Alimento selecionado é válido
+                } else {
+                    e.target.value = ''; // Limpa se não for um alimento válido da lista
+                }
+            });
         });
     }
+
+    function handleFoodSearch(inputElement, dataListElement) {
+        const searchTerm = inputElement.value.toLowerCase();
+        dataListElement.innerHTML = ''; // Limpa sugestões antigas
+
+        if (searchTerm.length < 2) { // Começa a pesquisar com 2 ou mais caracteres
+            return;
+        }
+
+        const filteredFoods = foodDatabase.filter(food =>
+            food.name.toLowerCase().includes(searchTerm)
+        ).sort((a, b) => a.name.localeCompare(b.name));
+
+        filteredFoods.forEach(food => {
+            const option = document.createElement('option');
+            option.value = food.name;
+            dataListElement.appendChild(option);
+        });
+    }
+
 
     function renderCheckinHistory() {
         checkinHistoryList.innerHTML = '';
@@ -517,10 +566,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const listItem = document.createElement('li');
             listItem.innerHTML = `
                 <strong>${entry.date}:</strong>
-                ${entry.sleep ? '😴' : ' '}
-                ${entry.workout ? '🏋️‍♂️' : ' '}
-                ${entry.diet ? '🥗' : ' '}
-                ${entry.nofap ? '🚫💦' : ' '}
+                ${entry.sleep ? '😴' : ''}
+                ${entry.workout ? '🏋️‍♂️' : ''}
+                ${entry.diet ? '🥗' : ''}
+                ${entry.nofap ? '🚫💦' : ''}
             `;
             checkinHistoryList.appendChild(listItem);
         });
@@ -532,38 +581,14 @@ document.addEventListener('DOMContentLoaded', () => {
             weightHistoryList.innerHTML = '<p class="no-data-message">Nenhum peso registrado ainda.</p>';
             return;
         }
-        weightHistory.forEach(entry => {
+        // Mostra os últimos 10 pesos, por exemplo
+        weightHistory.slice(-10).reverse().forEach(entry => {
             const listItem = document.createElement('li');
             listItem.innerHTML = `
                 <span>${entry.date}</span>
-                <span>${entry.weight} Kg</span>
+                <span>${entry.weight.toFixed(1)} Kg</span>
             `;
             weightHistoryList.appendChild(listItem);
-        });
-    }
-
-    function populateFoodSelects() {
-        // Encontra todos os selects de alimentos e os preenche
-        document.querySelectorAll('.food-select').forEach(select => {
-            // Salva a opção "Selecione um alimento" se ela existir
-            const defaultOption = select.querySelector('option[value=""]');
-            select.innerHTML = ''; // Limpa as opções existentes
-            if (defaultOption) {
-                select.appendChild(defaultOption);
-            } else {
-                const opt = document.createElement('option');
-                opt.value = '';
-                opt.textContent = 'Selecione um alimento';
-                select.appendChild(opt);
-            }
-
-            // Adiciona os alimentos do banco de dados (ordenados alfabeticamente)
-            foodDatabase.sort((a,b) => a.name.localeCompare(b.name)).forEach(food => {
-                const option = document.createElement('option');
-                option.value = food.name;
-                option.textContent = food.name;
-                select.appendChild(option);
-            });
         });
     }
 
@@ -585,7 +610,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Se for a página de configurações, preenche o formulário do perfil
         if (pageId === 'settings-page') {
             renderUserProfile(); // Garante que os campos do perfil estejam preenchidos
-            populateFoodSelects(); // Garante que os selects de comida estejam atualizados
         }
     }
 
@@ -613,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalFats: 0
             });
             localStorage.setItem('dailyData', JSON.stringify(dailyData));
-            renderMealGroups();
+            renderMealGroups(); // Redesenha para incluir o novo grupo
         }
     });
 
@@ -621,15 +645,15 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         const form = event.target;
         const groupIndex = parseInt(form.dataset.groupIndex);
-        const foodName = form.querySelector('.food-select').value;
+        const foodName = form.querySelector('.food-search-input').value.trim(); // Usa o input de busca
         const quantity = parseFloat(form.querySelector('.food-quantity').value);
 
         if (!foodName || isNaN(quantity) || quantity <= 0) {
-            alert('Por favor, selecione um alimento e insira uma quantidade válida.');
+            alert('Por favor, digite o nome de um alimento, selecione-o e insira uma quantidade válida.');
             return;
         }
 
-        const foodInfo = foodDatabase.find(food => food.name === foodName);
+        const foodInfo = foodDatabase.find(food => food.name.toLowerCase() === foodName.toLowerCase()); // Busca exata
         if (foodInfo) {
             const factor = quantity / 100;
             const kcal = Math.round(foodInfo.kcalPer100g * factor);
@@ -638,7 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fats = parseFloat((foodInfo.fatsPer100g * factor).toFixed(1));
 
             dailyData.mealGroups[groupIndex].foods.push({
-                name: foodName,
+                name: foodInfo.name, // Usa o nome do banco de dados para consistência
                 quantity,
                 kcal,
                 protein,
@@ -663,13 +687,13 @@ document.addEventListener('DOMContentLoaded', () => {
             updateProgressBars();
             form.reset(); // Limpa o formulário
         } else {
-            alert('Alimento não encontrado no banco de dados. Você pode adicioná-lo na aba de Configurações.');
+            alert('Alimento não encontrado no banco de dados. Verifique a ortografia ou adicione-o na aba de Configurações.');
         }
     }
 
     function removeFoodItem(event) {
-        const groupIndex = parseInt(event.target.dataset.groupIndex);
-        const foodIndex = parseInt(event.target.dataset.foodIndex);
+        const groupIndex = parseInt(event.target.dataset.group-index);
+        const foodIndex = parseInt(event.target.dataset.food-index);
 
         const foodToRemove = dailyData.mealGroups[groupIndex].foods[foodIndex];
 
@@ -699,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Salvar Check-in
     saveCheckinBtn.addEventListener('click', () => {
-        const today = new Date().toLocaleDateString();
+        const today = new Date().toLocaleDateString('pt-BR'); // Formato BR
         const existingCheckinIndex = checkinHistory.findIndex(entry => entry.date === today);
 
         const currentCheckinState = {
@@ -729,7 +753,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const today = new Date().toLocaleDateString();
+        const today = new Date().toLocaleDateString('pt-BR'); // Formato BR
+
         // Atualiza o peso atual no userProfile para refletir o último peso registrado
         if (userProfile) {
             userProfile.currentWeight = weight;
@@ -769,7 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Verifica se o alimento já existe para evitar duplicatas
         const existingFood = foodDatabase.find(food => food.name.toLowerCase() === customFoodName.toLowerCase());
         if (existingFood) {
-            alert('Um alimento com este nome já existe no banco de dados. Use um nome diferente ou edite o existente (funcionalidade futura).');
+            alert('Um alimento com este nome já existe no banco de dados. Use um nome diferente.');
             return;
         }
 
@@ -781,7 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fatsPer100g: customFoodFats
         });
         localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
-        populateFoodSelects(); // Atualiza os selects de alimentos
+        renderMealGroups(); // Redesenha os formulários de refeição para atualizar as datalists
         addCustomFoodForm.reset();
         alert(`Alimento "${customFoodName}" adicionado com sucesso!`);
     });
