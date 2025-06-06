@@ -56,8 +56,8 @@ nav {
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 15px;
     margin-bottom: 20px;
-    flex-wrap: wrap; /* Permite que os botões quebrem a linha */
-    gap: 10px; /* Espaçamento entre os botões */
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 nav button {
@@ -70,8 +70,8 @@ nav button {
     transition: all 0.3s ease;
     border-radius: 8px;
     font-weight: bold;
-    flex-grow: 1; /* Permite que os botões cresçam para preencher o espaço */
-    min-width: 100px; /* Garante um tamanho mínimo para cada botão */
+    flex-grow: 1;
+    min-width: 100px;
 }
 
 nav button:hover,
@@ -162,7 +162,7 @@ form {
     box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
 }
 
-/* Progress Bars */
+/* Progress Section with Numbers */
 .progress-section {
     background-color: var(--accent-blue);
     border-radius: 10px;
@@ -179,15 +179,24 @@ form {
     font-family: 'Orbitron', sans-serif;
 }
 
-.progress-bar-container {
+.progress-item-detail {
     margin-bottom: 15px;
 }
 
-.progress-bar-container label {
+.progress-item-detail .detail-label {
     display: block;
-    margin-bottom: 5px;
     font-weight: bold;
     color: var(--text-light);
+    margin-bottom: 5px;
+}
+
+.progress-item-detail .detail-value {
+    display: block;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: var(--vibrant-green); /* Cor para os números */
+    margin-bottom: 5px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
 }
 
 .progress-bar-wrapper {
@@ -205,21 +214,6 @@ form {
     width: 0%;
     border-radius: 10px;
     transition: width 0.5s ease-out;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 10px;
-    box-sizing: border-box;
-}
-
-.progress-text {
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    line-height: 25px;
-    color: var(--text-light);
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
 }
 
 /* Meal Groups */
@@ -289,6 +283,7 @@ form {
     background-color: #c0392b;
 }
 
+/* Add Food Form with Search */
 .add-food-form {
     display: flex;
     flex-wrap: wrap;
@@ -296,10 +291,11 @@ form {
     margin-top: 15px;
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
+    position: relative; /* Para posicionar os resultados da busca */
 }
 
-.add-food-form input,
-.add-food-form select {
+.add-food-form input.food-search-input,
+.add-food-form input.food-quantity {
     flex: 1;
     min-width: 120px;
     padding: 8px;
@@ -322,6 +318,36 @@ form {
 .add-food-form button:hover {
     background-color: #27ae60;
 }
+
+/* Search Results */
+.search-results {
+    position: absolute;
+    top: 100%; /* Abaixo do input de busca */
+    left: 0;
+    right: 0;
+    background-color: var(--secondary-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.search-results div {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-results div:last-child {
+    border-bottom: none;
+}
+
+.search-results div:hover {
+    background-color: var(--accent-blue);
+}
+
 
 /* Check-in */
 .checkin-item {
@@ -480,9 +506,9 @@ form {
 }
 
 /* Weight Page - New Current Weight Input */
-#weight-page .input-group {
+.input-group-inline {
     display: flex;
-    flex-direction: row; /* Alinha o input e botão na mesma linha */
+    flex-direction: row;
     align-items: flex-end;
     gap: 10px;
     margin-bottom: 20px;
@@ -490,12 +516,14 @@ form {
     padding-bottom: 20px;
 }
 
-#weight-page .input-group label {
-    display: none; /* Esconde a label para o layout inline */
+.input-group-inline label {
+    flex-shrink: 0; /* Não encolher */
+    margin-bottom: 0;
+    padding-bottom: 10px; /* Alinha com o input */
 }
 
-#weight-page #new-current-weight {
-    flex-grow: 1; /* Permite que o input preencha o espaço */
+.input-group-inline input {
+    flex-grow: 1;
 }
 
 
@@ -527,8 +555,7 @@ form {
 
     .input-group input,
     .input-group select,
-    .add-food-form input,
-    .add-food-form select {
+    .add-food-form input { /* Removido select */
         font-size: 0.9em;
         padding: 10px;
     }
@@ -537,12 +564,18 @@ form {
         flex-direction: column;
     }
 
-    #weight-page .input-group {
-        flex-direction: column; /* Volta para coluna em telas pequenas */
+    .input-group-inline { /* Ajuste para o grupo inline em telas pequenas */
+        flex-direction: column;
         align-items: stretch;
     }
 
-    #weight-page .input-group label {
+    .input-group-inline label {
         display: block; /* Mostra a label novamente */
+        padding-bottom: 8px;
+    }
+
+    .search-results {
+        position: static; /* Remove a posição absoluta para melhor fluxo em mobile */
+        margin-top: 10px;
     }
 }
