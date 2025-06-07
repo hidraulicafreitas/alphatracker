@@ -651,7 +651,7 @@ form {
 
     .input-group input,
     .input-group select,
-    .add-food-form input { /* Removido select */
+    .add-food-form input {
         font-size: 0.9em;
         padding: 10px;
     }
@@ -660,18 +660,18 @@ form {
         flex-direction: column;
     }
 
-    .input-group-inline { /* Ajuste para o grupo inline em telas pequenas */
+    .input-group-inline {
         flex-direction: column;
         align-items: stretch;
     }
 
     .input-group-inline label {
-        display: block; /* Mostra a label novamente */
+        display: block;
         padding-bottom: 8px;
     }
 
     .search-results {
-        position: static; /* Remove a posição absoluta para melhor fluxo em mobile */
+        position: static;
         margin-top: 10px;
     }
 }
