@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customFoodList = document.getElementById('custom-food-list');
 
     // Elemento da página de boas-vindas
-    const welcomePage = document.getElementById('welcome-page'); //
+    const welcomePage = document.getElementById('welcome-page');
 
     // Elementos de progresso na Home Page
     const userNameSpan = document.getElementById('user-name');
@@ -216,8 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function initApp() {
         checkDailyReset();
         if (!userProfileComplete()) {
-            showWelcomeScreen(); //
+            // Se o perfil não estiver completo, mostra apenas a tela de boas-vindas
+            showWelcomeScreen();
         } else {
+            // Caso contrário, renderiza o perfil e mostra a página inicial
             renderUserProfile();
             updateProgressBars();
             renderMealGroups();
@@ -237,26 +239,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Mostra apenas a página de boas-vindas
-        welcomePage.classList.add('active');
-        welcomePage.style.display = 'block';
+        if (welcomePage) {
+            welcomePage.classList.add('active');
+            welcomePage.style.display = 'block';
+        }
+
 
         // Esconde os botões de navegação
         navButtons.forEach(btn => btn.style.display = 'none');
 
         // Adiciona o event listener para o botão "Ir para Configurações"
-        const goToSettingsBtn = document.getElementById('go-to-settings-btn'); //
+        const goToSettingsBtn = document.getElementById('go-to-settings-btn');
         if (goToSettingsBtn) { // Garante que o botão exista no DOM
             // Remove o listener existente para evitar múltiplos binds se a função for chamada novamente
-            const oldClickListener = goToSettingsBtn._currentClickListener; //
-            if (oldClickListener) { //
-                goToSettingsBtn.removeEventListener('click', oldClickListener); //
+            // Isso é importante porque welcomePage não é removida, então o listener pode ser duplicado.
+            const oldClickListener = goToSettingsBtn._currentClickListener;
+            if (oldClickListener) {
+                goToSettingsBtn.removeEventListener('click', oldClickListener);
             }
 
-            const newClickListener = () => { //
+            const newClickListener = () => {
                 navButtons.forEach(btn => btn.style.display = 'block'); // Mostra os botões de navegação
                 showPage('settings-page'); // Navega para a página de configurações
             };
-            goToSettingsBtn.addEventListener('click', newClickListener); //
+            goToSettingsBtn.addEventListener('click', newClickListener);
             goToSettingsBtn._currentClickListener = newClickListener; // Armazena o listener para futura remoção
         }
     }
@@ -361,6 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWeightPrediction();
         alert('Perfil salvo e metas recalculadas!');
 
+        // Garante que os botões de navegação estejam visíveis após preencher o perfil
         navButtons.forEach(btn => btn.style.display = 'block');
         showPage('home-page');
     }
@@ -695,17 +702,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Mostra a página de destino
-        const targetPage = document.getElementById(pageId); //
-        if (targetPage) { //
-            targetPage.classList.add('active'); //
-            targetPage.style.display = 'block'; //
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) {
+            targetPage.classList.add('active');
+            targetPage.style.display = 'block';
         }
 
         // Atualiza o estado ativo dos botões de navegação
-        navButtons.forEach(btn => btn.classList.remove('active')); //
-        const activeNavButton = document.getElementById(`nav-${pageId.replace('-page', '')}`); //
-        if (activeNavButton) { //
-            activeNavButton.classList.add('active'); //
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        const activeNavButton = document.getElementById(`nav-${pageId.replace('-page', '')}`);
+        if (activeNavButton) {
+            activeNavButton.classList.add('active');
         }
 
         if (pageId === 'weight-page') {
@@ -724,6 +731,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navButtons.forEach(button => {
         button.addEventListener('click', () => {
+            // Se o perfil não estiver completo, e o botão clicado não for "Configurações",
+            // alerta e redireciona para Configurações.
             if (!userProfileComplete() && button.id !== 'nav-settings') {
                 alert('Por favor, complete seu perfil na aba de Configurações antes de usar outras funcionalidades.');
                 showPage('settings-page');
@@ -742,10 +751,9 @@ document.addEventListener('DOMContentLoaded', () => {
                userProfile.gender &&
                !isNaN(userProfile.currentWeight) &&
                !isNaN(userProfile.targetWeight) &&
-               userProfile.activityFactor && // Já é um número de 1.2 a 1.9
-               userProfile.targetDate; // targetDate é uma string de data
+               userProfile.activityFactor &&
+               userProfile.targetDate;
     }
-
 
     profileForm.addEventListener('submit', saveProfile);
 
