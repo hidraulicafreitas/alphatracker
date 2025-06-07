@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userNameSpan = document.getElementById('user-name');
     const caloriesProgressBar = document.getElementById('calories-progress');
     const caloriesNum = document.getElementById('calories-num');
-    const proteinProgressBar = document.getElementById('protein-progress');
+    const proteinProgressBar = document = document.getElementById('protein-progress');
     const proteinNum = document.getElementById('protein-num');
     const carbsProgressBar = document.getElementById('carbs-progress');
     const carbsNum = document.getElementById('carbs-num');
@@ -200,7 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     // Adicionar alimentos padrão ao foodDatabase se ele estiver vazio ou se não tiverem sido adicionados ainda
     if (foodDatabase.length === 0 || !foodDatabase.some(food => !food.isCustom)) {
-        foodDatabase = defaultFoods.concat(foodDatabase.filter(food => food.isCustom));
+        // Filtra para remover quaisquer alimentos padrão que possam ter sido adicionados como "custom" por engano antes da isCustom flag
+        const currentCustomFoods = foodDatabase.filter(food => food.isCustom);
+        foodDatabase = defaultFoods.concat(currentCustomFoods);
         localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
     }
 
@@ -373,51 +375,57 @@ document.addEventListener('DOMContentLoaded', () => {
         fatsProgressBar.style.backgroundColor = dailyData.consumedFats > userProfile.targetFats ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
         // Peso
-        const currentWeight = userProfile.currentWeight; // Peso do perfil, que será o último peso registrado
+        // Garante que o userProfile.currentWeight esteja atualizado com o último peso do histórico
+        if (weightHistory.length > 0) {
+            userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        }
+
+        const currentWeight = userProfile.currentWeight;
         const targetWeight = userProfile.targetWeight;
         let weightProgress;
+        let remainingOrAchievedText = ''; // Texto para mostrar "faltam X kg" ou "atingiu a meta"
 
-        if (weightHistory.length > 0) {
-            const lastRecordedWeight = weightHistory[weightHistory.length - 1].weight;
-            userProfile.currentWeight = lastRecordedWeight; // Garante que o peso do perfil seja o mais recente
-            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        if (currentWeight === targetWeight) {
+            weightProgress = 100;
+            remainingOrAchievedText = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
+        } else if (userProfile.gender === 'male' && currentWeight > targetWeight || userProfile.gender === 'female' && currentWeight > targetWeight) { // Perder peso
+            const initialWeight = weightHistory.length > 0 ? weightHistory[0].weight : currentWeight; // Pega o primeiro peso registrado como inicial
+            const totalToLose = initialWeight - targetWeight;
+            const progressToLose = initialWeight - currentWeight;
 
-            const totalWeightDiff = Math.abs(userProfile.currentWeight - targetWeight);
-            const initialWeight = weightHistory[0].weight;
-
-            if (initialWeight === targetWeight) { // Caso a meta já seja o peso inicial
+            if (totalToLose === 0) { // Evita divisão por zero se a meta já era o peso inicial
                 weightProgress = 100;
-                weightRemainingText.textContent = `Meta de peso é ${targetWeight.toFixed(1)} Kg.`;
-            } else if (userProfile.currentWeight > targetWeight) { // Perder peso
-                // Progresso baseado na diferença entre o peso inicial e o atual, em relação ao total a perder
-                const progressToLose = initialWeight - lastRecordedWeight;
-                const totalToLose = initialWeight - targetWeight;
+                remainingOrAchievedText = `Meta de peso é ${targetWeight.toFixed(1)} Kg.`;
+            } else {
                 weightProgress = (progressToLose / totalToLose) * 100;
-                weightProgress = Math.max(0, Math.min(weightProgress, 100)); // Garante que esteja entre 0 e 100
-                const remaining = (lastRecordedWeight - targetWeight).toFixed(1);
-                weightRemainingText.textContent = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
-
-            } else if (userProfile.currentWeight < targetWeight) { // Ganhar peso
-                const progressToGain = lastRecordedWeight - initialWeight;
-                const totalToGain = targetWeight - initialWeight;
-                weightProgress = (progressToGain / totalToGain) * 100;
-                weightProgress = Math.max(0, Math.min(weightProgress, 100)); // Garante que esteja entre 0 e 100
-                const remaining = (targetWeight - lastRecordedWeight).toFixed(1);
-                weightRemainingText.textContent = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
-            } else { // Já está na meta
-                weightProgress = 100;
-                weightRemainingText.textContent = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
+                weightProgress = Math.max(0, Math.min(weightProgress, 100));
+                const remaining = (currentWeight - targetWeight).toFixed(1);
+                remainingOrAchievedText = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
             }
+        } else if (userProfile.gender === 'male' && currentWeight < targetWeight || userProfile.gender === 'female' && currentWeight < targetWeight) { // Ganhar peso
+            const initialWeight = weightHistory.length > 0 ? weightHistory[0].weight : currentWeight; // Pega o primeiro peso registrado como inicial
+            const totalToGain = targetWeight - initialWeight;
+            const progressToGain = currentWeight - initialWeight;
 
-            weightProgressBar.style.width = `${weightProgress}%`;
-            weightProgressBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
-            weightNum.textContent = `${lastRecordedWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
-
-        } else {
-            weightNum.textContent = `${currentWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
-            weightProgressBar.style.width = '0%';
-            weightRemainingText.textContent = `Faltam ${Math.abs(currentWeight - targetWeight).toFixed(1)} Kg para atingir sua meta.`;
+            if (totalToGain === 0) { // Evita divisão por zero se a meta já era o peso inicial
+                weightProgress = 100;
+                remainingOrAchievedText = `Meta de peso é ${targetWeight.toFixed(1)} Kg.`;
+            } else {
+                weightProgress = (progressToGain / totalToGain) * 100;
+                weightProgress = Math.max(0, Math.min(weightProgress, 100));
+                const remaining = (targetWeight - currentWeight).toFixed(1);
+                remainingOrAchievedText = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
+            }
+        } else { // Caso não haja perfil ou dados inconsistentes
+            weightProgress = 0;
+            remainingOrAchievedText = `Defina seu perfil e registre seu peso para acompanhar o progresso.`;
         }
+
+        weightProgressBar.style.width = `${weightProgress}%`;
+        weightProgressBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
+        weightNum.textContent = `${currentWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
+        weightRemainingText.textContent = remainingOrAchievedText; // Atualiza o texto abaixo da barra
     }
 
 
@@ -611,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCustomFoodList() {
-        customFoodList.innerHTML = '';
+        customFoodList.innerHTML = ''; // Limpa a lista antes de renderizar novamente
         const customFoods = foodDatabase.filter(food => food.isCustom);
 
         if (customFoods.length === 0) {
@@ -621,14 +629,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         customFoods.forEach((food, index) => {
             const listItem = document.createElement('li');
+            // É importante usar o índice real do alimento no foodDatabase, não o índice filtrado
+            const foodDatabaseIndex = foodDatabase.indexOf(food);
             listItem.innerHTML = `
                 <div class="food-details">
                     <strong>${food.name}</strong>
                     <span>${food.kcalPer100g} Kcal | P: ${food.proteinPer100g}g | C: ${food.carbsPer100g}g | G: ${food.fatsPer100g}g</span>
                 </div>
                 <div class="food-actions">
-                    <button class="edit-custom-food-btn" data-index="${foodDatabase.indexOf(food)}">Editar</button>
-                    <button class="delete-custom-food-btn" data-index="${foodDatabase.indexOf(food)}">Excluir</button>
+                    <button class="edit-custom-food-btn" data-index="${foodDatabaseIndex}">Editar</button>
+                    <button class="delete-custom-food-btn" data-index="${foodDatabaseIndex}">Excluir</button>
                 </div>
             `;
             customFoodList.appendChild(listItem);
@@ -932,7 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMealGroups(); // Redesenha os formulários de refeição para atualizar as datalists
         renderCustomFoodList(); // Atualiza a lista de alimentos personalizados
         addCustomFoodForm.reset();
-        alert(`Alimento "${customFoodName}" adicionado com sucesso!`);
+        alert(`Alimento "${customFoodName}" adicionado com sucesso!`); // Mensagem de sucesso
     });
 
     function editCustomFood(event) {
