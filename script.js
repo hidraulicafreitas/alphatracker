@@ -169,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Pasta de Amendoim Natural', kcalPer100g: 588, proteinPer100g: 25, carbsPer100g: 20, fatsPer100g: 50, isCustom: false },
         { name: 'Amêndoas', kcalPer100g: 579, proteinPer100g: 21, carbsPer100g: 21, fatsPer100g: 49, isCustom: false },
         { name: 'Castanha do Pará', kcalPer100g: 659, proteinPer100g: 14, carbsPer100g: 12, fatsPer100g: 66, isCustom: false },
-        { name: 'Leite Semi-desnatado', kcalPer100g: 47, proteinPer100g: 3.2, carbsPer100g: 4.8, fatsPer100g: 1.6, isCustom: false },
         { name: 'Manteiga de Amendoim', kcalPer100g: 588, proteinPer100g: 25, carbsPer100g: 20, fatsPer100g: 50, isCustom: false },
         { name: 'Pizza de Mussarela', kcalPer100g: 266, proteinPer100g: 11, carbsPer100g: 33, fatsPer100g: 10, isCustom: false },
         { name: 'Hambúrguer (carne)', kcalPer100g: 250, proteinPer100g: 20, carbsPer100g: 0, fatsPer100g: 18, isCustom: false },
@@ -197,9 +196,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Bolacha Maria', kcalPer100g: 420, proteinPer100g: 7, carbsPer100g: 75, fatsPer100g: 10, isCustom: false },
         { name: 'Doce de Leite', kcalPer100g: 320, proteinPer100g: 6, carbsPer100g: 55, fatsPer100g: 8, isCustom: false },
         { name: 'Brigadeiro', kcalPer100g: 450, proteinPer100g: 5, carbsPer100g: 60, fatsPer100g: 20, isCustom: false },
+        // Novos alimentos adicionados
         { name: 'Leite Integral', kcalPer100g: 60, proteinPer100g: 3.2, carbsPer100g: 4.8, fatsPer100g: 3.3, isCustom: false },
         { name: 'Leite Desnatado', kcalPer100g: 35, proteinPer100g: 3.4, carbsPer100g: 4.9, fatsPer100g: 0.1, isCustom: false },
-        { name: 'Tapioca', kcalPer100g: 240, proteinPer100g: 0.6, carbsPer100g: 59, fatsPer100g: 0.1, isCustom: false },
+        { name: 'Farinha de Tapioca', kcalPer100g: 350, proteinPer100g: 0.2, carbsPer100g: 87, fatsPer100g: 0.1, isCustom: false },
     ];
     if (foodDatabase.length === 0 || !foodDatabase.some(food => !food.isCustom)) {
         const currentCustomFoods = foodDatabase.filter(food => food.isCustom);
@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Ao salvar o perfil, adicione o currentWeight ao histórico se ainda não houver nenhum ou se for diferente do último.
         // A data será a de hoje.
-        if (weightHistory.length === 0 || weightHistory[weightHistory.length - 1].weight !== currentWeight) {
+        if (weightHistory.length === 0 || (weightHistory.length > 0 && weightHistory[weightHistory.length - 1].weight !== currentWeight)) {
             addWeightEntry(currentWeight, new Date().toLocaleDateString('pt-BR'));
         }
 
@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
             weightProgress = 100;
             weightDiffMessage = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
         } else if (weightHistory.length > 0) {
-            const initialWeight = weightHistory[0].weight;
+            const initialWeight = weightHistory[0].weight; // Primeiro peso registrado
             const diffValue = Math.abs(currentWeight - initialWeight).toFixed(1);
             let action = '';
 
@@ -422,14 +422,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (initialWeight === targetWeight) {
                 weightProgress = 100;
                 weightDiffMessage = `Meta de peso é ${targetWeight.toFixed(1)} Kg.`;
-            } else if (userProfile.targetWeight < initialWeight) { // Meta de perda de peso
+            } else if (targetWeight < initialWeight) { // Meta de perda de peso
                 const totalToLose = initialWeight - targetWeight;
                 const progressToLose = initialWeight - currentWeight;
                 weightProgress = (progressToLose / totalToLose) * 100;
                 weightProgress = Math.max(0, Math.min(weightProgress, 100));
                 const remaining = (currentWeight - targetWeight).toFixed(1);
                 weightDiffMessage = `Você ${action} ${diffValue} Kg até agora. Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
-            } else if (userProfile.targetWeight > initialWeight) { // Meta de ganho de peso
+            } else if (targetWeight > initialWeight) { // Meta de ganho de peso
                 const totalToGain = targetWeight - initialWeight;
                 const progressToGain = currentWeight - initialWeight;
                 weightProgress = (progressToGain / totalToGain) * 100;
@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const lastWeight = weightHistory[weightHistory.length - 1].weight;
         const targetWeight = userProfile.targetWeight;
-        const targetDate = new Date(userProfile.targetDate + 'T23:59:59');
+        const targetDate = new Date(userProfile.targetDate + 'T23:59:59'); // Para incluir o dia inteiro
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -485,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let statusMessage = '';
         if (Math.abs(lastWeight - targetWeight) < 0.1) {
             statusMessage = `**Meta atingida!** Seu peso atual é ${lastWeight.toFixed(1)} Kg.`;
-        } else if (Math.abs(lastWeight - expectedWeightToday) < 0.5) {
+        } else if (Math.abs(lastWeight - expectedWeightToday) < 0.5) { // Margem de erro de 0.5kg
             statusMessage = `Você está no caminho certo! Seu peso atual (${lastWeight.toFixed(1)} Kg) está próximo do esperado (${expectedWeightToday.toFixed(1)} Kg).`;
         } else if (userProfile.targetWeight > initialWeight) { // Meta de ganho
             if (lastWeight > expectedWeightToday) {
@@ -556,9 +556,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             searchInput.addEventListener('input', () => handleFoodSearch(searchInput, dataList));
             searchInput.addEventListener('change', (e) => {
-                if (foodDatabase.some(food => food.name === e.target.value)) {
+                if (foodDatabase.some(food => removeAccents(food.name).toLowerCase() === removeAccents(e.target.value).toLowerCase())) {
+                    // Alimento selecionado é válido
                 } else {
-                    e.target.value = '';
+                    e.target.value = ''; // Limpa se não for um alimento válido da lista
                 }
             });
         });
@@ -566,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função para remover acentos
     function removeAccents(str) {
-        if (typeof str !== 'string') return ''; // Garante que é uma string
+        if (typeof str !== 'string' || str === null) return ''; // Garante que é uma string e não é nulo
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
@@ -646,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        customFoods.forEach((food) => {
+        customFoods.forEach((food) => { // Removido o index do forEach pois o indexOf é mais seguro
             const listItem = document.createElement('li');
             const foodDatabaseIndex = foodDatabase.indexOf(food);
             listItem.innerHTML = `
@@ -696,8 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderWeightHistory();
             updateWeightPrediction();
             // Define a data atual no input de data do peso ao abrir a aba
-            // Garantir que newWeightDateInput está disponível
-            if (newWeightDateInput) {
+            if (newWeightDateInput) { // Verifica se o elemento existe
                 newWeightDateInput.valueAsDate = new Date();
             }
         }
@@ -720,7 +720,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function userProfileComplete() {
-        // Verifica se userProfile não é nulo e se todas as propriedades essenciais estão preenchidas
         return userProfile &&
                userProfile.name &&
                !isNaN(userProfile.age) &&
@@ -728,7 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
                userProfile.gender &&
                !isNaN(userProfile.currentWeight) &&
                !isNaN(userProfile.targetWeight) &&
-               !isNaN(userProfile.activityFactor) &&
+               userProfile.activityFactor && // Já é um número de 1.2 a 1.9
                userProfile.targetDate; // targetDate é uma string de data
     }
 
@@ -763,7 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Usa removeAccents para a comparação
+        // Usa removeAccents para a comparação na busca por foodInfo
         const foodInfo = foodDatabase.find(food => removeAccents(food.name).toLowerCase() === removeAccents(foodName).toLowerCase());
         if (foodInfo) {
             const factor = quantity / 100;
@@ -773,7 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fats = parseFloat((foodInfo.fatsPer100g * factor).toFixed(1));
 
             dailyData.mealGroups[groupIndex].foods.push({
-                name: foodInfo.name,
+                name: foodInfo.name, // Usa o nome do banco de dados para consistência
                 quantity,
                 kcal,
                 protein,
@@ -876,30 +875,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${day}/${month}/${year}`;
     }
 
-    // Função auxiliar para converter "dd/mm/yyyy" para "yyyy-mm-dd"
+    // Função auxiliar para converter "dd/mm/yyyy" para "yyyy-mm-dd" (para criar Date objects)
     function formatDateToISO(dateString) {
         if (!dateString) return '';
         const [day, month, year] = dateString.split('/');
-        // Adiciona um 'Z' para indicar UTC, ou manipula timezone conforme necessário
-        // Para compatibilidade, é melhor criar a data no formato ISO completo
-        return `${year}-${month}-${day}T00:00:00Z`;
+        return `${year}-${month}-${day}`;
     }
 
-    function addWeightEntry(weight, dateString) {
-        const dateToAdd = dateString;
+    // Função para adicionar/atualizar um registro de peso no histórico, mantendo-o ordenado
+    function addWeightEntry(weight, dateStringBR) { // dateStringBR é no formato DD/MM/YYYY
+        const dateToAddBR = dateStringBR;
 
-        // Procura se já existe um registro para a data
-        const existingEntryIndex = weightHistory.findIndex(entry => entry.date === dateToAdd);
+        const existingEntryIndex = weightHistory.findIndex(entry => entry.date === dateToAddBR);
 
         if (existingEntryIndex !== -1) {
-            // Se existir, atualiza o peso para a data
             weightHistory[existingEntryIndex].weight = parseFloat(weight.toFixed(1));
         } else {
-            // Se não existir, adiciona um novo registro
-            weightHistory.push({ date: dateToAdd, weight: parseFloat(weight.toFixed(1)) });
+            weightHistory.push({ date: dateToAddBR, weight: parseFloat(weight.toFixed(1)) });
         }
 
-        // Garante que o histórico esteja sempre ordenado por data
+        // Ordena o histórico por data (do mais antigo ao mais recente)
         weightHistory.sort((a, b) => {
             const dateA = new Date(formatDateToISO(a.date));
             const dateB = new Date(formatDateToISO(b.date));
@@ -922,12 +917,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Converte a data para o formato DD/MM/YYYY para armazenar
-        const formattedDateBR = formatDateToBR(dateISO);
+        const formattedDateBR = formatDateToBR(dateISO); // Converte para DD/MM/YYYY para armazenar
 
-        addWeightEntry(weight, formattedDateBR); // Chama a função helper para adicionar/atualizar
+        // Chama a função auxiliar para adicionar/atualizar o peso e ordenar
+        addWeightEntry(weight, formattedDateBR);
 
-        // Atualiza o userProfile.currentWeight para o último peso no histórico
+        // Atualiza o userProfile.currentWeight para o último peso no histórico (após a ordenação)
         if (userProfile && weightHistory.length > 0) {
             userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -956,12 +951,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Converte a data atual para YYYY-MM-DD para usar no prompt de data tipo date
-        const currentISODate = formatDateToISO(entryToEdit.date).split('T')[0]; // Pega só a parte da data
-        let newDateISO = prompt(`Editar data para ${entryToEdit.date}. Insira a nova data (AAAA-MM-DD):`, currentISODate); // Solicita no formato ISO
+        const currentISODate = formatDateToISO(entryToEdit.date);
+        let newDateISO = prompt(`Editar data para ${entryToEdit.date}. Insira a nova data (AAAA-MM-DD):`, currentISODate);
         if (newDateISO === null) return;
 
         // Valida o formato AAAA-MM-DD e se é uma data real
-        const testDate = new Date(newDateISO + 'T00:00:00Z'); // Adiciona T00:00:00Z para evitar problemas de fuso horário
+        const testDate = new Date(newDateISO + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
         if (isNaN(testDate.getTime())) {
             alert('Data inválida. Por favor, insira uma data real no formato AAAA-MM-DD.');
             return;
@@ -969,7 +964,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formattedNewDateBR = formatDateToBR(newDateISO); // Converte para DD/MM/YYYY para armazenamento
 
-        // Verifica se a nova data já existe para outro registro
+        // Verifica se a nova data já existe para outro registro (exceto para o próprio registro sendo editado)
         const existingDateIndex = weightHistory.findIndex((entry, i) => i !== index && entry.date === formattedNewDateBR);
         if (existingDateIndex !== -1) {
             alert('Já existe um registro de peso para esta data. Por favor, escolha outra data ou edite o registro existente.');
@@ -979,7 +974,7 @@ document.addEventListener('DOMContentLoaded', () => {
         entryToEdit.weight = parseFloat(parsedNewWeight.toFixed(1));
         entryToEdit.date = formattedNewDateBR; // Armazena no formato BR
 
-        // Reordena o histórico após a edição e salva
+        // Após a edição, reordena o histórico e salva
         weightHistory.sort((a, b) => {
             const dateA = new Date(formatDateToISO(a.date));
             const dateB = new Date(formatDateToISO(b.date));
@@ -988,9 +983,9 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
         // Atualiza userProfile.currentWeight se o peso editado for o último no histórico (após a reordenação)
-        if (userProfile && weightHistory.length > 0 && weightHistory[weightHistory.length - 1].date === entryToEdit.date) {
-            userProfile.currentWeight = entryToEdit.weight;
-            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        if (userProfile && weightHistory.length > 0) {
+             userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
+             localStorage.setItem('userProfile', JSON.stringify(userProfile));
         }
 
         renderWeightHistory();
@@ -1007,6 +1002,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
             if (userProfile) {
+                // Atualiza o currentWeight para o último peso restante ou 0 se não houver mais registros
                 userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
                 localStorage.setItem('userProfile', JSON.stringify(userProfile));
             }
@@ -1030,6 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Usa removeAccents para a comparação
         const existingFood = foodDatabase.find(food => removeAccents(food.name).toLowerCase() === removeAccents(customFoodName).toLowerCase());
         if (existingFood) {
             alert('Um alimento com este nome já existe no banco de dados. Use um nome diferente.');
@@ -1070,6 +1067,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newFats = prompt(`Editar Gorduras de "${foodToEdit.name}" (${foodToEdit.fatsPer100g}g/100g). Novas Gorduras:`, foodToEdit.fatsPer100g);
         if (newFats === null || isNaN(parseFloat(newFats)) || parseFloat(newFats) < 0) return alert('Gorduras inválidas.');
 
+        // Usa removeAccents para a comparação
         const existingFoodWithNewName = foodDatabase.find((food, i) => i !== index && removeAccents(food.name).toLowerCase() === removeAccents(newName).toLowerCase());
         if (existingFoodWithNewName) {
             alert('Já existe um alimento com este novo nome. Por favor, escolha um nome diferente.');
@@ -1104,7 +1102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderMealGroups();
             alert('Alimento personalizado excluído.');
         }
-    }
+    });
 
     checkinCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', (event) => {
