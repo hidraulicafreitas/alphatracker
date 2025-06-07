@@ -14,9 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const addCustomFoodForm = document.getElementById('add-custom-food-form');
     const customFoodList = document.getElementById('custom-food-list');
 
-    // Remove a referência à welcomePage constante, pois ela será injetada dinamicamente
-    // const welcomePage = document.getElementById('welcome-page'); // REMOVIDO
-
     // Elementos de progresso na Home Page
     const userNameSpan = document.getElementById('user-name');
     const caloriesProgressBar = document.getElementById('calories-progress');
@@ -24,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const proteinProgressBar = document.getElementById('protein-progress');
     const proteinNum = document.getElementById('protein-num');
     const carbsProgressBar = document.getElementById('carbs-progress');
-    const carbsNum = document = document.getElementById('carbs-num');
+    const carbsNum = document.getElementById('carbs-num');
     const fatsProgressBar = document.getElementById('fats-progress');
     const fatsNum = document.getElementById('fats-num');
     const weightProgressBar = document.getElementById('weight-progress');
@@ -215,51 +212,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initApp() {
         checkDailyReset();
-
-        // Para forçar a exibição da mensagem de boas-vindas para TESTES.
-        // DESCOMENTE A LINHA ABAIXO, SALVE E RECARREGUE A PÁGINA.
-        // LEMBRE-SE DE COMENTAR OU REMOVER ELA DEPOIS DE TESTAR,
-        // para não apagar os dados do usuário a cada carregamento!
-        // localStorage.removeItem('userProfile');
-        // userProfile = null; // Garante que a variável local reflita a remoção do localStorage
-
         if (!userProfileComplete()) {
-            // Se o perfil não estiver completo, mostra a tela de boas-vindas
             showWelcomeScreen();
         } else {
-            // Caso contrário, renderiza o perfil e mostra a página inicial
-            // Esconde explicitamente a welcomePage (se ela foi mostrada anteriormente)
-            const existingWelcomePage = document.getElementById('welcome-page');
-            if (existingWelcomePage) {
-                existingWelcomePage.remove(); // Remove a welcome page do DOM
-            }
             renderUserProfile();
             updateProgressBars();
             renderMealGroups();
             renderCheckinHistory();
             renderWeightHistory();
             renderCustomFoodList();
-            showPage('home-page'); // Mostra a página inicial por padrão
-            // Garante que os botões de navegação estejam visíveis
-            navButtons.forEach(btn => btn.style.display = 'block');
+            updateWeightPrediction();
+            showPage('home-page');
         }
     }
 
     function showWelcomeScreen() {
-        // Oculta todas as outras páginas primeiro para garantir que apenas a de boas-vindas seja visível
         document.querySelectorAll('.page-content').forEach(page => {
             page.classList.remove('active');
-            page.style.display = 'none';
         });
-        
-        // Remove a página de boas-vindas se ela já existir para injetar uma nova
-        const existingWelcomePage = document.getElementById('welcome-page');
-        if (existingWelcomePage) {
-            existingWelcomePage.remove();
-        }
-
-        appContent.innerHTML = `
-            <section id="welcome-page">
+        navButtons.forEach(btn => btn.style.display = 'none');
+        document.getElementById('app-content').innerHTML = `
+            <section id="welcome-page" class="page-content active">
                 <h2 style="color: var(--vibrant-green); text-align: center; margin-bottom: 25px; font-family: 'Orbitron', sans-serif;">Bem-vindo ao Alpha Tracker!</h2>
                 <p style="text-align: center; color: var(--text-light); font-size: 1.1em; margin-bottom: 30px;">
                     Para começar a controlar seus macros e seu progresso, precisamos de algumas informações sobre você.
@@ -269,20 +242,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </p>
                 <button id="go-to-settings-btn" class="main-btn" style="display: block; margin: 0 auto;">Ir para Configurações</button>
             </section>
-        ` + appContent.innerHTML; // Adiciona a welcome page no início do appContent
-
-        // Esconde os botões de navegação enquanto a tela de boas-vindas estiver ativa
-        navButtons.forEach(btn => btn.style.display = 'none');
+        `;
+        document.getElementById('go-to-settings-btn').addEventListener('click', () => {
+            navButtons.forEach(btn => btn.style.display = 'block');
+            showPage('settings-page');
+        });
     }
 
-    // A delegação de eventos para o botão "Ir para Configurações"
-    // Isso garante que o clique seja sempre detectado, mesmo que o botão seja recriado no DOM.
-    document.addEventListener('click', (event) => {
-        if (event.target.id === 'go-to-settings-btn') {
-            navButtons.forEach(btn => btn.style.display = 'block'); // Mostra os botões de navegação
-            showPage('settings-page'); // Navega para a página de configurações
-        }
-    });
 
     function checkDailyReset() {
         const today = new Date().toLocaleDateString('pt-BR');
@@ -383,7 +349,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWeightPrediction();
         alert('Perfil salvo e metas recalculadas!');
 
-        // Garante que os botões de navegação estejam visíveis após preencher o perfil
         navButtons.forEach(btn => btn.style.display = 'block');
         showPage('home-page');
     }
@@ -498,10 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const initialWeightEntry = weightHistory[0];
         const initialWeight = initialWeightEntry.weight;
-        // Adaptação da data para garantir consistência no fuso horário
-        const initialDateParts = initialWeightEntry.date.split('/');
-        const initialDate = new Date(`<span class="math-inline">\{initialDateParts\[2\]\}\-</span>{initialDateParts[1]}-${initialDateParts[0]}T00:00:00`);
-
+        const initialDate = new Date(formatDateToISO(initialWeightEntry.date)); // Converter para YYYY-MM-DD para Date object
+        initialDate.setHours(0, 0, 0, 0);
 
         const daysTotal = (targetDate - today) / (1000 * 60 * 60 * 24);
         const daysPassedSinceStart = (today - initialDate) / (1000 * 60 * 60 * 24);
@@ -523,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Math.abs(lastWeight - targetWeight) < 0.1) {
             statusMessage = `**Meta atingida!** Seu peso atual é ${lastWeight.toFixed(1)} Kg.`;
         } else if (Math.abs(lastWeight - expectedWeightToday) < 0.5) { // Margem de erro de 0.5kg
-            statusMessage = `Você está no caminho certo! Seu peso atual (<span class="math-inline">\{lastWeight\.toFixed\(1\)\} Kg\) está próximo do esperado \(</span>{expectedWeightToday.toFixed(1)} Kg).`;
+            statusMessage = `Você está no caminho certo! Seu peso atual (${lastWeight.toFixed(1)} Kg) está próximo do esperado (${expectedWeightToday.toFixed(1)} Kg).`;
         } else if (userProfile.targetWeight > initialWeight) { // Meta de ganho
             if (lastWeight > expectedWeightToday) {
                 statusMessage = `Você está adiantado na sua meta de ganho de peso! Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
@@ -554,8 +517,8 @@ document.addEventListener('DOMContentLoaded', () => {
             mealGroupDiv.innerHTML = `
                 <h4>
                     ${group.name}
-                    <span class="meal-total-macros">Total: ${group.totalKcal} Kcal | P: ${group.totalProtein.toFixed(1)}g | C: ${group.totalCarbs.toFixed(1)}g | G: <span class="math-inline">\{group\.totalFats\.toFixed\(1\)\}g</span\>
-<button class\="remove\-meal\-group\-btn" data\-group\-index\="</span>{groupIndex}">X</button>
+                    <span class="meal-total-macros">Total: ${group.totalKcal} Kcal | P: ${group.totalProtein.toFixed(1)}g | C: ${group.totalCarbs.toFixed(1)}g | G: ${group.totalFats.toFixed(1)}g</span>
+                    <button class="remove-meal-group-btn" data-group-index="${groupIndex}">X</button>
                 </h4>
                 <ul class="meal-items-list" id="meal-list-${groupIndex}">
                     ${group.foods.map((food, foodIndex) => `
@@ -568,8 +531,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         </li>
                     `).join('')}
                 </ul>
-                <form class="add-food-form" data-group-index="<span class="math-inline">\{groupIndex\}"\>
-<input type\="text" class\="food\-search\-input" placeholder\="Buscar alimento\.\.\." list\="food\-suggestions\-</span>{groupIndex}">
+                <form class="add-food-form" data-group-index="${groupIndex}">
+                    <input type="text" class="food-search-input" placeholder="Buscar alimento..." list="food-suggestions-${groupIndex}">
                     <datalist id="food-suggestions-${groupIndex}"></datalist>
                     <input type="number" class="food-quantity" placeholder="Quantidade (g)" required>
                     <button type="submit">Adicionar Alimento</button>
@@ -604,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função para remover acentos
     function removeAccents(str) {
-        if (typeof str !== 'string' || str === null) return '';
+        if (typeof str !== 'string' || str === null) return ''; // Garante que é uma string e não é nulo
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
@@ -657,11 +620,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const listItem = document.createElement('li');
             const actualIndex = weightHistory.length - 1 - originalIndex;
             listItem.innerHTML = `
-                <span><span class="math-inline">\{entry\.date\}</span\>
-<span\></span>{entry.weight.toFixed(1)} Kg</span>
+                <span>${entry.date}</span>
+                <span>${entry.weight.toFixed(1)} Kg</span>
                 <div class="weight-actions">
-                    <button class="edit-weight-btn" data-index="<span class="math-inline">\{actualIndex\}"\>Editar</button\>
-<button class\="delete\-weight\-btn" data\-index\="</span>{actualIndex}">Excluir</button>
+                    <button class="edit-weight-btn" data-index="${actualIndex}">Editar</button>
+                    <button class="delete-weight-btn" data-index="${actualIndex}">Excluir</button>
                 </div>
             `;
             weightHistoryList.appendChild(listItem);
@@ -689,11 +652,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const foodDatabaseIndex = foodDatabase.indexOf(food);
             listItem.innerHTML = `
                 <div class="food-details">
-                    <strong><span class="math-inline">\{food\.name\}</strong\>
-<span\></span>{food.kcalPer100g} Kcal | P: ${food.proteinPer100g}g | C: ${food.carbsPer100g}g | G: <span class="math-inline">\{food\.fatsPer100g\}g</span\>
-</div\>
-<div class\="food\-actions"\>
-<button class\="edit\-custom\-food\-btn" data\-index\="</span>{foodDatabaseIndex}">Editar</button>
+                    <strong>${food.name}</strong>
+                    <span>${food.kcalPer100g} Kcal | P: ${food.proteinPer100g}g | C: ${food.carbsPer100g}g | G: ${food.fatsPer100g}g</span>
+                </div>
+                <div class="food-actions">
+                    <button class="edit-custom-food-btn" data-index="${foodDatabaseIndex}">Editar</button>
                     <button class="delete-custom-food-btn" data-index="${foodDatabaseIndex}">Excluir</button>
                 </div>
             `;
@@ -713,35 +676,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funções de Interação ---
 
     function showPage(pageId) {
-        // Esconde TODAS as seções de conteúdo que são filhas diretas de 'main'
-        // incluindo a welcome-page se ela estiver visível
-        document.querySelectorAll('main > section').forEach(page => {
-            page.classList.remove('active');
-            page.style.display = 'none'; // Garante que estejam escondidas via estilo inline
-        });
-
-        // Mostra a página de destino
-        const targetPage = document.getElementById(pageId);
-        if (targetPage) {
-            targetPage.classList.add('active');
-            targetPage.style.display = 'block'; // Mostra a página de destino
+        const welcomePage = document.getElementById('welcome-page');
+        if (welcomePage) {
+            welcomePage.remove();
+            navButtons.forEach(btn => btn.style.display = 'block');
         }
 
-        // Atualiza o estado ativo dos botões de navegação
+        document.querySelectorAll('.page-content').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById(pageId).classList.add('active');
+
         navButtons.forEach(btn => btn.classList.remove('active'));
         const activeNavButton = document.getElementById(`nav-${pageId.replace('-page', '')}`);
         if (activeNavButton) {
             activeNavButton.classList.add('active');
         }
 
-        // Garante que os botões de navegação estejam visíveis
-        navButtons.forEach(btn => btn.style.display = 'block');
-
-        // Lógica específica para páginas
         if (pageId === 'weight-page') {
             renderWeightHistory();
             updateWeightPrediction();
-            if (newWeightDateInput) {
+            // Define a data atual no input de data do peso ao abrir a aba
+            if (newWeightDateInput) { // Verifica se o elemento existe
                 newWeightDateInput.valueAsDate = new Date();
             }
         }
@@ -753,8 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // Se o perfil não estiver completo, e o botão clicado não for "Configurações",
-            // alerta e redireciona para Configurações.
             if (!userProfileComplete() && button.id !== 'nav-settings') {
                 alert('Por favor, complete seu perfil na aba de Configurações antes de usar outras funcionalidades.');
                 showPage('settings-page');
@@ -766,17 +720,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function userProfileComplete() {
-        // Verifica se todas as propriedades essenciais do userProfile estão preenchidas
         return userProfile &&
-               userProfile.name && userProfile.name.trim() !== '' &&
-               !isNaN(userProfile.age) && userProfile.age > 0 &&
-               !isNaN(userProfile.height) && userProfile.height > 0 &&
-               userProfile.gender && userProfile.gender.trim() !== '' &&
-               !isNaN(userProfile.currentWeight) && userProfile.currentWeight > 0 &&
-               !isNaN(userProfile.targetWeight) && userProfile.targetWeight > 0 &&
-               userProfile.activityFactor && !isNaN(userProfile.activityFactor) && userProfile.activityFactor > 0 &&
-               userProfile.targetDate && userProfile.targetDate.trim() !== ''; // targetDate é uma string de data
+               userProfile.name &&
+               !isNaN(userProfile.age) &&
+               !isNaN(userProfile.height) &&
+               userProfile.gender &&
+               !isNaN(userProfile.currentWeight) &&
+               !isNaN(userProfile.targetWeight) &&
+               userProfile.activityFactor && // Já é um número de 1.2 a 1.9
+               userProfile.targetDate; // targetDate é uma string de data
     }
+
 
     profileForm.addEventListener('submit', saveProfile);
 
@@ -918,14 +872,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatDateToBR(dateString) {
         if (!dateString) return '';
         const [year, month, day] = dateString.split('-');
-        return `<span class="math-inline">\{day\}/</span>{month}/${year}`;
+        return `${day}/${month}/${year}`;
     }
 
     // Função auxiliar para converter "dd/mm/yyyy" para "yyyy-mm-dd" (para criar Date objects)
     function formatDateToISO(dateString) {
         if (!dateString) return '';
         const [day, month, year] = dateString.split('/');
-        return `<span class="math-inline">\{year\}\-</span>{month}-${day}`;
+        return `${year}-${month}-${day}`;
     }
 
     // Função para adicionar/atualizar um registro de peso no histórico, mantendo-o ordenado
@@ -952,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addWeightEntryBtn.addEventListener('click', () => {
         const weight = parseFloat(newCurrentWeightInput.value);
-        const dateISO = newWeightDateInput.value; // Pega a data no formatoญี่ป-MM-DD
+        const dateISO = newWeightDateInput.value; // Pega a data no formato YYYY-MM-DD
 
         if (isNaN(weight) || weight <= 0) {
             alert('Por favor, insira um peso válido.');
@@ -996,7 +950,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Converte a data atual paraญี่ป-MM-DD para usar no prompt de data tipo date
+        // Converte a data atual para YYYY-MM-DD para usar no prompt de data tipo date
         const currentISODate = formatDateToISO(entryToEdit.date);
         let newDateISO = prompt(`Editar data para ${entryToEdit.date}. Insira a nova data (AAAA-MM-DD):`, currentISODate);
         if (newDateISO === null) return;
@@ -1013,3 +967,157 @@ document.addEventListener('DOMContentLoaded', () => {
         // Verifica se a nova data já existe para outro registro (exceto para o próprio registro sendo editado)
         const existingDateIndex = weightHistory.findIndex((entry, i) => i !== index && entry.date === formattedNewDateBR);
         if (existingDateIndex !== -1) {
+            alert('Já existe um registro de peso para esta data. Por favor, escolha outra data ou edite o registro existente.');
+            return;
+        }
+
+        entryToEdit.weight = parseFloat(parsedNewWeight.toFixed(1));
+        entryToEdit.date = formattedNewDateBR; // Armazena no formato BR
+
+        // Após a edição, reordena o histórico e salva
+        weightHistory.sort((a, b) => {
+            const dateA = new Date(formatDateToISO(a.date));
+            const dateB = new Date(formatDateToISO(b.date));
+            return dateA - dateB;
+        });
+        localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+
+        // Atualiza userProfile.currentWeight se o peso editado for o último no histórico (após a reordenação)
+        if (userProfile && weightHistory.length > 0) {
+             userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
+             localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        }
+
+        renderWeightHistory();
+        updateProgressBars();
+        updateWeightPrediction();
+        alert('Peso e data atualizados com sucesso!');
+    }
+
+
+    function deleteWeightEntry(event) {
+        const index = parseInt(event.target.dataset.index);
+        if (confirm(`Tem certeza que deseja excluir o registro de peso de ${weightHistory[index].weight} Kg em ${weightHistory[index].date}?`)) {
+            weightHistory.splice(index, 1);
+            localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+
+            if (userProfile) {
+                // Atualiza o currentWeight para o último peso restante ou 0 se não houver mais registros
+                userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            }
+            renderWeightHistory();
+            updateProgressBars();
+            updateWeightPrediction();
+            alert('Registro de peso excluído.');
+        }
+    }
+
+    addCustomFoodForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const customFoodName = document.getElementById('custom-food-name').value.trim();
+        const customFoodKcal = parseFloat(document.getElementById('custom-food-kcal').value);
+        const customFoodProtein = parseFloat(document.getElementById('custom-food-protein').value);
+        const customFoodCarbs = parseFloat(document.getElementById('custom-food-carbs').value);
+        const customFoodFats = parseFloat(document.getElementById('custom-food-fats').value);
+
+        if (!customFoodName || isNaN(customFoodKcal) || isNaN(customFoodProtein) || isNaN(customFoodCarbs) || isNaN(customFoodFats) || customFoodKcal < 0 || customFoodProtein < 0 || customFoodCarbs < 0 || customFoodFats < 0) {
+            alert('Por favor, preencha todos os campos do alimento personalizado com valores válidos.');
+            return;
+        }
+
+        // Usa removeAccents para a comparação
+        const existingFood = foodDatabase.find(food => removeAccents(food.name).toLowerCase() === removeAccents(customFoodName).toLowerCase());
+        if (existingFood) {
+            alert('Um alimento com este nome já existe no banco de dados. Use um nome diferente.');
+            return;
+        }
+
+        foodDatabase.push({
+            name: customFoodName,
+            kcalPer100g: customFoodKcal,
+            proteinPer100g: customFoodProtein,
+            carbsPer100g: customFoodCarbs,
+            fatsPer100g: customFoodFats,
+            isCustom: true
+        });
+        localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
+        renderMealGroups();
+        renderCustomFoodList();
+        addCustomFoodForm.reset();
+        alert(`Alimento "${customFoodName}" adicionado com sucesso!`);
+    });
+
+    function editCustomFood(event) {
+        const index = parseInt(event.target.dataset.index);
+        const foodToEdit = foodDatabase[index];
+
+        const newName = prompt(`Editar nome de "${foodToEdit.name}". Novo nome:`, foodToEdit.name);
+        if (newName === null || newName.trim() === '') return;
+
+        const newKcal = prompt(`Editar Kcal de "${foodToEdit.name}" (${foodToEdit.kcalPer100g} Kcal/100g). Novas Kcal:`, foodToEdit.kcalPer100g);
+        if (newKcal === null || isNaN(parseFloat(newKcal)) || parseFloat(newKcal) < 0) return alert('Kcal inválidas.');
+
+        const newProtein = prompt(`Editar Proteína de "${foodToEdit.name}" (${foodToEdit.proteinPer100g}g/100g). Nova Proteína:`, foodToEdit.proteinPer100g);
+        if (newProtein === null || isNaN(parseFloat(newProtein)) || parseFloat(newProtein) < 0) return alert('Proteína inválida.');
+
+        const newCarbs = prompt(`Editar Carboidratos de "${foodToEdit.name}" (${foodToEdit.carbsPer100g}g/100g). Novos Carboidratos:`, foodToEdit.carbsPer100g);
+        if (newCarbs === null || isNaN(parseFloat(newCarbs)) || parseFloat(newCarbs) < 0) return alert('Carboidratos inválidos.');
+
+        const newFats = prompt(`Editar Gorduras de "${foodToEdit.name}" (${foodToEdit.fatsPer100g}g/100g). Novas Gorduras:`, foodToEdit.fatsPer100g);
+        if (newFats === null || isNaN(parseFloat(newFats)) || parseFloat(newFats) < 0) return alert('Gorduras inválidas.');
+
+        // Usa removeAccents para a comparação
+        const existingFoodWithNewName = foodDatabase.find((food, i) => i !== index && removeAccents(food.name).toLowerCase() === removeAccents(newName).toLowerCase());
+        if (existingFoodWithNewName) {
+            alert('Já existe um alimento com este novo nome. Por favor, escolha um nome diferente.');
+            return;
+        }
+
+        foodToEdit.name = newName.trim();
+        foodToEdit.kcalPer100g = parseFloat(newKcal);
+        foodToEdit.proteinPer100g = parseFloat(newProtein);
+        foodToEdit.carbsPer100g = parseFloat(newCarbs);
+        foodToEdit.fatsPer100g = parseFloat(newFats);
+
+        localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
+        renderCustomFoodList();
+        renderMealGroups();
+        alert(`Alimento "${foodToEdit.name}" atualizado com sucesso!`);
+    }
+
+    function deleteCustomFood(event) {
+        const index = parseInt(event.target.dataset.index);
+        const foodToDelete = foodDatabase[index];
+
+        if (!foodToDelete.isCustom) {
+            alert('Você não pode excluir alimentos padrão do sistema.');
+            return;
+        }
+
+        if (confirm(`Tem certeza que deseja excluir o alimento personalizado "${foodToDelete.name}"?`)) {
+            foodDatabase.splice(index, 1);
+            localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
+            renderCustomFoodList();
+            renderMealGroups();
+            alert('Alimento personalizado excluído.');
+        }
+    });
+
+    checkinCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', (event) => {
+            const animationDiv = event.target.nextElementSibling.nextElementSibling;
+            if (event.target.checked) {
+                animationDiv.textContent = '🎉';
+                animationDiv.style.opacity = '1';
+                animationDiv.style.transform = 'scale(1)';
+            } else {
+                animationDiv.style.opacity = '0';
+                animationDiv.style.transform = 'scale(0)';
+                animationDiv.textContent = '';
+            }
+        });
+    });
+
+    initApp();
+});
