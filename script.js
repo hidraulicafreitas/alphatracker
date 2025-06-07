@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const addCustomFoodForm = document.getElementById('add-custom-food-form');
     const customFoodList = document.getElementById('custom-food-list');
 
-    // Elemento da página de boas-vindas
-    const welcomePage = document.getElementById('welcome-page');
+    // Remove a referência à welcomePage constante, pois ela será injetada dinamicamente
+    // const welcomePage = document.getElementById('welcome-page'); // REMOVIDO
 
     // Elementos de progresso na Home Page
     const userNameSpan = document.getElementById('user-name');
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const proteinProgressBar = document.getElementById('protein-progress');
     const proteinNum = document.getElementById('protein-num');
     const carbsProgressBar = document.getElementById('carbs-progress');
-    const carbsNum = document.getElementById('carbs-num');
+    const carbsNum = document = document.getElementById('carbs-num');
     const fatsProgressBar = document.getElementById('fats-progress');
     const fatsNum = document.getElementById('fats-num');
     const weightProgressBar = document.getElementById('weight-progress');
@@ -216,73 +216,73 @@ document.addEventListener('DOMContentLoaded', () => {
     function initApp() {
         checkDailyReset();
 
-        // PASSO IMPORTANTE PARA TESTE: Limpar userProfile para forçar a tela de boas-vindas.
-        // Se você já tem um perfil salvo e quer ver a tela de boas-vindas,
+        // Para forçar a exibição da mensagem de boas-vindas para TESTES.
         // DESCOMENTE A LINHA ABAIXO, SALVE E RECARREGUE A PÁGINA.
         // LEMBRE-SE DE COMENTAR OU REMOVER ELA DEPOIS DE TESTAR,
         // para não apagar os dados do usuário a cada carregamento!
         // localStorage.removeItem('userProfile');
         // userProfile = null; // Garante que a variável local reflita a remoção do localStorage
 
-
         if (!userProfileComplete()) {
-            // Se o perfil não estiver completo, mostra APENAS a tela de boas-vindas
-            // e esconde os botões de navegação e as outras páginas.
-            // Esconde TODAS as seções de conteúdo que são filhas diretas de 'main'
-            document.querySelectorAll('main > section').forEach(page => {
-                page.classList.remove('active');
-                page.style.display = 'none'; // Garante que estejam escondidas via estilo inline
-            });
-
-            if (welcomePage) {
-                welcomePage.style.display = 'block'; // Torna a welcomePage visível
-            }
-            navButtons.forEach(btn => btn.style.display = 'none'); // Esconde a navegação
-
-            // Adiciona o listener do botão da welcome page aqui, onde temos certeza que o botão existe
-            setupWelcomeButtonListener();
-
+            // Se o perfil não estiver completo, mostra a tela de boas-vindas
+            showWelcomeScreen();
         } else {
-            // Caso contrário, o perfil está completo.
-            // Esconde a welcomePage (se ela estiver visível por algum motivo)
-            if (welcomePage) {
-                welcomePage.style.display = 'none';
+            // Caso contrário, renderiza o perfil e mostra a página inicial
+            // Esconde explicitamente a welcomePage (se ela foi mostrada anteriormente)
+            const existingWelcomePage = document.getElementById('welcome-page');
+            if (existingWelcomePage) {
+                existingWelcomePage.remove(); // Remove a welcome page do DOM
             }
-            // Mostra os botões de navegação
-            navButtons.forEach(btn => btn.style.display = 'block');
-            // Renderiza o perfil e mostra a página inicial
             renderUserProfile();
             updateProgressBars();
             renderMealGroups();
             renderCheckinHistory();
             renderWeightHistory();
             renderCustomFoodList();
-            updateWeightPrediction();
             showPage('home-page'); // Mostra a página inicial por padrão
+            // Garante que os botões de navegação estejam visíveis
+            navButtons.forEach(btn => btn.style.display = 'block');
         }
     }
 
-    // Função dedicada para configurar o listener do botão da tela de boas-vindas
-    function setupWelcomeButtonListener() {
-        const goToSettingsBtn = document.getElementById('go-to-settings-btn');
-        if (goToSettingsBtn) {
-            // Remove qualquer listener existente antes de adicionar um novo para evitar duplicação
-            // Isso é importante pois initApp pode ser chamada mais de uma vez em cenários complexos
-            if (typeof goToSettingsBtn._currentClickListener === 'function') {
-                goToSettingsBtn.removeEventListener('click', goToSettingsBtn._currentClickListener);
-            }
-
-            const newClickListener = () => {
-                // Ao clicar no botão, mostra os botões de navegação e redireciona para configurações
-                navButtons.forEach(btn => btn.style.display = 'block');
-                showPage('settings-page');
-            };
-            goToSettingsBtn.addEventListener('click', newClickListener);
-            // Armazena a referência do listener para poder removê-lo no futuro
-            goToSettingsBtn._currentClickListener = newClickListener;
+    function showWelcomeScreen() {
+        // Oculta todas as outras páginas primeiro para garantir que apenas a de boas-vindas seja visível
+        document.querySelectorAll('.page-content').forEach(page => {
+            page.classList.remove('active');
+            page.style.display = 'none';
+        });
+        
+        // Remove a página de boas-vindas se ela já existir para injetar uma nova
+        const existingWelcomePage = document.getElementById('welcome-page');
+        if (existingWelcomePage) {
+            existingWelcomePage.remove();
         }
+
+        appContent.innerHTML = `
+            <section id="welcome-page">
+                <h2 style="color: var(--vibrant-green); text-align: center; margin-bottom: 25px; font-family: 'Orbitron', sans-serif;">Bem-vindo ao Alpha Tracker!</h2>
+                <p style="text-align: center; color: var(--text-light); font-size: 1.1em; margin-bottom: 30px;">
+                    Para começar a controlar seus macros e seu progresso, precisamos de algumas informações sobre você.
+                </p>
+                <p style="text-align: center; color: var(--text-gray); font-size: 1em; margin-bottom: 40px;">
+                    Por favor, preencha seu perfil na aba de configurações.
+                </p>
+                <button id="go-to-settings-btn" class="main-btn" style="display: block; margin: 0 auto;">Ir para Configurações</button>
+            </section>
+        ` + appContent.innerHTML; // Adiciona a welcome page no início do appContent
+
+        // Esconde os botões de navegação enquanto a tela de boas-vindas estiver ativa
+        navButtons.forEach(btn => btn.style.display = 'none');
     }
 
+    // A delegação de eventos para o botão "Ir para Configurações"
+    // Isso garante que o clique seja sempre detectado, mesmo que o botão seja recriado no DOM.
+    document.addEventListener('click', (event) => {
+        if (event.target.id === 'go-to-settings-btn') {
+            navButtons.forEach(btn => btn.style.display = 'block'); // Mostra os botões de navegação
+            showPage('settings-page'); // Navega para a página de configurações
+        }
+    });
 
     function checkDailyReset() {
         const today = new Date().toLocaleDateString('pt-BR');
@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const lastWeight = weightHistory[weightHistory.length - 1].weight;
         const targetWeight = userProfile.targetWeight;
-        const targetDate = new Date(userProfile.targetDate + 'T23:59:57-03:00'); // Fuso horário do Brasil -03
+        const targetDate = new Date(userProfile.targetDate + 'T23:59:59'); // Para incluir o dia inteiro
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const initialWeight = initialWeightEntry.weight;
         // Adaptação da data para garantir consistência no fuso horário
         const initialDateParts = initialWeightEntry.date.split('/');
-        const initialDate = new Date(`<span class="math-inline">\{initialDateParts\[2\]\}\-</span>{initialDateParts[1]}-${initialDateParts[0]}T00:00:00-03:00`); // Fuso horário do Brasil -03
+        const initialDate = new Date(`<span class="math-inline">\{initialDateParts\[2\]\}\-</span>{initialDateParts[1]}-${initialDateParts[0]}T00:00:00`);
 
 
         const daysTotal = (targetDate - today) / (1000 * 60 * 60 * 24);
@@ -555,3 +555,461 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h4>
                     ${group.name}
                     <span class="meal-total-macros">Total: ${group.totalKcal} Kcal | P: ${group.totalProtein.toFixed(1)}g | C: ${group.totalCarbs.toFixed(1)}g | G: <span class="math-inline">\{group\.totalFats\.toFixed\(1\)\}g</span\>
+<button class\="remove\-meal\-group\-btn" data\-group\-index\="</span>{groupIndex}">X</button>
+                </h4>
+                <ul class="meal-items-list" id="meal-list-${groupIndex}">
+                    ${group.foods.map((food, foodIndex) => `
+                        <li class="meal-item">
+                            <div class="meal-item-details">
+                                ${food.name} (${food.quantity}g)
+                                <span>${food.kcal} Kcal | P: ${food.protein.toFixed(1)}g | C: ${food.carbs.toFixed(1)}g | G: ${food.fats.toFixed(1)}g</span>
+                            </div>
+                            <button class="remove-food-item-btn" data-group-index="${groupIndex}" data-food-index="${foodIndex}">Remover</button>
+                        </li>
+                    `).join('')}
+                </ul>
+                <form class="add-food-form" data-group-index="<span class="math-inline">\{groupIndex\}"\>
+<input type\="text" class\="food\-search\-input" placeholder\="Buscar alimento\.\.\." list\="food\-suggestions\-</span>{groupIndex}">
+                    <datalist id="food-suggestions-${groupIndex}"></datalist>
+                    <input type="number" class="food-quantity" placeholder="Quantidade (g)" required>
+                    <button type="submit">Adicionar Alimento</button>
+                </form>
+            `;
+            mealGroupsContainer.appendChild(mealGroupDiv);
+        });
+
+        mealGroupsContainer.querySelectorAll('.remove-food-item-btn').forEach(button => {
+            button.addEventListener('click', removeFoodItem);
+        });
+
+        mealGroupsContainer.querySelectorAll('.remove-meal-group-btn').forEach(button => {
+            button.addEventListener('click', removeMealGroup);
+        });
+
+        mealGroupsContainer.querySelectorAll('.add-food-form').forEach(form => {
+            form.addEventListener('submit', addFoodItem);
+            const searchInput = form.querySelector('.food-search-input');
+            const dataList = form.querySelector(`datalist#food-suggestions-${form.dataset.groupIndex}`);
+
+            searchInput.addEventListener('input', () => handleFoodSearch(searchInput, dataList));
+            searchInput.addEventListener('change', (e) => {
+                if (foodDatabase.some(food => removeAccents(food.name).toLowerCase() === removeAccents(e.target.value).toLowerCase())) {
+                    // Alimento selecionado é válido
+                } else {
+                    e.target.value = ''; // Limpa se não for um alimento válido da lista
+                }
+            });
+        });
+    }
+
+    // Função para remover acentos
+    function removeAccents(str) {
+        if (typeof str !== 'string' || str === null) return '';
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function handleFoodSearch(inputElement, dataListElement) {
+        const searchTerm = removeAccents(inputElement.value).toLowerCase();
+        dataListElement.innerHTML = '';
+
+        if (searchTerm.length < 2) {
+            return;
+        }
+
+        const filteredFoods = foodDatabase.filter(food =>
+            removeAccents(food.name).toLowerCase().includes(searchTerm)
+        ).sort((a, b) => removeAccents(a.name).localeCompare(removeAccents(b.name)));
+
+        filteredFoods.forEach(food => {
+            const option = document.createElement('option');
+            option.value = food.name;
+            dataListElement.appendChild(option);
+        });
+    }
+
+    function renderCheckinHistory() {
+        checkinHistoryList.innerHTML = '';
+        if (checkinHistory.length === 0) {
+            checkinHistoryList.innerHTML = '<p class="no-data-message">Nenhum check-in registrado ainda.</p>';
+            return;
+        }
+        checkinHistory.slice(-7).reverse().forEach(entry => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <strong>${entry.date}:</strong>
+                ${entry.sleep ? '😴' : ''}
+                ${entry.workout ? '🏋️‍♂️' : ''}
+                ${entry.diet ? '🥗' : ''}
+                ${entry.nofap ? '🚫💦' : ''}
+            `;
+            checkinHistoryList.appendChild(listItem);
+        });
+    }
+
+    function renderWeightHistory() {
+        weightHistoryList.innerHTML = '';
+        if (weightHistory.length === 0) {
+            weightHistoryList.innerHTML = '<p class="no-data-message">Nenhum peso registrado ainda.</p>';
+            return;
+        }
+        // Exibe os pesos em ordem cronológica reversa (mais recente primeiro)
+        weightHistory.slice().reverse().forEach((entry, originalIndex) => {
+            const listItem = document.createElement('li');
+            const actualIndex = weightHistory.length - 1 - originalIndex;
+            listItem.innerHTML = `
+                <span><span class="math-inline">\{entry\.date\}</span\>
+<span\></span>{entry.weight.toFixed(1)} Kg</span>
+                <div class="weight-actions">
+                    <button class="edit-weight-btn" data-index="<span class="math-inline">\{actualIndex\}"\>Editar</button\>
+<button class\="delete\-weight\-btn" data\-index\="</span>{actualIndex}">Excluir</button>
+                </div>
+            `;
+            weightHistoryList.appendChild(listItem);
+        });
+
+        weightHistoryList.querySelectorAll('.edit-weight-btn').forEach(button => {
+            button.addEventListener('click', editWeightEntry);
+        });
+        weightHistoryList.querySelectorAll('.delete-weight-btn').forEach(button => {
+            button.addEventListener('click', deleteWeightEntry);
+        });
+    }
+
+    function renderCustomFoodList() {
+        customFoodList.innerHTML = '';
+        const customFoods = foodDatabase.filter(food => food.isCustom);
+
+        if (customFoods.length === 0) {
+            customFoodList.innerHTML = '<p class="no-data-message">Nenhum alimento personalizado adicionado.</p>';
+            return;
+        }
+
+        customFoods.forEach((food) => { // Removido o index do forEach pois o indexOf é mais seguro
+            const listItem = document.createElement('li');
+            const foodDatabaseIndex = foodDatabase.indexOf(food);
+            listItem.innerHTML = `
+                <div class="food-details">
+                    <strong><span class="math-inline">\{food\.name\}</strong\>
+<span\></span>{food.kcalPer100g} Kcal | P: ${food.proteinPer100g}g | C: ${food.carbsPer100g}g | G: <span class="math-inline">\{food\.fatsPer100g\}g</span\>
+</div\>
+<div class\="food\-actions"\>
+<button class\="edit\-custom\-food\-btn" data\-index\="</span>{foodDatabaseIndex}">Editar</button>
+                    <button class="delete-custom-food-btn" data-index="${foodDatabaseIndex}">Excluir</button>
+                </div>
+            `;
+            customFoodList.appendChild(listItem);
+        });
+
+        customFoodList.querySelectorAll('.edit-custom-food-btn').forEach(button => {
+            button.addEventListener('click', editCustomFood);
+        });
+
+        customFoodList.querySelectorAll('.delete-custom-food-btn').forEach(button => {
+            button.addEventListener('click', deleteCustomFood);
+        });
+    }
+
+
+    // --- Funções de Interação ---
+
+    function showPage(pageId) {
+        // Esconde TODAS as seções de conteúdo que são filhas diretas de 'main'
+        // incluindo a welcome-page se ela estiver visível
+        document.querySelectorAll('main > section').forEach(page => {
+            page.classList.remove('active');
+            page.style.display = 'none'; // Garante que estejam escondidas via estilo inline
+        });
+
+        // Mostra a página de destino
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) {
+            targetPage.classList.add('active');
+            targetPage.style.display = 'block'; // Mostra a página de destino
+        }
+
+        // Atualiza o estado ativo dos botões de navegação
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        const activeNavButton = document.getElementById(`nav-${pageId.replace('-page', '')}`);
+        if (activeNavButton) {
+            activeNavButton.classList.add('active');
+        }
+
+        // Garante que os botões de navegação estejam visíveis
+        navButtons.forEach(btn => btn.style.display = 'block');
+
+        // Lógica específica para páginas
+        if (pageId === 'weight-page') {
+            renderWeightHistory();
+            updateWeightPrediction();
+            if (newWeightDateInput) {
+                newWeightDateInput.valueAsDate = new Date();
+            }
+        }
+        if (pageId === 'settings-page') {
+            renderUserProfile();
+            renderCustomFoodList();
+        }
+    }
+
+    navButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Se o perfil não estiver completo, e o botão clicado não for "Configurações",
+            // alerta e redireciona para Configurações.
+            if (!userProfileComplete() && button.id !== 'nav-settings') {
+                alert('Por favor, complete seu perfil na aba de Configurações antes de usar outras funcionalidades.');
+                showPage('settings-page');
+                return;
+            }
+            const pageId = button.id.replace('nav-', '') + '-page';
+            showPage(pageId);
+        });
+    });
+
+    function userProfileComplete() {
+        // Verifica se todas as propriedades essenciais do userProfile estão preenchidas
+        return userProfile &&
+               userProfile.name && userProfile.name.trim() !== '' &&
+               !isNaN(userProfile.age) && userProfile.age > 0 &&
+               !isNaN(userProfile.height) && userProfile.height > 0 &&
+               userProfile.gender && userProfile.gender.trim() !== '' &&
+               !isNaN(userProfile.currentWeight) && userProfile.currentWeight > 0 &&
+               !isNaN(userProfile.targetWeight) && userProfile.targetWeight > 0 &&
+               userProfile.activityFactor && !isNaN(userProfile.activityFactor) && userProfile.activityFactor > 0 &&
+               userProfile.targetDate && userProfile.targetDate.trim() !== ''; // targetDate é uma string de data
+    }
+
+    profileForm.addEventListener('submit', saveProfile);
+
+    addMealGroupBtn.addEventListener('click', () => {
+        const mealGroupName = prompt('Qual o nome do grupo de refeição? (Ex: Café da Manhã)');
+        if (mealGroupName) {
+            dailyData.mealGroups.push({
+                name: mealGroupName,
+                foods: [],
+                totalKcal: 0,
+                totalProtein: 0,
+                totalCarbs: 0,
+                totalFats: 0
+            });
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+            renderMealGroups();
+        }
+    });
+
+    function addFoodItem(event) {
+        event.preventDefault();
+        const form = event.target;
+        const groupIndex = parseInt(form.dataset.groupIndex);
+        const foodName = form.querySelector('.food-search-input').value.trim();
+        const quantity = parseFloat(form.querySelector('.food-quantity').value);
+
+        if (!foodName || isNaN(quantity) || quantity <= 0) {
+            alert('Por favor, digite o nome de um alimento, selecione-o e insira uma quantidade válida.');
+            return;
+        }
+
+        // Usa removeAccents para a comparação na busca por foodInfo
+        const foodInfo = foodDatabase.find(food => removeAccents(food.name).toLowerCase() === removeAccents(foodName).toLowerCase());
+        if (foodInfo) {
+            const factor = quantity / 100;
+            const kcal = Math.round(foodInfo.kcalPer100g * factor);
+            const protein = parseFloat((foodInfo.proteinPer100g * factor).toFixed(1));
+            const carbs = parseFloat((foodInfo.carbsPer100g * factor).toFixed(1));
+            const fats = parseFloat((foodInfo.fatsPer100g * factor).toFixed(1));
+
+            dailyData.mealGroups[groupIndex].foods.push({
+                name: foodInfo.name, // Usa o nome do banco de dados para consistência
+                quantity,
+                kcal,
+                protein,
+                carbs,
+                fats
+            });
+
+            dailyData.mealGroups[groupIndex].totalKcal += kcal;
+            dailyData.mealGroups[groupIndex].totalProtein += protein;
+            dailyData.mealGroups[groupIndex].totalCarbs += carbs;
+            dailyData.mealGroups[groupIndex].totalFats += fats;
+
+            dailyData.consumedCalories += kcal;
+            dailyData.consumedProtein += protein;
+            dailyData.consumedCarbs += carbs;
+            dailyData.consumedFats += fats;
+
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+            renderMealGroups();
+            updateProgressBars();
+            form.reset();
+        } else {
+            alert('Alimento não encontrado no banco de dados. Verifique a ortografia ou adicione-o na aba de Configurações.');
+        }
+    }
+
+    function removeFoodItem(event) {
+        const groupIndex = parseInt(event.target.dataset.groupIndex);
+        const foodIndex = parseInt(event.target.dataset.foodIndex);
+
+        const foodToRemove = dailyData.mealGroups[groupIndex].foods[foodIndex];
+
+        dailyData.consumedCalories -= foodToRemove.kcal;
+        dailyData.consumedProtein -= foodToRemove.protein;
+        dailyData.consumedCarbs -= foodToRemove.carbs;
+        dailyData.consumedFats -= foodToRemove.fats;
+
+        dailyData.mealGroups[groupIndex].totalKcal -= foodToRemove.kcal;
+        dailyData.mealGroups[groupIndex].totalProtein -= foodToRemove.protein;
+        dailyData.mealGroups[groupIndex].totalCarbs -= foodToRemove.carbs;
+        dailyData.mealGroups[groupIndex].totalFats -= foodToRemove.fats;
+
+        dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1);
+
+        if (dailyData.mealGroups[groupIndex].foods.length === 0) {
+            dailyData.mealGroups.splice(groupIndex, 1);
+        }
+
+        localStorage.setItem('dailyData', JSON.stringify(dailyData));
+        renderMealGroups();
+        updateProgressBars();
+    }
+
+    function removeMealGroup(event) {
+        const groupIndex = parseInt(event.target.dataset.groupIndex);
+
+        if (confirm(`Tem certeza que deseja remover o grupo de refeição "${dailyData.mealGroups[groupIndex].name}"? Todos os alimentos dentro dele também serão removidos.`)) {
+            const groupToRemove = dailyData.mealGroups[groupIndex];
+
+            dailyData.consumedCalories -= groupToRemove.totalKcal;
+            dailyData.consumedProtein -= groupToRemove.totalProtein;
+            dailyData.consumedCarbs -= groupToRemove.totalCarbs;
+            dailyData.consumedFats -= groupToRemove.totalFats;
+
+            dailyData.mealGroups.splice(groupIndex, 1);
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+            renderMealGroups();
+            updateProgressBars();
+            alert('Grupo de refeição removido.');
+        }
+    }
+
+    saveCheckinBtn.addEventListener('click', () => {
+        const today = new Date().toLocaleDateString('pt-BR');
+        const existingCheckinIndex = checkinHistory.findIndex(entry => entry.date === today);
+
+        const currentCheckinState = {
+            sleep: document.getElementById('check-sleep').checked,
+            workout: document.getElementById('check-workout').checked,
+            diet: document.getElementById('check-diet').checked,
+            nofap: document.getElementById('check-nofap').checked,
+        };
+
+        if (existingCheckinIndex !== -1) {
+            checkinHistory[existingCheckinIndex] = { date: today, ...currentCheckinState };
+        } else {
+            checkinHistory.push({ date: today, ...currentCheckinState });
+        }
+
+        localStorage.setItem('checkinHistory', JSON.stringify(checkinHistory));
+        localStorage.setItem('currentDayCheckinState', JSON.stringify(currentCheckinState));
+        renderCheckinHistory();
+        alert('Check-in salvo!');
+    });
+
+    // Função auxiliar para converter "yyyy-mm-dd" para "dd/mm/yyyy"
+    function formatDateToBR(dateString) {
+        if (!dateString) return '';
+        const [year, month, day] = dateString.split('-');
+        return `<span class="math-inline">\{day\}/</span>{month}/${year}`;
+    }
+
+    // Função auxiliar para converter "dd/mm/yyyy" para "yyyy-mm-dd" (para criar Date objects)
+    function formatDateToISO(dateString) {
+        if (!dateString) return '';
+        const [day, month, year] = dateString.split('/');
+        return `<span class="math-inline">\{year\}\-</span>{month}-${day}`;
+    }
+
+    // Função para adicionar/atualizar um registro de peso no histórico, mantendo-o ordenado
+    function addWeightEntry(weight, dateStringBR) { // dateStringBR é no formato DD/MM/YYYY
+        const dateToAddBR = dateStringBR;
+
+        const existingEntryIndex = weightHistory.findIndex(entry => entry.date === dateToAddBR);
+
+        if (existingEntryIndex !== -1) {
+            weightHistory[existingEntryIndex].weight = parseFloat(weight.toFixed(1));
+        } else {
+            weightHistory.push({ date: dateToAddBR, weight: parseFloat(weight.toFixed(1)) });
+        }
+
+        // Ordena o histórico por data (do mais antigo ao mais recente)
+        weightHistory.sort((a, b) => {
+            const dateA = new Date(formatDateToISO(a.date));
+            const dateB = new Date(formatDateToISO(b.date));
+            return dateA - dateB;
+        });
+        localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+    }
+
+
+    addWeightEntryBtn.addEventListener('click', () => {
+        const weight = parseFloat(newCurrentWeightInput.value);
+        const dateISO = newWeightDateInput.value; // Pega a data no formatoญี่ป-MM-DD
+
+        if (isNaN(weight) || weight <= 0) {
+            alert('Por favor, insira um peso válido.');
+            return;
+        }
+        if (!dateISO) {
+            alert('Por favor, selecione uma data para o registro do peso.');
+            return;
+        }
+
+        const formattedDateBR = formatDateToBR(dateISO); // Converte para DD/MM/YYYY para armazenar
+
+        // Chama a função auxiliar para adicionar/atualizar o peso e ordenar
+        addWeightEntry(weight, formattedDateBR);
+
+        // Atualiza o userProfile.currentWeight para o último peso no histórico (após a ordenação)
+        if (userProfile && weightHistory.length > 0) {
+            userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        }
+
+        renderWeightHistory();
+        updateProgressBars();
+        updateWeightPrediction();
+        newCurrentWeightInput.value = '';
+        newWeightDateInput.valueAsDate = new Date(); // Reseta a data para hoje
+        alert('Peso registrado com sucesso!');
+    });
+
+
+    function editWeightEntry(event) {
+        const index = parseInt(event.target.dataset.index);
+        const entryToEdit = weightHistory[index];
+
+        const newWeight = prompt(`Editar peso para ${entryToEdit.weight} Kg. Insira o novo peso:`, entryToEdit.weight);
+        if (newWeight === null) return;
+
+        const parsedNewWeight = parseFloat(newWeight);
+        if (isNaN(parsedNewWeight) || parsedNewWeight <= 0) {
+            alert('Por favor, insira um peso válido.');
+            return;
+        }
+
+        // Converte a data atual paraญี่ป-MM-DD para usar no prompt de data tipo date
+        const currentISODate = formatDateToISO(entryToEdit.date);
+        let newDateISO = prompt(`Editar data para ${entryToEdit.date}. Insira a nova data (AAAA-MM-DD):`, currentISODate);
+        if (newDateISO === null) return;
+
+        // Valida o formato AAAA-MM-DD e se é uma data real
+        const testDate = new Date(newDateISO + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
+        if (isNaN(testDate.getTime())) {
+            alert('Data inválida. Por favor, insira uma data real no formato AAAA-MM-DD.');
+            return;
+        }
+
+        const formattedNewDateBR = formatDateToBR(newDateISO); // Converte para DD/MM/YYYY para armazenamento
+
+        // Verifica se a nova data já existe para outro registro (exceto para o próprio registro sendo editado)
+        const existingDateIndex = weightHistory.findIndex((entry, i) => i !== index && entry.date === formattedNewDateBR);
+        if (existingDateIndex !== -1) {
