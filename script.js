@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const weightNum = document.getElementById('weight-num');
     const weightRemainingText = document.getElementById('weight-remaining-text'); // Novo elemento para o que falta
     const weightPredictionText = document.getElementById('weight-prediction-text');
+    const weightLostGainedText = document.getElementById('weight-lost-gained-text'); // Novo elemento para peso perdido/ganho
 
     // Campo de data final da meta
     const targetDateInput = document.getElementById('target-date');
@@ -324,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderUserProfile();
         updateProgressBars();
         updateWeightPrediction();
-        alert('Perfil salvo e metas recalculadas!');
+        alert('Perfil salvo e o app está pronto para uso!'); // Mensagem de confirmação
         showPage('home-page'); // Redireciona para a home-page após salvar
     }
 
@@ -341,6 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
             weightNum.textContent = '0 Kg / 0 Kg';
             weightProgressBar.style.width = '0%';
             weightRemainingText.textContent = '';
+            weightLostGainedText.textContent = ''; // Limpa a nova linha também
             return;
         }
 
@@ -373,106 +375,124 @@ document.addEventListener('DOMContentLoaded', () => {
         fatsProgressBar.style.backgroundColor = dailyData.consumedFats > userProfile.targetFats ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
         // Peso
-        const currentWeight = userProfile.currentWeight; // Peso do perfil, que será o último peso registrado
         const targetWeight = userProfile.targetWeight;
         let weightProgress;
 
         if (weightHistory.length > 0) {
             const lastRecordedWeight = weightHistory[weightHistory.length - 1].weight;
+            const initialWeight = weightHistory[0].weight; // Primeiro peso registrado
+
             userProfile.currentWeight = lastRecordedWeight; // Garante que o peso do perfil seja o mais recente
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
 
-            const totalWeightDiff = Math.abs(userProfile.currentWeight - targetWeight);
-            const initialWeight = weightHistory[0].weight;
+            const totalWeightChangeGoal = Math.abs(initialWeight - targetWeight);
+            const currentWeightChange = Math.abs(initialWeight - lastRecordedWeight);
 
-            if (initialWeight === targetWeight) { // Caso a meta já seja o peso inicial
+            if (totalWeightChangeGoal === 0) { // Se a meta já é o peso inicial
                 weightProgress = 100;
                 weightRemainingText.textContent = `Meta de peso é ${targetWeight.toFixed(1)} Kg.`;
-            } else if (userProfile.currentWeight > targetWeight) { // Perder peso
-                // Progresso baseado na diferença entre o peso inicial e o atual, em relação ao total a perder
-                const progressToLose = initialWeight - lastRecordedWeight;
-                const totalToLose = initialWeight - targetWeight;
-                weightProgress = (progressToLose / totalToLose) * 100;
-                weightProgress = Math.max(0, Math.min(weightProgress, 100)); // Garante que esteja entre 0 e 100
-                const remaining = (lastRecordedWeight - targetWeight).toFixed(1);
+                weightLostGainedText.textContent = '';
+            } else {
+                weightProgress = (currentWeightChange / totalWeightChangeGoal) * 100;
+                weightProgress = Math.max(0, Math.min(weightProgress, 100));
+
+                const remaining = Math.abs(lastRecordedWeight - targetWeight).toFixed(1);
                 weightRemainingText.textContent = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
 
-            } else if (userProfile.currentWeight < targetWeight) { // Ganhar peso
-                const progressToGain = lastRecordedWeight - initialWeight;
-                const totalToGain = targetWeight - initialWeight;
-                weightProgress = (progressToGain / totalToGain) * 100;
-                weightProgress = Math.max(0, Math.min(weightProgress, 100)); // Garante que esteja entre 0 e 100
-                const remaining = (targetWeight - lastRecordedWeight).toFixed(1);
-                weightRemainingText.textContent = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
-            } else { // Já está na meta
-                weightProgress = 100;
-                weightRemainingText.textContent = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
+                const weightDiff = lastRecordedWeight - initialWeight;
+                if (weightDiff < 0) {
+                    weightLostGainedText.textContent = `Você já perdeu ${Math.abs(weightDiff).toFixed(1)} Kg!`;
+                } else if (weightDiff > 0) {
+                    weightLostGainedText.textContent = `Você já ganhou ${weightDiff.toFixed(1)} Kg!`;
+                } else {
+                    weightLostGainedText.textContent = '';
+                }
             }
+
 
             weightProgressBar.style.width = `${weightProgress}%`;
             weightProgressBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
             weightNum.textContent = `${lastRecordedWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
 
         } else {
-            weightNum.textContent = `${currentWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
+            weightNum.textContent = `${userProfile.currentWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
             weightProgressBar.style.width = '0%';
-            weightRemainingText.textContent = `Faltam ${Math.abs(currentWeight - targetWeight).toFixed(1)} Kg para atingir sua meta.`;
+            weightRemainingText.textContent = `Faltam ${Math.abs(userProfile.currentWeight - targetWeight).toFixed(1)} Kg para atingir sua meta.`;
+            weightLostGainedText.textContent = '';
         }
     }
 
 
     function updateWeightPrediction() {
-        if (!userProfile || weightHistory.length < 2 || !userProfile.targetDate) {
-            weightPredictionText.textContent = 'Registre mais pesos e defina a data final da meta para uma previsão.';
+        if (!userProfile || weightHistory.length < 1 || !userProfile.targetDate) {
+            weightPredictionText.textContent = 'Registre seu peso atual e defina a data final da meta para uma previsão.';
             return;
         }
 
-        const lastWeight = weightHistory[weightHistory.length - 1].weight;
+        const lastWeightEntry = weightHistory[weightHistory.length - 1];
+        const initialWeightEntry = weightHistory[0]; // O primeiro peso registrado é o ponto de partida
+        const initialWeight = initialWeightEntry.weight;
+        const initialDate = new Date(initialWeightEntry.date + 'T00:00:00'); // Garante que é meia-noite do dia
+
         const targetWeight = userProfile.targetWeight;
         const targetDate = new Date(userProfile.targetDate + 'T23:59:59'); // Para incluir o dia inteiro
+
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Zera hora para comparação de datas
 
-        const initialWeightEntry = weightHistory[0];
-        const initialWeight = initialWeightEntry.weight;
-        const initialDate = new Date(initialWeightEntry.date);
-        initialDate.setHours(0, 0, 0, 0);
+        // Calcula a duração total em dias da meta (do peso inicial até a data final)
+        const totalDurationDays = (targetDate.getTime() - initialDate.getTime()) / (1000 * 60 * 60 * 24);
 
-        const daysTotal = (targetDate - today) / (1000 * 60 * 60 * 24);
-        const daysPassedSinceStart = (today - initialDate) / (1000 * 60 * 60 * 24);
-
-        if (daysTotal <= 0) {
-            weightPredictionText.textContent = 'A data final da meta deve ser no futuro.';
-            if (Math.abs(lastWeight - targetWeight) < 0.1) {
+        if (totalDurationDays <= 0) {
+            if (Math.abs(lastWeightEntry.weight - targetWeight) < 0.1) {
                 weightPredictionText.textContent = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
             } else if (today > targetDate) {
-                weightPredictionText.textContent = `A data da sua meta (${userProfile.targetDate}) já passou. Você terminou em ${lastWeight.toFixed(1)} Kg.`;
+                weightPredictionText.textContent = `A data da sua meta (${userProfile.targetDate}) já passou. Você terminou em ${lastWeightEntry.weight.toFixed(1)} Kg.`;
+            } else {
+                weightPredictionText.textContent = 'A data final da meta deve ser no futuro.';
             }
             return;
         }
 
-        const requiredChangePerDay = (targetWeight - initialWeight) / ((targetDate - initialDate) / (1000 * 60 * 60 * 24));
-        const expectedWeightToday = initialWeight + (requiredChangePerDay * daysPassedSinceStart);
+        // Calcula o progresso em dias desde o peso inicial
+        const daysPassedSinceInitial = (today.getTime() - initialDate.getTime()) / (1000 * 60 * 60 * 24);
+
+        if (daysPassedSinceInitial < 0) { // Se a data inicial está no futuro (não deveria acontecer se initialWeightEntry.date é o primeiro registro)
+            weightPredictionText.textContent = 'Aguardando o início da sua meta de peso.';
+            return;
+        }
+
+        // Calcula a taxa de mudança de peso por dia necessária para atingir a meta
+        const totalWeightDifference = targetWeight - initialWeight;
+        const requiredChangePerDay = totalWeightDifference / totalDurationDays;
+
+        // Calcula o peso esperado para hoje
+        const expectedWeightToday = initialWeight + (requiredChangePerDay * daysPassedSinceInitial);
 
         let statusMessage = '';
-        if (Math.abs(lastWeight - targetWeight) < 0.1) {
-            statusMessage = `**Meta atingida!** Seu peso atual é ${lastWeight.toFixed(1)} Kg.`;
-        } else if (Math.abs(lastWeight - expectedWeightToday) < 0.5) { // Margem de erro de 0.5kg
-            statusMessage = `Você está no caminho certo! Seu peso atual (${lastWeight.toFixed(1)} Kg) está próximo do esperado (${expectedWeightToday.toFixed(1)} Kg).`;
-        } else if (userProfile.targetWeight > userProfile.currentWeight) { // Meta de ganho
-            if (lastWeight > expectedWeightToday) {
-                statusMessage = `Você está adiantado na sua meta de ganho de peso! Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+        const deviation = lastWeightEntry.weight - expectedWeightToday; // Diferença entre peso atual e esperado
+
+        if (Math.abs(deviation) < 0.2) { // Margem de erro de 0.2kg
+            statusMessage = `Você está no caminho certo! Seu peso atual (${lastWeightEntry.weight.toFixed(1)} Kg) está próximo do esperado (${expectedWeightToday.toFixed(1)} Kg).`;
+        } else if (targetWeight > initialWeight) { // Meta de ganho de peso
+            if (deviation > 0) {
+                statusMessage = `Você está adiantado na sua meta de ganho de peso! Atual: ${lastWeightEntry.weight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
             } else {
-                statusMessage = `Você está um pouco atrasado na sua meta de ganho de peso. Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+                statusMessage = `Você está um pouco atrasado na sua meta de ganho de peso. Atual: ${lastWeightEntry.weight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
             }
-        } else { // Meta de perda
-            if (lastWeight < expectedWeightToday) {
-                statusMessage = `Você está adiantado na sua meta de perda de peso! Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+        } else { // Meta de perda de peso
+            if (deviation < 0) {
+                statusMessage = `Você está adiantado na sua meta de perda de peso! Atual: ${lastWeightEntry.weight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
             } else {
-                statusMessage = `Você está um pouco atrasado na sua meta de perda de peso. Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+                statusMessage = `Você está um pouco atrasado na sua meta de perda de peso. Atual: ${lastWeightEntry.weight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
             }
         }
         weightPredictionText.textContent = statusMessage;
+    }
+
+    // Função auxiliar para remover acentos e converter para minúsculas
+    function normalizeString(str) {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     }
 
 
@@ -531,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             searchInput.addEventListener('input', () => handleFoodSearch(searchInput, dataList));
             searchInput.addEventListener('change', (e) => { // Preenche automaticamente ao selecionar da lista
-                if (foodDatabase.some(food => food.name === e.target.value)) {
+                if (foodDatabase.some(food => normalizeString(food.name) === normalizeString(e.target.value))) {
                     // Alimento selecionado é válido
                 } else {
                     e.target.value = ''; // Limpa se não for um alimento válido da lista
@@ -541,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleFoodSearch(inputElement, dataListElement) {
-        const searchTerm = inputElement.value.toLowerCase();
+        const searchTerm = normalizeString(inputElement.value); // Normaliza para busca
         dataListElement.innerHTML = ''; // Limpa sugestões antigas
 
         if (searchTerm.length < 2) { // Começa a pesquisar com 2 ou mais caracteres
@@ -549,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const filteredFoods = foodDatabase.filter(food =>
-            food.name.toLowerCase().includes(searchTerm)
+            normalizeString(food.name).includes(searchTerm) // Normaliza para comparação
         ).sort((a, b) => a.name.localeCompare(b.name));
 
         filteredFoods.forEach(food => {
@@ -707,7 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const foodInfo = foodDatabase.find(food => food.name.toLowerCase() === foodName.toLowerCase()); // Busca exata
+        const foodInfo = foodDatabase.find(food => normalizeString(food.name) === normalizeString(foodName)); // Busca exata normalizada
         if (foodInfo) {
             const factor = quantity / 100;
             const kcal = Math.round(foodInfo.kcalPer100g * factor);
@@ -914,7 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Verifica se o alimento já existe para evitar duplicatas (incluindo os padrão)
         const allFoods = defaultFoods.concat(foodDatabase.filter(food => food.isCustom)); // Inclui padrões na verificação
-        const existingFood = allFoods.find(food => food.name.toLowerCase() === customFoodName.toLowerCase());
+        const existingFood = allFoods.find(food => normalizeString(food.name) === normalizeString(customFoodName)); // Normaliza para comparação
         if (existingFood) {
             alert('Um alimento com este nome já existe no banco de dados. Use um nome diferente.');
             return;
@@ -955,7 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newFats === null || isNaN(parseFloat(newFats)) || parseFloat(newFats) < 0) return alert('Gorduras inválidas.');
 
         // Verifica duplicidade para o novo nome, excluindo o próprio alimento que está sendo editado
-        const existingFoodWithNewName = foodDatabase.find((food, i) => i !== index && food.name.toLowerCase() === newName.toLowerCase());
+        const existingFoodWithNewName = foodDatabase.find((food, i) => i !== index && normalizeString(food.name) === normalizeString(newName)); // Normaliza para comparação
         if (existingFoodWithNewName) {
             alert('Já existe um alimento com este novo nome. Por favor, escolha um nome diferente.');
             return;
