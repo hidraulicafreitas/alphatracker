@@ -233,11 +233,35 @@ form {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative; /* Para posicionar o botão de remover grupo */
 }
 
 .meal-group h4 .meal-total-macros {
     font-size: 0.8em;
     color: var(--text-gray);
+    margin-left: auto; /* Empurra para a direita */
+    margin-right: 10px; /* Espaçamento antes do botão X */
+}
+
+.meal-group h4 .remove-meal-group-btn {
+    background-color: var(--vibrant-red);
+    color: white;
+    border: none;
+    border-radius: 50%; /* Torna-o circular */
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0; /* Não deixa encolher */
+}
+
+.meal-group h4 .remove-meal-group-btn:hover {
+    background-color: #c0392b;
+    transform: scale(1.1);
 }
 
 .meal-items-list {
@@ -268,7 +292,8 @@ form {
     font-size: 0.8em;
 }
 
-.meal-item button {
+/* Botões de remover alimento dentro do grupo */
+.meal-item .remove-food-item-btn { /* Nova classe para diferenciar */
     background-color: var(--vibrant-red);
     color: white;
     border: none;
@@ -279,9 +304,10 @@ form {
     transition: background-color 0.2s ease;
 }
 
-.meal-item button:hover {
+.meal-item .remove-food-item-btn:hover {
     background-color: #c0392b;
 }
+
 
 /* Add Food Form with Search */
 .add-food-form {
@@ -387,13 +413,6 @@ form {
     transform: translate(-50%, -50%);
 }
 
-.checkin-item label {
-    flex-grow: 1;
-    font-size: 1.1em;
-    font-weight: bold;
-    cursor: pointer;
-}
-
 .check-animation {
     width: 30px;
     height: 30px;
@@ -483,6 +502,31 @@ form {
     color: var(--vibrant-orange);
 }
 
+.weight-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.weight-actions button {
+    background-color: var(--vibrant-orange);
+    color: var(--primary-dark);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: background-color 0.2s ease;
+}
+
+.weight-actions button.delete-weight-btn {
+    background-color: var(--vibrant-red);
+}
+
+.weight-actions button:hover {
+    filter: brightness(0.9);
+}
+
+
 /* Settings Page Specifics */
 .settings-section {
     background-color: var(--accent-blue);
@@ -496,7 +540,6 @@ form {
     color: var(--vibrant-orange);
     text-align: center;
     margin-bottom: 20px;
-    font-size: 1.5em;
     font-family: 'Orbitron', sans-serif;
 }
 
@@ -524,6 +567,59 @@ form {
 
 .input-group-inline input {
     flex-grow: 1;
+}
+
+/* Lista de alimentos personalizados */
+#custom-food-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+}
+
+#custom-food-list li {
+    background-color: var(--secondary-dark);
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95em;
+    border: 1px solid var(--border-color);
+}
+
+#custom-food-list li .food-details {
+    display: flex;
+    flex-direction: column;
+}
+
+#custom-food-list li .food-details span {
+    color: var(--text-gray);
+    font-size: 0.8em;
+}
+
+.food-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.food-actions button {
+    background-color: var(--vibrant-orange);
+    color: var(--primary-dark);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: background-color 0.2s ease;
+}
+
+.food-actions button:hover {
+    filter: brightness(0.9);
+}
+
+.food-actions .delete-custom-food-btn {
+    background-color: var(--vibrant-red);
 }
 
 
