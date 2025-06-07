@@ -216,21 +216,38 @@ document.addEventListener('DOMContentLoaded', () => {
     function initApp() {
         checkDailyReset();
 
-        // Limpar userProfile para forçar a tela de boas-vindas para TESTES.
-        // COMENTE OU REMOVA ESTA LINHA APÓS CONFIRMAR QUE FUNCIONA!
+        // PASSO IMPORTANTE PARA TESTE: Limpar userProfile para forçar a tela de boas-vindas.
+        // Se você já tem um perfil salvo e quer ver a tela de boas-vindas,
+        // DESCOMENTE A LINHA ABAIXO, SALVE E RECARREGUE A PÁGINA.
+        // LEMBRE-SE DE COMENTAR OU REMOVER ELA DEPOIS DE TESTAR,
+        // para não apagar os dados do usuário a cada carregamento!
         // localStorage.removeItem('userProfile');
-        // userProfile = null; // Atualiza a variável local para refletir a remoção
+        // userProfile = null; // Garante que a variável local reflita a remoção do localStorage
+
 
         if (!userProfileComplete()) {
-            // Se o perfil não estiver completo, mostra apenas a tela de boas-vindas e esconde a navegação
-            showWelcomeScreen();
-        } else {
-            // Caso contrário, renderiza o perfil e mostra a página inicial
-            // Esconde explicitamente a welcomePage antes de mostrar as outras
+            // Se o perfil não estiver completo, mostra APENAS a tela de boas-vindas
+            // e esconde os botões de navegação.
             if (welcomePage) {
-                welcomePage.classList.remove('active');
+                welcomePage.style.display = 'block'; // Garante que esteja visível
+            }
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.style.display = 'none'; // Esconde todas as outras páginas
+            });
+            navButtons.forEach(btn => btn.style.display = 'none'); // Esconde a navegação
+
+            // Adiciona o listener do botão aqui, onde temos certeza que o botão existe
+            setupWelcomeButtonListener();
+
+        } else {
+            // Caso contrário, o perfil está completo.
+            // Esconde a welcomePage (se ela estiver visível por algum motivo)
+            if (welcomePage) {
                 welcomePage.style.display = 'none';
             }
+            // Mostra os botões de navegação
+            navButtons.forEach(btn => btn.style.display = 'block');
+            // Renderiza o perfil e mostra a página inicial
             renderUserProfile();
             updateProgressBars();
             renderMealGroups();
@@ -239,35 +256,16 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCustomFoodList();
             updateWeightPrediction();
             showPage('home-page'); // Mostra a página inicial por padrão
-            // Garante que os botões de navegação estejam visíveis se o perfil já estiver completo
-            navButtons.forEach(btn => btn.style.display = 'block');
         }
     }
 
-    function showWelcomeScreen() {
-        // Esconde todas as seções de conteúdo da página que possuem a classe 'page-content'
-        document.querySelectorAll('.page-content').forEach(page => {
-            page.classList.remove('active');
-            page.style.display = 'none'; // Garante que estejam escondidas
-        });
-
-        // Mostra apenas a página de boas-vindas
-        if (welcomePage) {
-            welcomePage.classList.add('active');
-            welcomePage.style.display = 'block';
-        }
-
-        // Esconde os botões de navegação enquanto a tela de boas-vindas estiver ativa
-        navButtons.forEach(btn => btn.style.display = 'none');
-
-        // Adiciona o event listener para o botão "Ir para Configurações"
+    // Função dedicada para configurar o listener do botão da tela de boas-vindas
+    function setupWelcomeButtonListener() {
         const goToSettingsBtn = document.getElementById('go-to-settings-btn');
         if (goToSettingsBtn) {
-            // Remove o listener existente para evitar múltiplos binds se a função for chamada novamente.
-            // Isso é importante porque welcomePage não é removida, então o listener pode ser duplicado.
-            const oldClickListener = goToSettingsBtn._currentClickListener;
-            if (oldClickListener) {
-                goToSettingsBtn.removeEventListener('click', oldClickListener);
+            // Remove qualquer listener existente antes de adicionar um novo para evitar duplicação
+            if (typeof goToSettingsBtn._currentClickListener === 'function') {
+                goToSettingsBtn.removeEventListener('click', goToSettingsBtn._currentClickListener);
             }
 
             const newClickListener = () => {
@@ -276,7 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showPage('settings-page');
             };
             goToSettingsBtn.addEventListener('click', newClickListener);
-            goToSettingsBtn._currentClickListener = newClickListener; // Armazena o listener para futura remoção
+            // Armazena a referência do listener para poder removê-lo no futuro
+            goToSettingsBtn._currentClickListener = newClickListener;
         }
     }
 
@@ -495,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const initialWeightEntry = weightHistory[0];
         const initialWeight = initialWeightEntry.weight;
-        const initialDate = new Date(formatDateToISO(initialWeightEntry.date)); // Converter para YYYY-MM-DD para Date object
+        const initialDate = new Date(formatDateToISO(initialWeightEntry.date)); // Converter paraญี่ป-MM-DD para Date object
         initialDate.setHours(0, 0, 0, 0);
 
         const daysTotal = (targetDate - today) / (1000 * 60 * 60 * 24);
@@ -708,8 +707,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funções de Interação ---
 
     function showPage(pageId) {
-        // Esconde TODAS as seções de conteúdo
-        document.querySelectorAll('main > section').forEach(page => { // Seleciona todas as seções diretamente dentro de 'main'
+        // Esconde TODAS as seções de conteúdo que são filhas diretas de 'main'
+        document.querySelectorAll('main > section').forEach(page => {
             page.classList.remove('active');
             page.style.display = 'none'; // Garante que estejam escondidas via estilo inline
         });
@@ -760,15 +759,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function userProfileComplete() {
+        // Verifica se todas as propriedades essenciais do userProfile estão preenchidas
         return userProfile &&
-               userProfile.name &&
-               !isNaN(userProfile.age) &&
-               !isNaN(userProfile.height) &&
-               userProfile.gender &&
-               !isNaN(userProfile.currentWeight) &&
-               !isNaN(userProfile.targetWeight) &&
-               userProfile.activityFactor &&
-               userProfile.targetDate;
+               userProfile.name && userProfile.name.trim() !== '' &&
+               !isNaN(userProfile.age) && userProfile.age > 0 &&
+               !isNaN(userProfile.height) && userProfile.height > 0 &&
+               userProfile.gender && userProfile.gender.trim() !== '' &&
+               !isNaN(userProfile.currentWeight) && userProfile.currentWeight > 0 &&
+               !isNaN(userProfile.targetWeight) && userProfile.targetWeight > 0 &&
+               userProfile.activityFactor && !isNaN(userProfile.activityFactor) && userProfile.activityFactor > 0 &&
+               userProfile.targetDate && userProfile.targetDate.trim() !== ''; // targetDate é uma string de data
     }
 
     profileForm.addEventListener('submit', saveProfile);
@@ -945,7 +945,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addWeightEntryBtn.addEventListener('click', () => {
         const weight = parseFloat(newCurrentWeightInput.value);
-        const dateISO = newWeightDateInput.value; // Pega a data no formato YYYY-MM-DD
+        const dateISO = newWeightDateInput.value; // Pega a data no formatoญี่ป-MM-DD
 
         if (isNaN(weight) || weight <= 0) {
             alert('Por favor, insira um peso válido.');
@@ -989,7 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Converte a data atual para YYYY-MM-DD para usar no prompt de data tipo date
+        // Converte a data atual paraญี่ป-MM-DD para usar no prompt de data tipo date
         const currentISODate = formatDateToISO(entryToEdit.date);
         let newDateISO = prompt(`Editar data para ${entryToEdit.date}. Insira a nova data (AAAA-MM-DD):`, currentISODate);
         if (newDateISO === null) return;
