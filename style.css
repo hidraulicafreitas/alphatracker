@@ -656,10 +656,6 @@ form {
         padding: 10px;
     }
 
-    .add-food-form {
-        flex-direction: column;
-    }
-
     .input-group-inline { /* Ajuste para o grupo inline em telas pequenas */
         flex-direction: column;
         align-items: stretch;
