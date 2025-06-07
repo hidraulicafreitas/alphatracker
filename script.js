@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const addCustomFoodForm = document.getElementById('add-custom-food-form');
     const customFoodList = document.getElementById('custom-food-list');
 
+    // Elemento da página de boas-vindas
+    const welcomePage = document.getElementById('welcome-page'); //
+
     // Elementos de progresso na Home Page
     const userNameSpan = document.getElementById('user-name');
     const caloriesProgressBar = document.getElementById('calories-progress');
@@ -213,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function initApp() {
         checkDailyReset();
         if (!userProfileComplete()) {
-            showWelcomeScreen();
+            showWelcomeScreen(); //
         } else {
             renderUserProfile();
             updateProgressBars();
@@ -227,26 +230,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showWelcomeScreen() {
+        // Esconde todas as seções de conteúdo da página
         document.querySelectorAll('.page-content').forEach(page => {
             page.classList.remove('active');
+            page.style.display = 'none'; // Garante que estejam escondidas
         });
+
+        // Mostra apenas a página de boas-vindas
+        welcomePage.classList.add('active');
+        welcomePage.style.display = 'block';
+
+        // Esconde os botões de navegação
         navButtons.forEach(btn => btn.style.display = 'none');
-        document.getElementById('app-content').innerHTML = `
-            <section id="welcome-page" class="page-content active">
-                <h2 style="color: var(--vibrant-green); text-align: center; margin-bottom: 25px; font-family: 'Orbitron', sans-serif;">Bem-vindo ao Alpha Tracker!</h2>
-                <p style="text-align: center; color: var(--text-light); font-size: 1.1em; margin-bottom: 30px;">
-                    Para começar a controlar seus macros e seu progresso, precisamos de algumas informações sobre você.
-                </p>
-                <p style="text-align: center; color: var(--text-gray); font-size: 1em; margin-bottom: 40px;">
-                    Por favor, preencha seu perfil na aba de configurações.
-                </p>
-                <button id="go-to-settings-btn" class="main-btn" style="display: block; margin: 0 auto;">Ir para Configurações</button>
-            </section>
-        `;
-        document.getElementById('go-to-settings-btn').addEventListener('click', () => {
-            navButtons.forEach(btn => btn.style.display = 'block');
-            showPage('settings-page');
-        });
+
+        // Adiciona o event listener para o botão "Ir para Configurações"
+        const goToSettingsBtn = document.getElementById('go-to-settings-btn'); //
+        if (goToSettingsBtn) { // Garante que o botão exista no DOM
+            // Remove o listener existente para evitar múltiplos binds se a função for chamada novamente
+            const oldClickListener = goToSettingsBtn._currentClickListener; //
+            if (oldClickListener) { //
+                goToSettingsBtn.removeEventListener('click', oldClickListener); //
+            }
+
+            const newClickListener = () => { //
+                navButtons.forEach(btn => btn.style.display = 'block'); // Mostra os botões de navegação
+                showPage('settings-page'); // Navega para a página de configurações
+            };
+            goToSettingsBtn.addEventListener('click', newClickListener); //
+            goToSettingsBtn._currentClickListener = newClickListener; // Armazena o listener para futura remoção
+        }
     }
 
 
@@ -676,21 +688,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funções de Interação ---
 
     function showPage(pageId) {
-        const welcomePage = document.getElementById('welcome-page');
-        if (welcomePage) {
-            welcomePage.remove();
-            navButtons.forEach(btn => btn.style.display = 'block');
-        }
-
+        // Esconde todas as seções de conteúdo da página
         document.querySelectorAll('.page-content').forEach(page => {
             page.classList.remove('active');
+            page.style.display = 'none'; // Garante que todas as páginas estão escondidas
         });
-        document.getElementById(pageId).classList.add('active');
 
-        navButtons.forEach(btn => btn.classList.remove('active'));
-        const activeNavButton = document.getElementById(`nav-${pageId.replace('-page', '')}`);
-        if (activeNavButton) {
-            activeNavButton.classList.add('active');
+        // Mostra a página de destino
+        const targetPage = document.getElementById(pageId); //
+        if (targetPage) { //
+            targetPage.classList.add('active'); //
+            targetPage.style.display = 'block'; //
+        }
+
+        // Atualiza o estado ativo dos botões de navegação
+        navButtons.forEach(btn => btn.classList.remove('active')); //
+        const activeNavButton = document.getElementById(`nav-${pageId.replace('-page', '')}`); //
+        if (activeNavButton) { //
+            activeNavButton.classList.add('active'); //
         }
 
         if (pageId === 'weight-page') {
