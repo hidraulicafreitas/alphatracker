@@ -63,6 +63,28 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Camarão Cozido', kcalPer100g: 85, proteinPer100g: 20, carbsPer100g: 0, fatsPer100g: 0.5 },
         { name: 'Ostra', kcalPer100g: 81, proteinPer100g: 9, carbsPer100g: 4.8, fatsPer100g: 2.3 },
         { name: 'Lagosta', kcalPer100g: 89, proteinPer100g: 19, carbsPer100g: 0, fatsPer100g: 0.5 },
+        // NOVAS CARNES ADICIONADAS AQUI
+        { name: 'Costelinha de Porco Assada', kcalPer100g: 300, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 20 },
+        { name: 'Sobrecoxa de Frango Cozida', kcalPer100g: 210, proteinPer100g: 25, carbsPer100g: 0, fatsPer100g: 12 },
+        { name: 'Patinho Moído Cozido', kcalPer100g: 170, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 6 },
+        { name: 'Contra-filé Grelhado', kcalPer100g: 240, proteinPer100g: 29, carbsPer100g: 0, fatsPer100g: 14 },
+        { name: 'Filé Mignon Grelhado', kcalPer100g: 200, proteinPer100g: 30, carbsPer100g: 0, fatsPer100g: 8 },
+        { name: 'Carne de Sol Cozida', kcalPer100g: 280, proteinPer100g: 38, carbsPer100g: 0, fatsPer100g: 15 },
+        { name: 'Coxa de Frango sem Pele', kcalPer100g: 170, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 7 },
+        { name: 'Peito de Peru Defumado Light', kcalPer100g: 80, proteinPer100g: 18, carbsPer100g: 0, fatsPer100g: 1 },
+        { name: 'Lombo de Porco Assado', kcalPer100g: 190, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 8 },
+        { name: 'Bisteca de Porco Grelhada', kcalPer100g: 280, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 19 },
+        { name: 'Carne Suína Moída', kcalPer100g: 260, proteinPer100g: 22, carbsPer100g: 0, fatsPer100g: 19 },
+        { name: 'Filé de Merluza Cozido', kcalPer100g: 90, proteinPer100g: 18, carbsPer100g: 0, fatsPer100g: 1.5 },
+        { name: 'Bacalao Desfiado', kcalPer100g: 130, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 2 },
+        { name: 'Ovas de Peixe', kcalPer100g: 140, proteinPer100g: 20, carbsPer100g: 2, fatsPer100g: 6 },
+        { name: 'Caranguejo Cozido', kcalPer100g: 80, proteinPer100g: 17, carbsPer100g: 0, fatsPer100g: 0.8 },
+        { name: 'Polvo Cozido', kcalPer100g: 82, proteinPer100g: 15, carbsPer100g: 2, fatsPer100g: 1 },
+        { name: 'Linguado Grelhado', kcalPer100g: 90, proteinPer100g: 17, carbsPer100g: 0, fatsPer100g: 2 },
+        { name: 'Truta Assada', kcalPer100g: 148, proteinPer100g: 23, carbsPer100g: 0, fatsPer100g: 6 },
+        { name: 'Pescada Cozida', kcalPer100g: 80, proteinPer100g: 17, carbsPer100g: 0, fatsPer100g: 1 },
+        { name: 'Pernil de Porco Assado', kcalPer100g: 250, proteinPer100g: 25, carbsPer100g: 0, fatsPer100g: 16 },
+        // FIM DAS NOVAS CARNES
         // Frutas
         { name: 'Maçã', kcalPer100g: 52, proteinPer100g: 0.3, carbsPer100g: 14, fatsPer100g: 0.2 },
         { name: 'Banana', kcalPer100g: 89, proteinPer100g: 1.1, carbsPer100g: 22.8, fatsPer100g: 0.3 },
@@ -168,37 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Melado de Cana', kcalPer100g: 290, proteinPer100g: 0, carbsPer100g: 75, fatsPer100g: 0 },
         { name: 'Café com Leite e Açúcar', kcalPer100g: 60, proteinPer100g: 2, carbsPer100g: 10, fatsPer100g: 1.5 },
         { name: 'Suco de Laranja Natural', kcalPer100g: 45, proteinPer100g: 0.7, carbsPer100g: 10.4, fatsPer100g: 0.2 },
-        { name: 'Lasanha à Bolonhesa', kcalPer100g: 140, proteinPer100g: 8, carbsPer100g: 12, fatsPer100g: 6 },
-        { name: 'Bolo de Chocolate', kcalPer100g: 400, proteinPer100g: 5, carbsPer100g: 55, fatsPer100g: 18 },
-        { name: 'Sorvete de Baunilha', kcalPer100g: 207, proteinPer100g: 3.5, carbsPer100g: 24, fatsPer100g: 11 },
-        { name: 'Requeijão Cremoso', kcalPer100g: 240, proteinPer100g: 9, carbsPer100g: 2, fatsPer100g: 22 },
-        { name: 'Salsicha de Carne Bovina', kcalPer100g: 290, proteinPer100g: 12, carbsPer100g: 2, fatsPer100g: 26 },
-        { name: 'Mortadela', kcalPer100g: 280, proteinPer100g: 10, carbsPer100g: 2, fatsPer100g: 25 },
-        { name: 'Pão de Queijo', kcalPer100g: 330, proteinPer100g: 10, carbsPer100g: 40, fatsPer100g: 15 },
-        { name: 'Tapioca (com queijo)', kcalPer100g: 250, proteinPer100g: 12, carbsPer100g: 30, fatsPer100g: 8 },
-        { name: 'Castanha de Caju', kcalPer100g: 553, proteinPer100g: 18, carbsPer100g: 30, fatsPer100g: 44 },
-        { name: 'Nozes', kcalPer100g: 654, proteinPer100g: 15, carbsPer100g: 14, fatsPer100g: 65 },
-        { name: 'Pistache', kcalPer100g: 562, proteinPer100g: 20, carbsPer100g: 28, fatsPer100g: 45 },
-        { name: 'Semente de Abóbora', kcalPer100g: 559, proteinPer100g: 24, carbsPer100g: 18, fatsPer100g: 49 },
-        { name: 'Semente de Girassol', kcalPer100g: 584, proteinPer100g: 21, carbsPer100g: 20, fatsPer100g: 51 },
-        { name: 'Chia', kcalPer100g: 486, proteinPer100g: 17, carbsPer100g: 42, fatsPer100g: 31 },
-        { name: 'Linhaça', kcalPer100g: 534, proteinPer100g: 18, carbsPer100g: 29, fatsPer100g: 42 },
-        { name: 'Açaí (polpa pura)', kcalPer100g: 80, proteinPer100g: 1, carbsPer100g: 4, fatsPer100g: 6 },
-        { name: 'Guaraná em Pó', kcalPer100g: 329, proteinPer100g: 14, carbsPer100g: 65, fatsPer100g: 3 },
-        { name: 'Pasta de Castanha de Caju', kcalPer100g: 580, proteinPer100g: 18, carbsPer100g: 30, fatsPer100g: 46 },
-        { name: 'Lasanha de Frango', kcalPer100g: 130, proteinPer100g: 7, carbsPer100g: 10, fatsPer100g: 6 },
-        { name: 'Pizza Calabresa', kcalPer100g: 280, proteinPer100g: 10, carbsPer100g: 30, fatsPer100g: 13 },
-        { name: 'Coxinha de Frango', kcalPer100g: 350, proteinPer100g: 10, carbsPer100g: 30, fatsPer100g: 20 },
-        { name: 'Pão de Mel', kcalPer100g: 350, proteinPer100g: 4, carbsPer100g: 60, fatsPer100g: 10 },
-        { name: 'Pudim de Leite', kcalPer100g: 180, proteinPer100g: 5, carbsPer100g: 25, fatsPer100g: 7 },
-        { name: 'Sorvete de Chocolate', kcalPer100g: 220, proteinPer100g: 4, carbsPer100g: 28, fatsPer100g: 12 },
-        { name: 'Leite Integral', kcalPer100g: 61, proteinPer100g: 3.2, carbsPer100g: 4.8, fatsPer100g: 3.3 },
-        { name: 'Creme de Leite Light', kcalPer100g: 120, proteinPer100g: 2.5, carbsPer100g: 4, fatsPer100g: 10 },
-        { name: 'Maionese', kcalPer100g: 680, proteinPer100g: 0.8, carbsPer100g: 0.6, fatsPer100g: 74 },
-        { name: 'Ketchup', kcalPer100g: 100, proteinPer100g: 1.2, carbsPer100g: 24, fatsPer100g: 0.2 },
-        { name: 'Mostarda', kcalPer100g: 66, proteinPer100g: 4.5, carbsPer100g: 6.5, fatsPer100g: 3.5 },
-        { name: 'Molho Barbecue', kcalPer100g: 130, proteinPer100g: 1, carbsPer100g: 30, fatsPer100g: 0.5 },
-        { name: 'Suco de Abacaxi Natural', kcalPer100g: 50, proteinPer100g: 0.4, carbsPer100g: 12.4, fatsPer100g: 0.1 },
         { name: 'Suco de Uva Integral', kcalPer100g: 70, proteinPer100g: 0.3, carbsPer100g: 17, fatsPer100g: 0.1 },
         { name: 'Gelatina Diet', kcalPer100g: 10, proteinPer100g: 2, carbsPer100g: 0, fatsPer100g: 0 },
         { name: 'Chocolate Amargo (70% cacau)', kcalPer100g: 580, proteinPer100g: 8, carbsPer100g: 45, fatsPer100g: 40 },
@@ -327,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateProgressBars();
         updateWeightPrediction();
         alert('Perfil salvo e metas recalculadas!');
-        showPage('home-page');
+        showPage('home-page'); // Redireciona para a home-page após salvar
     }
 
     function updateProgressBars() {
@@ -492,6 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h4>
                     ${group.name}
                     <span class="meal-total-macros">Total: ${group.totalKcal} Kcal | P: ${group.totalProtein.toFixed(1)}g | C: ${group.totalCarbs.toFixed(1)}g | G: ${group.totalFats.toFixed(1)}g</span>
+                    <button class="remove-meal-group-btn" data-group-index="${groupIndex}">X</button>
                 </h4>
                 <ul class="meal-items-list" id="meal-list-${groupIndex}">
                     ${group.foods.map((food, foodIndex) => `
@@ -517,6 +509,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Adiciona listeners para remover alimento
         mealGroupsContainer.querySelectorAll('.meal-item button').forEach(button => {
             button.addEventListener('click', removeFoodItem);
+        });
+
+        // Adiciona listeners para remover grupo de refeição
+        mealGroupsContainer.querySelectorAll('.remove-meal-group-btn').forEach(button => {
+            button.addEventListener('click', removeMealGroup);
         });
 
         // Adiciona listeners para adicionar alimento
@@ -582,13 +579,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         // Mostra os últimos 10 pesos, por exemplo
-        weightHistory.slice(-10).reverse().forEach(entry => {
+        weightHistory.slice().reverse().forEach((entry, originalIndex) => { // Mantém o índice original para exclusão
             const listItem = document.createElement('li');
+            // Calcula o índice real antes de reverter a ordem para usar para edição/exclusão
+            const actualIndex = weightHistory.length - 1 - originalIndex;
             listItem.innerHTML = `
                 <span>${entry.date}</span>
                 <span>${entry.weight.toFixed(1)} Kg</span>
+                <div class="weight-actions">
+                    <button class="edit-weight-btn" data-index="${actualIndex}">Editar</button>
+                    <button class="delete-weight-btn" data-index="${actualIndex}">Excluir</button>
+                </div>
             `;
             weightHistoryList.appendChild(listItem);
+        });
+
+        // Adiciona listeners para os botões de editar e excluir peso
+        weightHistoryList.querySelectorAll('.edit-weight-btn').forEach(button => {
+            button.addEventListener('click', editWeightEntry);
+        });
+        weightHistoryList.querySelectorAll('.delete-weight-btn').forEach(button => {
+            button.addEventListener('click', deleteWeightEntry);
         });
     }
 
@@ -603,8 +614,9 @@ document.addEventListener('DOMContentLoaded', () => {
         navButtons.forEach(btn => btn.classList.remove('active'));
         document.getElementById(`nav-${pageId.replace('-page', '')}`).classList.add('active');
 
-        // Se for a página de peso, atualiza a previsão
+        // Se for a página de peso, atualiza a previsão e o histórico
         if (pageId === 'weight-page') {
+            renderWeightHistory(); // Atualiza a lista de pesos para incluir botões
             updateWeightPrediction();
         }
         // Se for a página de configurações, preenche o formulário do perfil
@@ -692,8 +704,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function removeFoodItem(event) {
-        const groupIndex = parseInt(event.target.dataset.group-index);
-        const foodIndex = parseInt(event.target.dataset.food-index);
+        const groupIndex = parseInt(event.target.dataset.groupIndex); // Corrigido aqui
+        const foodIndex = parseInt(event.target.dataset.foodIndex); // Corrigido aqui
 
         const foodToRemove = dailyData.mealGroups[groupIndex].foods[foodIndex];
 
@@ -720,6 +732,27 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMealGroups();
         updateProgressBars();
     }
+
+    function removeMealGroup(event) {
+        const groupIndex = parseInt(event.target.dataset.groupIndex);
+
+        if (confirm(`Tem certeza que deseja remover o grupo de refeição "${dailyData.mealGroups[groupIndex].name}"? Todos os alimentos dentro dele também serão removidos.`)) {
+            const groupToRemove = dailyData.mealGroups[groupIndex];
+
+            // Subtrai os macros totais do grupo dos totais diários
+            dailyData.consumedCalories -= groupToRemove.totalKcal;
+            dailyData.consumedProtein -= groupToRemove.totalProtein;
+            dailyData.consumedCarbs -= groupToRemove.totalCarbs;
+            dailyData.consumedFats -= groupToRemove.totalFats;
+
+            dailyData.mealGroups.splice(groupIndex, 1);
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+            renderMealGroups();
+            updateProgressBars();
+            alert('Grupo de refeição removido.');
+        }
+    }
+
 
     // Salvar Check-in
     saveCheckinBtn.addEventListener('click', () => {
@@ -776,6 +809,51 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('O peso inserido já é o último registrado para hoje.');
         }
     });
+
+    function editWeightEntry(event) {
+        const index = parseInt(event.target.dataset.index);
+        const currentWeight = weightHistory[index].weight;
+        const newWeight = prompt(`Editar peso para ${currentWeight} Kg. Insira o novo peso:`, currentWeight);
+
+        if (newWeight !== null) { // Se o usuário não cancelou
+            const parsedNewWeight = parseFloat(newWeight);
+            if (!isNaN(parsedNewWeight) && parsedNewWeight > 0) {
+                weightHistory[index].weight = parseFloat(parsedNewWeight.toFixed(1));
+                localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+
+                // Atualiza o userProfile.currentWeight se o peso editado for o último
+                if (index === weightHistory.length - 1 && userProfile) {
+                    userProfile.currentWeight = parsedNewWeight;
+                    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                }
+                renderWeightHistory();
+                updateProgressBars();
+                updateWeightPrediction();
+                alert('Peso atualizado com sucesso!');
+            } else {
+                alert('Por favor, insira um peso válido.');
+            }
+        }
+    }
+
+    function deleteWeightEntry(event) {
+        const index = parseInt(event.target.dataset.index);
+        if (confirm(`Tem certeza que deseja excluir o registro de peso de ${weightHistory[index].weight} Kg em ${weightHistory[index].date}?`)) {
+            weightHistory.splice(index, 1);
+            localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+
+            // Atualiza o userProfile.currentWeight se o peso excluído for o último
+            if (userProfile) {
+                userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            }
+            renderWeightHistory();
+            updateProgressBars();
+            updateWeightPrediction();
+            alert('Registro de peso excluído.');
+        }
+    }
+
 
     // Adicionar alimento personalizado
     addCustomFoodForm.addEventListener('submit', (event) => {
