@@ -215,8 +215,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initApp() {
         checkDailyReset();
+
+        // Para forçar a exibição da mensagem de boas-vindas para testes, descomente a linha abaixo.
+        // Lembre-se de comentar/remover ela após o teste para não apagar os dados do usuário a cada carregamento!
+        // localStorage.removeItem('userProfile'); //
+
         if (!userProfileComplete()) {
-            // Se o perfil não estiver completo, mostra apenas a tela de boas-vindas
+            // Se o perfil não estiver completo, mostra apenas a tela de boas-vindas e esconde a navegação
             showWelcomeScreen();
         } else {
             // Caso contrário, renderiza o perfil e mostra a página inicial
@@ -227,7 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
             renderWeightHistory();
             renderCustomFoodList();
             updateWeightPrediction();
-            showPage('home-page');
+            showPage('home-page'); // Mostra a página inicial por padrão
+            // Garante que os botões de navegação estejam visíveis se o perfil já estiver completo
+            navButtons.forEach(btn => btn.style.display = 'block');
         }
     }
 
@@ -244,14 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
             welcomePage.style.display = 'block';
         }
 
-
-        // Esconde os botões de navegação
+        // Esconde os botões de navegação enquanto a tela de boas-vindas estiver ativa
         navButtons.forEach(btn => btn.style.display = 'none');
 
         // Adiciona o event listener para o botão "Ir para Configurações"
         const goToSettingsBtn = document.getElementById('go-to-settings-btn');
-        if (goToSettingsBtn) { // Garante que o botão exista no DOM
-            // Remove o listener existente para evitar múltiplos binds se a função for chamada novamente
+        if (goToSettingsBtn) {
+            // Remove o listener existente para evitar múltiplos binds se a função for chamada novamente.
             // Isso é importante porque welcomePage não é removida, então o listener pode ser duplicado.
             const oldClickListener = goToSettingsBtn._currentClickListener;
             if (oldClickListener) {
@@ -586,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função para remover acentos
     function removeAccents(str) {
-        if (typeof str !== 'string' || str === null) return ''; // Garante que é uma string e não é nulo
+        if (typeof str !== 'string' || str === null) return '';
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
@@ -715,11 +721,14 @@ document.addEventListener('DOMContentLoaded', () => {
             activeNavButton.classList.add('active');
         }
 
+        // Garante que os botões de navegação estejam visíveis ao sair da welcomePage
+        navButtons.forEach(btn => btn.style.display = 'block');
+
         if (pageId === 'weight-page') {
             renderWeightHistory();
             updateWeightPrediction();
             // Define a data atual no input de data do peso ao abrir a aba
-            if (newWeightDateInput) { // Verifica se o elemento existe
+            if (newWeightDateInput) {
                 newWeightDateInput.valueAsDate = new Date();
             }
         }
@@ -885,7 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
             checkinHistory.push({ date: today, ...currentCheckinState });
         }
 
-        localStorage.setItem('checkinHistory', JSON.stringify(checkinHistory));
+        localStorage.setItem('checkinHistory', JSON.stringify(checkinState));
         localStorage.setItem('currentDayCheckinState', JSON.stringify(currentCheckinState));
         renderCheckinHistory();
         alert('Check-in salvo!');
