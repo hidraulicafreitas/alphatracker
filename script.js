@@ -216,15 +216,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function initApp() {
         checkDailyReset();
 
-        // Para forçar a exibição da mensagem de boas-vindas para testes, descomente a linha abaixo.
-        // Lembre-se de comentar/remover ela após o teste para não apagar os dados do usuário a cada carregamento!
-        // localStorage.removeItem('userProfile'); //
+        // Limpar userProfile para forçar a tela de boas-vindas para TESTES.
+        // COMENTE OU REMOVA ESTA LINHA APÓS CONFIRMAR QUE FUNCIONA!
+        // localStorage.removeItem('userProfile');
+        // userProfile = null; // Atualiza a variável local para refletir a remoção
 
         if (!userProfileComplete()) {
             // Se o perfil não estiver completo, mostra apenas a tela de boas-vindas e esconde a navegação
             showWelcomeScreen();
         } else {
             // Caso contrário, renderiza o perfil e mostra a página inicial
+            // Esconde explicitamente a welcomePage antes de mostrar as outras
+            if (welcomePage) {
+                welcomePage.classList.remove('active');
+                welcomePage.style.display = 'none';
+            }
             renderUserProfile();
             updateProgressBars();
             renderMealGroups();
@@ -239,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showWelcomeScreen() {
-        // Esconde todas as seções de conteúdo da página
+        // Esconde todas as seções de conteúdo da página que possuem a classe 'page-content'
         document.querySelectorAll('.page-content').forEach(page => {
             page.classList.remove('active');
             page.style.display = 'none'; // Garante que estejam escondidas
@@ -265,8 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const newClickListener = () => {
-                navButtons.forEach(btn => btn.style.display = 'block'); // Mostra os botões de navegação
-                showPage('settings-page'); // Navega para a página de configurações
+                // Ao clicar no botão, mostra os botões de navegação e redireciona para configurações
+                navButtons.forEach(btn => btn.style.display = 'block');
+                showPage('settings-page');
             };
             goToSettingsBtn.addEventListener('click', newClickListener);
             goToSettingsBtn._currentClickListener = newClickListener; // Armazena o listener para futura remoção
@@ -701,17 +708,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funções de Interação ---
 
     function showPage(pageId) {
-        // Esconde todas as seções de conteúdo da página
-        document.querySelectorAll('.page-content').forEach(page => {
+        // Esconde TODAS as seções de conteúdo
+        document.querySelectorAll('main > section').forEach(page => { // Seleciona todas as seções diretamente dentro de 'main'
             page.classList.remove('active');
-            page.style.display = 'none'; // Garante que todas as páginas estão escondidas
+            page.style.display = 'none'; // Garante que estejam escondidas via estilo inline
         });
 
         // Mostra a página de destino
         const targetPage = document.getElementById(pageId);
         if (targetPage) {
             targetPage.classList.add('active');
-            targetPage.style.display = 'block';
+            targetPage.style.display = 'block'; // Mostra a página de destino
         }
 
         // Atualiza o estado ativo dos botões de navegação
@@ -724,10 +731,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Garante que os botões de navegação estejam visíveis ao sair da welcomePage
         navButtons.forEach(btn => btn.style.display = 'block');
 
+        // Lógica específica para páginas
         if (pageId === 'weight-page') {
             renderWeightHistory();
             updateWeightPrediction();
-            // Define a data atual no input de data do peso ao abrir a aba
             if (newWeightDateInput) {
                 newWeightDateInput.valueAsDate = new Date();
             }
@@ -894,7 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
             checkinHistory.push({ date: today, ...currentCheckinState });
         }
 
-        localStorage.setItem('checkinHistory', JSON.stringify(checkinState));
+        localStorage.setItem('checkinHistory', JSON.stringify(checkinHistory));
         localStorage.setItem('currentDayCheckinState', JSON.stringify(currentCheckinState));
         renderCheckinHistory();
         alert('Check-in salvo!');
