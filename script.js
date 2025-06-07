@@ -448,7 +448,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 weightPredictionText.textContent = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
             } else if (today > targetDate) {
                 weightPredictionText.textContent = `A data da sua meta (${userProfile.targetDate}) já passou. Você terminou em ${lastWeightEntry.weight.toFixed(1)} Kg.`;
-            } else {
+            }
+            else {
                 weightPredictionText.textContent = 'A data final da meta deve ser no futuro.';
             }
             return;
