@@ -11,13 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const addWeightEntryBtn = document.getElementById('add-weight-entry-btn');
     const newCurrentWeightInput = document.getElementById('new-current-weight');
     const addCustomFoodForm = document.getElementById('add-custom-food-form');
-    const customFoodList = document.getElementById('custom-food-list');
+    const customFoodList = document.getElementById('custom-food-list'); // Novo elemento
 
     // Elementos de progresso na Home Page
     const userNameSpan = document.getElementById('user-name');
     const caloriesProgressBar = document.getElementById('calories-progress');
     const caloriesNum = document.getElementById('calories-num');
-    const proteinProgressBar = document.getElementById('protein-progress');
+    const proteinProgressBar = document = document.getElementById('protein-progress');
     const proteinNum = document.getElementById('protein-num');
     const carbsProgressBar = document.getElementById('carbs-progress');
     const carbsNum = document.getElementById('carbs-num');
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fatsNum = document.getElementById('fats-num');
     const weightProgressBar = document.getElementById('weight-progress');
     const weightNum = document.getElementById('weight-num');
-    const weightRemainingText = document.getElementById('weight-remaining-text');
+    const weightRemainingText = document.getElementById('weight-remaining-text'); // Novo elemento para o que falta
     const weightPredictionText = document.getElementById('weight-prediction-text');
 
     // Campo de data final da meta
@@ -45,9 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let weightHistory = JSON.parse(localStorage.getItem('weightHistory')) || [];
 
     // "Banco de dados" de alimentos comum e personalizado
+    // Separar alimentos padrão dos personalizados para facilitar a remoção
     let foodDatabase = JSON.parse(localStorage.getItem('foodDatabase')) || [];
     let defaultFoods = [
-        // Carnes
+        // Carnes (novas adições)
         { name: 'Picanha Grelhada', kcalPer100g: 290, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 20, isCustom: false },
         { name: 'Alcatra Grelhada', kcalPer100g: 190, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 9, isCustom: false },
         { name: 'Maminha Grelhada', kcalPer100g: 210, proteinPer100g: 27, carbsPer100g: 0, fatsPer100g: 11, isCustom: false },
@@ -197,7 +198,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Doce de Leite', kcalPer100g: 320, proteinPer100g: 6, carbsPer100g: 55, fatsPer100g: 8, isCustom: false },
         { name: 'Brigadeiro', kcalPer100g: 450, proteinPer100g: 5, carbsPer100g: 60, fatsPer100g: 20, isCustom: false },
     ];
+    // Adicionar alimentos padrão ao foodDatabase se ele estiver vazio ou se não tiverem sido adicionados ainda
     if (foodDatabase.length === 0 || !foodDatabase.some(food => !food.isCustom)) {
+        // Filtra para remover quaisquer alimentos padrão que possam ter sido adicionados como "custom" por engano antes da isCustom flag
         const currentCustomFoods = foodDatabase.filter(food => food.isCustom);
         foodDatabase = defaultFoods.concat(currentCustomFoods);
         localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
@@ -208,46 +211,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initApp() {
         checkDailyReset();
-        // Verificar se userProfile existe e está completo
-        if (!userProfile || !userProfile.name || !userProfile.age || !userProfile.height || !userProfile.gender || !userProfile.currentWeight || !userProfile.targetWeight || !userProfile.activityFactor || !userProfile.targetDate) {
-            showWelcomeScreen();
-        } else {
-            renderUserProfile();
-            updateProgressBars();
-            renderMealGroups();
-            renderCheckinHistory();
-            renderWeightHistory();
-            renderCustomFoodList();
-            updateWeightPrediction();
-            showPage('home-page'); // Mostra a home-page se o perfil estiver completo
-        }
+        renderUserProfile();
+        updateProgressBars();
+        renderMealGroups();
+        renderCheckinHistory();
+        renderWeightHistory();
+        renderCustomFoodList(); // Novo: renderiza a lista de alimentos personalizados
+        updateWeightPrediction();
     }
-
-    function showWelcomeScreen() {
-        // Esconde todas as páginas e botões de navegação
-        document.querySelectorAll('.page-content').forEach(page => {
-            page.classList.remove('active');
-        });
-        navButtons.forEach(btn => btn.style.display = 'none'); // Esconde os botões de navegação
-        document.getElementById('app-content').innerHTML = `
-            <section id="welcome-page" class="page-content active">
-                <h2 style="color: var(--vibrant-green); text-align: center; margin-bottom: 25px; font-family: 'Orbitron', sans-serif;">Bem-vindo ao Alpha Tracker!</h2>
-                <p style="text-align: center; color: var(--text-light); font-size: 1.1em; margin-bottom: 30px;">
-                    Para começar a controlar seus macros e seu progresso, precisamos de algumas informações sobre você.
-                </p>
-                <p style="text-align: center; color: var(--text-gray); font-size: 1em; margin-bottom: 40px;">
-                    Por favor, preencha seu perfil na aba de configurações.
-                </p>
-                <button id="go-to-settings-btn" class="main-btn" style="display: block; margin: 0 auto;">Ir para Configurações</button>
-            </section>
-        `;
-        document.getElementById('go-to-settings-btn').addEventListener('click', () => {
-            // Reexibe os botões de navegação
-            navButtons.forEach(btn => btn.style.display = 'block');
-            showPage('settings-page');
-        });
-    }
-
 
     function checkDailyReset() {
         const today = new Date().toLocaleDateString('pt-BR'); // Formato BR
@@ -283,24 +254,31 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('age').value = userProfile.age;
             document.getElementById('height').value = userProfile.height;
             document.getElementById('gender').value = userProfile.gender;
+            // O campo de peso atual nas configurações é diferente do campo de registro de peso
             document.getElementById('current-weight-settings').value = userProfile.currentWeight;
             document.getElementById('target-weight').value = userProfile.targetWeight;
             document.getElementById('activity-factor').value = userProfile.activityFactor;
+            // Preenche a data final da meta
             if (userProfile.targetDate) {
                 targetDateInput.value = userProfile.targetDate;
             }
         } else {
             userNameSpan.textContent = 'Guerreiro';
+            // Se não tiver perfil, abre a página de cadastro automaticamente
+            showPage('settings-page');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            document.getElementById('nav-settings').classList.add('active'); // Ativa o botão de configurações
         }
     }
 
     function calculateDailyCaloricNeeds(weight, height, age, gender, activityFactor) {
-        let tmb;
+        let tmb; // Taxa Metabólica Basal
         if (gender === 'male') {
             tmb = 10 * weight + 6.25 * height - 5 * age + 5;
-        } else {
+        } else { // female
             tmb = 10 * weight + 6.25 * height - 5 * age - 161;
         }
+
         return tmb * activityFactor;
     }
 
@@ -314,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentWeight = parseFloat(document.getElementById('current-weight-settings').value);
         const targetWeight = parseFloat(document.getElementById('target-weight').value);
         const activityFactor = parseFloat(document.getElementById('activity-factor').value);
-        const targetDate = document.getElementById('target-date').value;
+        const targetDate = document.getElementById('target-date').value; // Nova data final da meta
 
         if (!name || isNaN(age) || isNaN(height) || isNaN(currentWeight) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
             alert('Por favor, preencha todos os campos do perfil corretamente, incluindo a data final da meta.');
@@ -322,9 +300,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const dailyCaloricNeeds = calculateDailyCaloricNeeds(currentWeight, height, age, gender, activityFactor);
-        const caloricDeficit = dailyCaloricNeeds * 0.20;
+        const caloricDeficit = dailyCaloricNeeds * 0.20; // 20% de déficit
         const targetCalories = Math.round(dailyCaloricNeeds - caloricDeficit);
 
+        // Metas de macronutrientes (exemplo: Proteína 40%, Carboidrato 40%, Gordura 20%)
         const targetProtein = Math.round((targetCalories * 0.40) / 4);
         const targetCarbs = Math.round((targetCalories * 0.40) / 4);
         const targetFats = Math.round((targetCalories * 0.20) / 9);
@@ -339,18 +318,16 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
 
+        // Se o peso atual do perfil for diferente do último registrado no histórico ou se for a primeira entrada
         if (weightHistory.length === 0 || weightHistory[weightHistory.length - 1].weight !== currentWeight) {
-            addWeightEntry(currentWeight);
+            addWeightEntry(currentWeight); // Adiciona ao histórico de peso
         }
 
         renderUserProfile();
         updateProgressBars();
         updateWeightPrediction();
         alert('Perfil salvo e metas recalculadas!');
-        
-        // Reexibe os botões de navegação se estiver na tela de boas-vindas
-        navButtons.forEach(btn => btn.style.display = 'block');
-        showPage('home-page');
+        showPage('home-page'); // Redireciona para a home-page após salvar
     }
 
     function updateProgressBars() {
@@ -369,24 +346,28 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Calorias
         let caloriesPercentage = (dailyData.consumedCalories / userProfile.targetCalories) * 100;
         caloriesPercentage = Math.min(caloriesPercentage, 100);
         caloriesProgressBar.style.width = `${caloriesPercentage}%`;
         caloriesNum.textContent = `${dailyData.consumedCalories} / ${userProfile.targetCalories} Kcal`;
         caloriesProgressBar.style.backgroundColor = dailyData.consumedCalories > userProfile.targetCalories ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
+        // Proteína
         let proteinPercentage = (dailyData.consumedProtein / userProfile.targetProtein) * 100;
         proteinPercentage = Math.min(proteinPercentage, 100);
         proteinProgressBar.style.width = `${proteinPercentage}%`;
         proteinNum.textContent = `${dailyData.consumedProtein.toFixed(1)} / ${userProfile.targetProtein} g`;
         proteinProgressBar.style.backgroundColor = dailyData.consumedProtein > userProfile.targetProtein ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
+        // Carboidratos
         let carbsPercentage = (dailyData.consumedCarbs / userProfile.targetCarbs) * 100;
         carbsPercentage = Math.min(carbsPercentage, 100);
         carbsProgressBar.style.width = `${carbsPercentage}%`;
         carbsNum.textContent = `${dailyData.consumedCarbs.toFixed(1)} / ${userProfile.targetCarbs} g`;
         carbsProgressBar.style.backgroundColor = dailyData.consumedCarbs > userProfile.targetCarbs ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
+        // Gorduras
         let fatsPercentage = (dailyData.consumedFats / userProfile.targetFats) * 100;
         fatsPercentage = Math.min(fatsPercentage, 100);
         fatsProgressBar.style.width = `${fatsPercentage}%`;
@@ -394,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fatsProgressBar.style.backgroundColor = dailyData.consumedFats > userProfile.targetFats ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
 
         // Peso
+        // Garante que o userProfile.currentWeight esteja atualizado com o último peso do histórico
         if (weightHistory.length > 0) {
             userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -402,50 +384,48 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentWeight = userProfile.currentWeight;
         const targetWeight = userProfile.targetWeight;
         let weightProgress;
-        let weightDiffMessage = ''; // Mensagem para o peso perdido/ganho
+        let remainingOrAchievedText = ''; // Texto para mostrar "faltam X kg" ou "atingiu a meta"
 
         if (currentWeight === targetWeight) {
             weightProgress = 100;
-            weightDiffMessage = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
-        } else if (weightHistory.length > 0) {
-            const initialWeight = weightHistory[0].weight;
-            const diff = Math.abs(currentWeight - initialWeight).toFixed(1);
-            let action = '';
+            remainingOrAchievedText = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
+        } else if (userProfile.gender === 'male' && currentWeight > targetWeight || userProfile.gender === 'female' && currentWeight > targetWeight) { // Perder peso
+            const initialWeight = weightHistory.length > 0 ? weightHistory[0].weight : currentWeight; // Pega o primeiro peso registrado como inicial
+            const totalToLose = initialWeight - targetWeight;
+            const progressToLose = initialWeight - currentWeight;
 
-            if (currentWeight < initialWeight) {
-                action = `perdeu`;
-            } else if (currentWeight > initialWeight) {
-                action = `ganhou`;
-            }
-
-            if (initialWeight === targetWeight) { // Caso a meta já seja o peso inicial
+            if (totalToLose === 0) { // Evita divisão por zero se a meta já era o peso inicial
                 weightProgress = 100;
-                weightDiffMessage = `Meta de peso é ${targetWeight.toFixed(1)} Kg.`;
-            } else if (userProfile.targetWeight < initialWeight) { // Meta de perda
-                const totalToLose = initialWeight - targetWeight;
-                const progressToLose = initialWeight - currentWeight;
+                remainingOrAchievedText = `Meta de peso é ${targetWeight.toFixed(1)} Kg.`;
+            } else {
                 weightProgress = (progressToLose / totalToLose) * 100;
                 weightProgress = Math.max(0, Math.min(weightProgress, 100));
                 const remaining = (currentWeight - targetWeight).toFixed(1);
-                weightDiffMessage = `${action} ${diff} Kg até agora. Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
-            } else if (userProfile.targetWeight > initialWeight) { // Meta de ganho
-                const totalToGain = targetWeight - initialWeight;
-                const progressToGain = currentWeight - initialWeight;
+                remainingOrAchievedText = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
+            }
+        } else if (userProfile.gender === 'male' && currentWeight < targetWeight || userProfile.gender === 'female' && currentWeight < targetWeight) { // Ganhar peso
+            const initialWeight = weightHistory.length > 0 ? weightHistory[0].weight : currentWeight; // Pega o primeiro peso registrado como inicial
+            const totalToGain = targetWeight - initialWeight;
+            const progressToGain = currentWeight - initialWeight;
+
+            if (totalToGain === 0) { // Evita divisão por zero se a meta já era o peso inicial
+                weightProgress = 100;
+                remainingOrAchievedText = `Meta de peso é ${targetWeight.toFixed(1)} Kg.`;
+            } else {
                 weightProgress = (progressToGain / totalToGain) * 100;
                 weightProgress = Math.max(0, Math.min(weightProgress, 100));
                 const remaining = (targetWeight - currentWeight).toFixed(1);
-                weightDiffMessage = `${action} ${diff} Kg até agora. Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
+                remainingOrAchievedText = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
             }
-        } else {
+        } else { // Caso não haja perfil ou dados inconsistentes
             weightProgress = 0;
-            const remaining = Math.abs(currentWeight - targetWeight).toFixed(1);
-            weightDiffMessage = `Faltam ${remaining} Kg para atingir sua meta.`;
+            remainingOrAchievedText = `Defina seu perfil e registre seu peso para acompanhar o progresso.`;
         }
 
         weightProgressBar.style.width = `${weightProgress}%`;
         weightProgressBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vibrant-green');
         weightNum.textContent = `${currentWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
-        weightRemainingText.textContent = weightDiffMessage;
+        weightRemainingText.textContent = remainingOrAchievedText; // Atualiza o texto abaixo da barra
     }
 
 
@@ -457,9 +437,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const lastWeight = weightHistory[weightHistory.length - 1].weight;
         const targetWeight = userProfile.targetWeight;
-        const targetDate = new Date(userProfile.targetDate + 'T23:59:59');
+        const targetDate = new Date(userProfile.targetDate + 'T23:59:59'); // Para incluir o dia inteiro
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0); // Zera hora para comparação de datas
 
         const initialWeightEntry = weightHistory[0];
         const initialWeight = initialWeightEntry.weight;
@@ -472,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (daysTotal <= 0) {
             weightPredictionText.textContent = 'A data final da meta deve ser no futuro.';
             if (Math.abs(lastWeight - targetWeight) < 0.1) {
-                weightPredictionText.textContent = `**Meta atingida!** Seu peso atual é ${lastWeight.toFixed(1)} Kg.`;
+                weightPredictionText.textContent = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
             } else if (today > targetDate) {
                 weightPredictionText.textContent = `A data da sua meta (${userProfile.targetDate}) já passou. Você terminou em ${lastWeight.toFixed(1)} Kg.`;
             }
@@ -485,9 +465,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let statusMessage = '';
         if (Math.abs(lastWeight - targetWeight) < 0.1) {
             statusMessage = `**Meta atingida!** Seu peso atual é ${lastWeight.toFixed(1)} Kg.`;
-        } else if (Math.abs(lastWeight - expectedWeightToday) < 0.5) {
+        } else if (Math.abs(lastWeight - expectedWeightToday) < 0.5) { // Margem de erro de 0.5kg
             statusMessage = `Você está no caminho certo! Seu peso atual (${lastWeight.toFixed(1)} Kg) está próximo do esperado (${expectedWeightToday.toFixed(1)} Kg).`;
-        } else if (userProfile.targetWeight > initialWeight) { // Meta de ganho
+        } else if (userProfile.targetWeight > userProfile.currentWeight) { // Meta de ganho
             if (lastWeight > expectedWeightToday) {
                 statusMessage = `Você está adiantado na sua meta de ganho de peso! Atual: ${lastWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
             } else {
@@ -541,24 +521,28 @@ document.addEventListener('DOMContentLoaded', () => {
             mealGroupsContainer.appendChild(mealGroupDiv);
         });
 
+        // Adiciona listeners para remover alimento (usando a nova classe)
         mealGroupsContainer.querySelectorAll('.remove-food-item-btn').forEach(button => {
             button.addEventListener('click', removeFoodItem);
         });
 
+        // Adiciona listeners para remover grupo de refeição
         mealGroupsContainer.querySelectorAll('.remove-meal-group-btn').forEach(button => {
             button.addEventListener('click', removeMealGroup);
         });
 
+        // Adiciona listeners para adicionar alimento
         mealGroupsContainer.querySelectorAll('.add-food-form').forEach(form => {
             form.addEventListener('submit', addFoodItem);
             const searchInput = form.querySelector('.food-search-input');
             const dataList = form.querySelector(`datalist#food-suggestions-${form.dataset.groupIndex}`);
 
             searchInput.addEventListener('input', () => handleFoodSearch(searchInput, dataList));
-            searchInput.addEventListener('change', (e) => {
+            searchInput.addEventListener('change', (e) => { // Preenche automaticamente ao selecionar da lista
                 if (foodDatabase.some(food => food.name === e.target.value)) {
+                    // Alimento selecionado é válido
                 } else {
-                    e.target.value = '';
+                    e.target.value = ''; // Limpa se não for um alimento válido da lista
                 }
             });
         });
@@ -566,9 +550,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleFoodSearch(inputElement, dataListElement) {
         const searchTerm = inputElement.value.toLowerCase();
-        dataListElement.innerHTML = '';
+        dataListElement.innerHTML = ''; // Limpa sugestões antigas
 
-        if (searchTerm.length < 2) {
+        if (searchTerm.length < 2) { // Começa a pesquisar com 2 ou mais caracteres
             return;
         }
 
@@ -583,13 +567,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
     function renderCheckinHistory() {
         checkinHistoryList.innerHTML = '';
         if (checkinHistory.length === 0) {
             checkinHistoryList.innerHTML = '<p class="no-data-message">Nenhum check-in registrado ainda.</p>';
             return;
         }
-        checkinHistory.slice(-7).reverse().forEach(entry => {
+        checkinHistory.slice(-7).reverse().forEach(entry => { // Mostra os últimos 7 dias
             const listItem = document.createElement('li');
             listItem.innerHTML = `
                 <strong>${entry.date}:</strong>
@@ -608,8 +593,10 @@ document.addEventListener('DOMContentLoaded', () => {
             weightHistoryList.innerHTML = '<p class="no-data-message">Nenhum peso registrado ainda.</p>';
             return;
         }
-        weightHistory.slice().reverse().forEach((entry, originalIndex) => {
+        // Mostra os últimos 10 pesos, por exemplo
+        weightHistory.slice().reverse().forEach((entry, originalIndex) => { // Mantém o índice original para exclusão
             const listItem = document.createElement('li');
+            // Calcula o índice real antes de reverter a ordem para usar para edição/exclusão
             const actualIndex = weightHistory.length - 1 - originalIndex;
             listItem.innerHTML = `
                 <span>${entry.date}</span>
@@ -622,6 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             weightHistoryList.appendChild(listItem);
         });
 
+        // Adiciona listeners para os botões de editar e excluir peso
         weightHistoryList.querySelectorAll('.edit-weight-btn').forEach(button => {
             button.addEventListener('click', editWeightEntry);
         });
@@ -631,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCustomFoodList() {
-        customFoodList.innerHTML = '';
+        customFoodList.innerHTML = ''; // Limpa a lista antes de renderizar novamente
         const customFoods = foodDatabase.filter(food => food.isCustom);
 
         if (customFoods.length === 0) {
@@ -639,8 +627,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        customFoods.forEach((food) => { // Removido o index do forEach pois o indexOf é mais seguro
+        customFoods.forEach((food, index) => {
             const listItem = document.createElement('li');
+            // É importante usar o índice real do alimento no foodDatabase, não o índice filtrado
             const foodDatabaseIndex = foodDatabase.indexOf(food);
             listItem.innerHTML = `
                 <div class="food-details">
@@ -668,56 +657,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funções de Interação ---
 
     function showPage(pageId) {
-        // Remove a página de boas-vindas se ela estiver ativa
-        const welcomePage = document.getElementById('welcome-page');
-        if (welcomePage) {
-            welcomePage.remove();
-            // Reexibe os botões de navegação, caso ainda estejam ocultos
-            navButtons.forEach(btn => btn.style.display = 'block');
-        }
-
         document.querySelectorAll('.page-content').forEach(page => {
             page.classList.remove('active');
         });
         document.getElementById(pageId).classList.add('active');
 
         navButtons.forEach(btn => btn.classList.remove('active'));
-        const activeNavButton = document.getElementById(`nav-${pageId.replace('-page', '')}`);
-        if (activeNavButton) {
-            activeNavButton.classList.add('active');
-        }
+        document.getElementById(`nav-${pageId.replace('-page', '')}`).classList.add('active');
 
-
+        // Se for a página de peso, atualiza a previsão e o histórico
         if (pageId === 'weight-page') {
-            renderWeightHistory();
+            renderWeightHistory(); // Atualiza a lista de pesos para incluir botões
             updateWeightPrediction();
         }
+        // Se for a página de configurações, preenche o formulário do perfil e lista alimentos personalizados
         if (pageId === 'settings-page') {
-            renderUserProfile();
-            renderCustomFoodList();
+            renderUserProfile(); // Garante que os campos do perfil estejam preenchidos
+            renderCustomFoodList(); // Renderiza a lista de alimentos personalizados
         }
     }
 
+    // Navegação
     navButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // Impedir navegação se o perfil não estiver completo, a menos que esteja indo para configurações
-            if (!userProfileComplete() && button.id !== 'nav-settings') {
-                alert('Por favor, complete seu perfil na aba de Configurações antes de usar outras funcionalidades.');
-                showPage('settings-page');
-                return;
-            }
             const pageId = button.id.replace('nav-', '') + '-page';
             showPage(pageId);
         });
     });
 
-    // Função para verificar se o perfil está completo
-    function userProfileComplete() {
-        return userProfile && userProfile.name && userProfile.age && userProfile.height && userProfile.gender && userProfile.currentWeight && userProfile.targetWeight && userProfile.activityFactor && userProfile.targetDate;
-    }
-
+    // Salvar perfil nas configurações
     profileForm.addEventListener('submit', saveProfile);
 
+    // Adicionar grupo de refeição
     addMealGroupBtn.addEventListener('click', () => {
         const mealGroupName = prompt('Qual o nome do grupo de refeição? (Ex: Café da Manhã)');
         if (mealGroupName) {
@@ -730,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalFats: 0
             });
             localStorage.setItem('dailyData', JSON.stringify(dailyData));
-            renderMealGroups();
+            renderMealGroups(); // Redesenha para incluir o novo grupo
         }
     });
 
@@ -738,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         const form = event.target;
         const groupIndex = parseInt(form.dataset.groupIndex);
-        const foodName = form.querySelector('.food-search-input').value.trim();
+        const foodName = form.querySelector('.food-search-input').value.trim(); // Usa o input de busca
         const quantity = parseFloat(form.querySelector('.food-quantity').value);
 
         if (!foodName || isNaN(quantity) || quantity <= 0) {
@@ -746,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const foodInfo = foodDatabase.find(food => food.name.toLowerCase() === foodName.toLowerCase());
+        const foodInfo = foodDatabase.find(food => food.name.toLowerCase() === foodName.toLowerCase()); // Busca exata
         if (foodInfo) {
             const factor = quantity / 100;
             const kcal = Math.round(foodInfo.kcalPer100g * factor);
@@ -755,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fats = parseFloat((foodInfo.fatsPer100g * factor).toFixed(1));
 
             dailyData.mealGroups[groupIndex].foods.push({
-                name: foodInfo.name,
+                name: foodInfo.name, // Usa o nome do banco de dados para consistência
                 quantity,
                 kcal,
                 protein,
@@ -763,11 +734,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 fats
             });
 
+            // Atualiza totais da refeição
             dailyData.mealGroups[groupIndex].totalKcal += kcal;
             dailyData.mealGroups[groupIndex].totalProtein += protein;
             dailyData.mealGroups[groupIndex].totalCarbs += carbs;
             dailyData.mealGroups[groupIndex].totalFats += fats;
 
+            // Atualiza totais diários
             dailyData.consumedCalories += kcal;
             dailyData.consumedProtein += protein;
             dailyData.consumedCarbs += carbs;
@@ -776,23 +749,26 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('dailyData', JSON.stringify(dailyData));
             renderMealGroups();
             updateProgressBars();
-            form.reset();
+            form.reset(); // Limpa o formulário
         } else {
             alert('Alimento não encontrado no banco de dados. Verifique a ortografia ou adicione-o na aba de Configurações.');
         }
     }
 
     function removeFoodItem(event) {
+        // Correção aqui: data-group-index no HTML se torna dataset.groupIndex no JS
         const groupIndex = parseInt(event.target.dataset.groupIndex);
         const foodIndex = parseInt(event.target.dataset.foodIndex);
 
         const foodToRemove = dailyData.mealGroups[groupIndex].foods[foodIndex];
 
+        // Atualiza totais diários
         dailyData.consumedCalories -= foodToRemove.kcal;
         dailyData.consumedProtein -= foodToRemove.protein;
         dailyData.consumedCarbs -= foodToRemove.carbs;
         dailyData.consumedFats -= foodToRemove.fats;
 
+        // Atualiza totais da refeição
         dailyData.mealGroups[groupIndex].totalKcal -= foodToRemove.kcal;
         dailyData.mealGroups[groupIndex].totalProtein -= foodToRemove.protein;
         dailyData.mealGroups[groupIndex].totalCarbs -= foodToRemove.carbs;
@@ -800,6 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1);
 
+        // Se o grupo de refeição ficar vazio, remove-o
         if (dailyData.mealGroups[groupIndex].foods.length === 0) {
             dailyData.mealGroups.splice(groupIndex, 1);
         }
@@ -815,6 +792,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Tem certeza que deseja remover o grupo de refeição "${dailyData.mealGroups[groupIndex].name}"? Todos os alimentos dentro dele também serão removidos.`)) {
             const groupToRemove = dailyData.mealGroups[groupIndex];
 
+            // Subtrai os macros totais do grupo dos totais diários
             dailyData.consumedCalories -= groupToRemove.totalKcal;
             dailyData.consumedProtein -= groupToRemove.totalProtein;
             dailyData.consumedCarbs -= groupToRemove.totalCarbs;
@@ -828,8 +806,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+    // Salvar Check-in
     saveCheckinBtn.addEventListener('click', () => {
-        const today = new Date().toLocaleDateString('pt-BR');
+        const today = new Date().toLocaleDateString('pt-BR'); // Formato BR
         const existingCheckinIndex = checkinHistory.findIndex(entry => entry.date === today);
 
         const currentCheckinState = {
@@ -846,11 +826,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         localStorage.setItem('checkinHistory', JSON.stringify(checkinHistory));
-        localStorage.setItem('currentDayCheckinState', JSON.stringify(currentCheckinState));
+        localStorage.setItem('currentDayCheckinState', JSON.stringify(currentCheckinState)); // Salva o estado dos checkboxes para o dia
         renderCheckinHistory();
         alert('Check-in salvo!');
     });
 
+    // Adicionar entrada de peso
     addWeightEntryBtn.addEventListener('click', () => {
         const weight = parseFloat(newCurrentWeightInput.value);
         if (isNaN(weight) || weight <= 0) {
@@ -858,8 +839,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const today = new Date().toLocaleDateString('pt-BR');
+        const today = new Date().toLocaleDateString('pt-BR'); // Formato BR
 
+        // Atualiza o peso atual no userProfile para refletir o último peso registrado
         if (userProfile) {
             userProfile.currentWeight = weight;
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -867,13 +849,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const lastEntry = weightHistory[weightHistory.length - 1];
 
+        // Só adiciona se o peso for diferente do último registrado OU se for o primeiro registro do dia
         if (!lastEntry || lastEntry.date !== today || lastEntry.weight !== weight) {
             weightHistory.push({ date: today, weight: parseFloat(weight.toFixed(1)) });
             localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
             renderWeightHistory();
             updateProgressBars();
             updateWeightPrediction();
-            newCurrentWeightInput.value = '';
+            newCurrentWeightInput.value = ''; // Limpa o campo
             alert('Peso registrado com sucesso!');
         } else {
             alert('O peso inserido já é o último registrado para hoje.');
@@ -885,12 +868,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentWeight = weightHistory[index].weight;
         const newWeight = prompt(`Editar peso para ${currentWeight} Kg. Insira o novo peso:`, currentWeight);
 
-        if (newWeight !== null) {
+        if (newWeight !== null) { // Se o usuário não cancelou
             const parsedNewWeight = parseFloat(newWeight);
             if (!isNaN(parsedNewWeight) && parsedNewWeight > 0) {
                 weightHistory[index].weight = parseFloat(parsedNewWeight.toFixed(1));
                 localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
+                // Atualiza o userProfile.currentWeight se o peso editado for o último
                 if (index === weightHistory.length - 1 && userProfile) {
                     userProfile.currentWeight = parsedNewWeight;
                     localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -911,6 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
             weightHistory.splice(index, 1);
             localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
+            // Atualiza o userProfile.currentWeight se o peso excluído for o último
             if (userProfile) {
                 userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
                 localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -922,6 +907,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+    // Adicionar alimento personalizado
     addCustomFoodForm.addEventListener('submit', (event) => {
         event.preventDefault();
         const customFoodName = document.getElementById('custom-food-name').value.trim();
@@ -935,7 +922,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const allFoods = defaultFoods.concat(foodDatabase.filter(food => food.isCustom));
+        // Verifica se o alimento já existe para evitar duplicatas (incluindo os padrão)
+        const allFoods = defaultFoods.concat(foodDatabase.filter(food => food.isCustom)); // Inclui padrões na verificação
         const existingFood = allFoods.find(food => food.name.toLowerCase() === customFoodName.toLowerCase());
         if (existingFood) {
             alert('Um alimento com este nome já existe no banco de dados. Use um nome diferente.');
@@ -948,13 +936,13 @@ document.addEventListener('DOMContentLoaded', () => {
             proteinPer100g: customFoodProtein,
             carbsPer100g: customFoodCarbs,
             fatsPer100g: customFoodFats,
-            isCustom: true
+            isCustom: true // Marca como personalizado
         });
         localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
-        renderMealGroups();
-        renderCustomFoodList();
+        renderMealGroups(); // Redesenha os formulários de refeição para atualizar as datalists
+        renderCustomFoodList(); // Atualiza a lista de alimentos personalizados
         addCustomFoodForm.reset();
-        alert(`Alimento "${customFoodName}" adicionado com sucesso!`);
+        alert(`Alimento "${customFoodName}" adicionado com sucesso!`); // Mensagem de sucesso
     });
 
     function editCustomFood(event) {
@@ -976,6 +964,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newFats = prompt(`Editar Gorduras de "${foodToEdit.name}" (${foodToEdit.fatsPer100g}g/100g). Novas Gorduras:`, foodToEdit.fatsPer100g);
         if (newFats === null || isNaN(parseFloat(newFats)) || parseFloat(newFats) < 0) return alert('Gorduras inválidas.');
 
+        // Verifica duplicidade para o novo nome, excluindo o próprio alimento que está sendo editado
         const existingFoodWithNewName = foodDatabase.find((food, i) => i !== index && food.name.toLowerCase() === newName.toLowerCase());
         if (existingFoodWithNewName) {
             alert('Já existe um alimento com este novo nome. Por favor, escolha um nome diferente.');
@@ -990,7 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
         renderCustomFoodList();
-        renderMealGroups();
+        renderMealGroups(); // Para atualizar os datalists de busca de alimentos
         alert(`Alimento "${foodToEdit.name}" atualizado com sucesso!`);
     }
 
@@ -1007,11 +996,13 @@ document.addEventListener('DOMContentLoaded', () => {
             foodDatabase.splice(index, 1);
             localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
             renderCustomFoodList();
-            renderMealGroups();
+            renderMealGroups(); // Para atualizar os datalists de busca de alimentos
             alert('Alimento personalizado excluído.');
         }
     }
 
+
+    // Animações de Check-in
     checkinCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', (event) => {
             const animationDiv = event.target.nextElementSibling.nextElementSibling;
@@ -1027,5 +1018,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Inicializa o aplicativo
     initApp();
+
+    // Mostra a página inicial por padrão, ou configurações se não houver perfil
+    if (!userProfile) {
+        showPage('settings-page');
+    } else {
+        showPage('home-page');
+    }
 });
