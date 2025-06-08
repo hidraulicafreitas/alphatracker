@@ -24,6 +24,32 @@
         <main id="app-content">
             <section id="home-page" class="page-content active">
                 <h2>Bem-vindo, <span id="user-name">Guerreiro</span>!</h2>
+                <div class="user-rank-section">
+                    <h3>Seu Nível Atual</h3>
+                    <div id="user-rank" class="animated-rank">Novato</div>
+                    <p class="highest-rank">Nível Mais Alto Registrado: <span id="highest-rank-display">Novato</span></p>
+                    <button id="show-all-ranks-btn" class="main-btn small-btn">Mostrar Todos os Níveis</button>
+                    <div id="all-ranks-list" class="hidden-ranks">
+                        <h4>Hierarquia dos Níveis</h4>
+                        <ul>
+                            <li>⚔️ Soldado (1 dia)</li>
+                            <li>🛡️ Cabo (2 dias)</li>
+                            <li>🥉 Terceiro Sargento (3-5 dias)</li>
+                            <li>🥈 Segundo Sargento (6-10 dias)</li>
+                            <li>🥇 Primeiro Sargento (11-13 dias)</li>
+                            <li>🌟 Subtenente (14-15 dias)</li>
+                            <li>✨ Aspirante a Oficial (16-20 dias)</li>
+                            <li>💎 Segundo Tenente (21-23 dias)</li>
+                            <li>🚀 Primeiro Tenente (24 dias)</li>
+                            <li>🌠 Capitão (25 dias)</li>
+                            <li>👑 Major (26 dias)</li>
+                            <li>🔥 Coronel (27 dias)</li>
+                            <li>🐺 General de Exército (28 dias)</li>
+                            <li>🦁 Rei (29 dias)</li>
+                            <li>🧘 Monge (30 dias ou mais)</li>
+                        </ul>
+                    </div>
+                </div>
 
                 <div class="progress-section">
                     <h3>Metas do Dia</h3>
@@ -88,6 +114,7 @@
 
             <section id="weight-page" class="page-content">
                 <h2>Acompanhamento de Peso</h2>
+                <p id="weight-page-feedback-message" class="feedback-message"></p>
                 <div class="input-group-inline">
                     <label for="new-current-weight">Registrar Peso (Kg):</label>
                     <input type="number" step="0.1" id="new-current-weight" placeholder="Insira seu peso atual">
@@ -96,15 +123,18 @@
                     <button id="add-weight-entry-btn" class="main-btn small-btn">Registrar</button>
                 </div>
                 <div id="weight-history-chart">
-                    <h3>Evolução do Peso</h3>
+                    <h3>Sua Evolução de Peso</h3>
                     <canvas id="weightChart"></canvas>
-                    <p class="no-data-message" id="chart-no-data" style="display: none;">Dados insuficientes para o gráfico. Registre mais pesos!</p>
-                    <ul id="weight-history-list"></ul>
                 </div>
+                <ul id="weight-history-list"></ul>
             </section>
 
             <section id="checkin-page" class="page-content">
                 <h2>Check-in Diário</h2>
+                <div class="checkin-summary">
+                    <p>Dias no Foco: <span id="current-streak-display">0</span></p>
+                    <p>Máximo de Dias: <span id="max-streak-display">0</span></p>
+                </div>
                 <div class="checkin-item">
                     <input type="checkbox" id="check-sleep">
                     <label for="check-sleep">Dormiu bem?</label>
@@ -217,6 +247,9 @@
                 </div>
             </section>
         </main>
+        <footer>
+            <p>App desenvolvido por Leonardo Freitas - Todos os direitos reservados.</p>
+        </footer>
     </div>
 
     <script src="script.js"></script>

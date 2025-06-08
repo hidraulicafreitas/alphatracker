@@ -10,11 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const weightHistoryList = document.getElementById('weight-history-list');
     const addWeightEntryBtn = document.getElementById('add-weight-entry-btn');
     const newCurrentWeightInput = document.getElementById('new-current-weight');
-    const newWeightDateInput = document.getElementById('new-weight-date'); // Novo campo de data
+    const newWeightDateInput = document.getElementById('new-weight-date');
     const addCustomFoodForm = document.getElementById('add-custom-food-form');
     const customFoodList = document.getElementById('custom-food-list');
     const pastMealsList = document.getElementById('past-meals-list');
-    const dietFeedbackMessage = document.getElementById('diet-feedback-message'); // Mensagem de feedback
+    const dietFeedbackMessage = document.getElementById('diet-feedback-message');
 
     // Home Page Progress Elements
     const userNameSpan = document.getElementById('user-name');
@@ -31,14 +31,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const weightRemainingText = document.getElementById('weight-remaining-text');
     const weightPredictionText = document.getElementById('weight-prediction-text');
     const weightLostGainedText = document.getElementById('weight-lost-gained-text');
+    const userRankDisplay = document.getElementById('user-rank');
+    const highestRankDisplay = document.getElementById('highest-rank-display');
+    const showAllRanksBtn = document.getElementById('show-all-ranks-btn');
+    const allRanksList = document.getElementById('all-ranks-list');
 
     // Target Date field
     const targetDateInput = document.getElementById('target-date');
 
-    // Chart elements
+    // Chart.js elements
     const weightChartCanvas = document.getElementById('weightChart');
-    const chartNoDataMessage = document.getElementById('chart-no-data');
-    let weightChartInstance = null; // To hold the Chart.js instance
+    let weightChart;
 
 
     // --- Application Data (simulating a "database" with LocalStorage) ---
@@ -56,13 +59,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let pastDailySummaries = JSON.parse(localStorage.getItem('pastDailySummaries')) || [];
     let lastWeightCheckDate = localStorage.getItem('lastWeightCheckDate') ? new Date(localStorage.getItem('lastWeightCheckDate')) : null;
 
-    // Variável para armazenar a mensagem de feedback da dieta temporariamente
-    let pendingDietFeedback = { message: '', color: '' };
+    let currentStreak = parseInt(localStorage.getItem('currentStreak')) || 0;
+    let maxStreak = parseInt(localStorage.getItem('maxStreak')) || 0;
+    let highestAchievedRank = localStorage.getItem('highestAchievedRank') || 'Novato';
+    let lastSuccessfulCheckinDate = localStorage.getItem('lastSuccessfulCheckinDate') ? new Date(localStorage.getItem('lastSuccessfulCheckinDate')) : null;
 
 
     let foodDatabase = JSON.parse(localStorage.getItem('foodDatabase')) || [];
     let defaultFoods = [
-        // Carnes (novas adições)
+        // NOVAS ADIÇÕES
+        { name: 'Whey Protein Growth (Concentrado)', kcalPer100g: 380, proteinPer100g: 75, carbsPer100g: 8, fatsPer100g: 5, isCustom: false },
+        { name: 'Leite Integral', kcalPer100g: 60, proteinPer100g: 3.2, carbsPer100g: 4.7, fatsPer100g: 3.3, isCustom: false },
+        { name: 'Leite Desnatado', kcalPer100g: 35, proteinPer100g: 3.4, carbsPer100g: 5, fatsPer100g: 0.5, isCustom: false },
+        // Carnes
         { name: 'Picanha Grelhada', kcalPer100g: 290, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 20, isCustom: false },
         { name: 'Alcatra Grelhada', kcalPer100g: 190, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 9, isCustom: false },
         { name: 'Maminha Grelhada', kcalPer100g: 210, proteinPer100g: 27, carbsPer100g: 0, fatsPer100g: 11, isCustom: false },
@@ -136,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Abóbora Cozida', kcalPer100g: 26, proteinPer100g: 1, carbsPer100g: 6.5, fatsPer100g: 0.1, isCustom: false },
         { name: 'Inhame Cozido', kcalPer100g: 118, proteinPer100g: 1.5, carbsPer100g: 27.5, fatsPer100g: 0.2, isCustom: false },
         { name: 'Mandioca Cozida', kcalPer100g: 160, proteinPer100g: 1.4, carbsPer100g: 38, fatsPer100g: 0.3, isCustom: false },
-        // Proteins
+        // Proteins (existing ones)
         { name: 'Frango Grelhado (Peito)', kcalPer100g: 165, proteinPer100g: 31, carbsPer100g: 0, fatsPer100g: 3.6, isCustom: false },
         { name: 'Bife Grelhado (Patinho)', kcalPer100g: 200, proteinPer100g: 29, carbsPer100g: 0, fatsPer100g: 9, isCustom: false },
         { name: 'Ovo Cozido', kcalPer100g: 155, proteinPer100g: 13, carbsPer100g: 1.1, fatsPer100g: 11, isCustom: false },
@@ -212,6 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Doce de Leite', kcalPer100g: 320, proteinPer100g: 6, carbsPer100g: 55, fatsPer100g: 8, isCustom: false },
         { name: 'Brigadeiro', kcalPer100g: 450, proteinPer100g: 5, carbsPer100g: 60, fatsPer100g: 20, isCustom: false },
     ];
+    // Add default foods to foodDatabase if it's empty or they haven't been added yet
     if (foodDatabase.length === 0 || !foodDatabase.some(food => !food.isCustom)) {
         foodDatabase = defaultFoods.concat(foodDatabase.filter(food => food.isCustom));
         localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
@@ -221,25 +231,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initialization and Rendering Functions ---
 
     function initApp() {
-        console.log("initApp: Starting initialization.");
         checkDailyReset();
         renderUserProfile();
         updateProgressBars();
         renderMealGroups();
         renderCheckinHistory();
+        renderWeightHistory();
         renderCustomFoodList();
-        updateWeightPrediction(); // Always update prediction on home page
+        updateWeightPrediction();
         renderPastMealsHistory();
-        newWeightDateInput.valueAsDate = new Date();
-
-        // The checkWeeklyWeightProgress is now ONLY called when navigating to weight page
-        console.log("initApp: Initialization complete.");
+        checkWeeklyWeightProgress();
+        setupWeightChart();
+        updateCheckinStreakDisplay();
+        updateUserRank();
+        updateHighestRankDisplay();
     }
 
     function checkDailyReset() {
-        console.log("checkDailyReset: Checking daily reset conditions.");
-        const today = new Date().toLocaleDateString('pt-BR');
-        if (dailyData.date !== today) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayLocaleString = today.toLocaleDateString('pt-BR');
+
+        if (dailyData.date !== todayLocaleString) {
             console.log("Reiniciando dados diários e salvando resumo do dia anterior...");
             if (dailyData.consumedCalories > 0 || dailyData.consumedProtein > 0 || dailyData.carbsPer100g > 0 || dailyData.consumedFats > 0) {
                 pastDailySummaries.unshift({
@@ -253,8 +266,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('pastDailySummaries', JSON.stringify(pastDailySummaries));
             }
 
+            // Streak continuity check based on lastSuccessfulCheckinDate
+            if (lastSuccessfulCheckinDate) {
+                const lastCheckinDay = new Date(lastSuccessfulCheckinDate);
+                lastCheckinDay.setHours(0, 0, 0, 0);
+
+                const diffTime = today.getTime() - lastCheckinDay.getTime();
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays > 1) {
+                    currentStreak = 0;
+                    console.log("Streak resetado devido a falha na continuidade.");
+                }
+            } else {
+                currentStreak = 0;
+            }
+            localStorage.setItem('currentStreak', currentStreak);
+
+
             dailyData = {
-                date: today,
+                date: todayLocaleString,
                 consumedCalories: 0,
                 consumedProtein: 0,
                 consumedCarbs: 0,
@@ -272,11 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         }
-        console.log("checkDailyReset: Daily reset check complete.");
     }
 
     function renderUserProfile() {
-        console.log("renderUserProfile: Rendering user profile.");
         if (userProfile) {
             userNameSpan.textContent = userProfile.name;
             document.getElementById('name').value = userProfile.name;
@@ -291,55 +320,54 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             userNameSpan.textContent = 'Guerreiro';
+            showPage('settings-page');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            document.getElementById('nav-settings').classList.add('active');
         }
-        console.log("renderUserProfile: User profile rendered.");
     }
 
     function calculateDailyCaloricNeeds(weight, height, age, gender, activityFactor) {
         let tmb;
         if (gender === 'male') {
             tmb = 10 * weight + 6.25 * height - 5 * age + 5;
-        } else {
+        } else { // female
             tmb = 10 * weight + 6.25 * height - 5 * age - 161;
         }
+
         return tmb * activityFactor;
     }
 
     function saveProfile(event) {
-        console.log("saveProfile: Saving profile.");
         if (event) event.preventDefault();
 
         const name = document.getElementById('name').value;
         const age = parseInt(document.getElementById('age').value);
         const height = parseInt(document.getElementById('height').value);
         const gender = document.getElementById('gender').value;
-        const currentWeightFromSettings = parseFloat(document.getElementById('current-weight-settings').value);
+        const currentWeight = parseFloat(document.getElementById('current-weight-settings').value);
         const targetWeight = parseFloat(document.getElementById('target-weight').value);
         const activityFactor = parseFloat(document.getElementById('activity-factor').value);
         const targetDate = document.getElementById('target-date').value;
 
-        if (!name || isNaN(age) || isNaN(height) || isNaN(currentWeightFromSettings) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
+        if (!name || isNaN(age) || isNaN(height) || isNaN(currentWeight) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
             alert('Por favor, preencha todos os campos do perfil corretamente, incluindo a data final da meta.');
             return;
         }
 
-        const dailyCaloricNeeds = calculateDailyCaloricNeeds(currentWeightFromSettings, height, age, gender, activityFactor);
+        const dailyCaloricNeeds = calculateDailyCaloricNeeds(currentWeight, height, age, gender, activityFactor);
         const caloricDeficit = dailyCaloricNeeds * 0.20;
-        let targetCalories = Math.round(dailyCaloricNeeds - caloricDeficit);
+        const targetCalories = Math.round(dailyCaloricNeeds - caloricDeficit);
 
-        let targetProtein = Math.round((targetCalories * 0.40) / 4);
+        const targetProtein = Math.round((targetCalories * 0.40) / 4);
         let targetCarbs = Math.round((targetCalories * 0.40) / 4);
-        let targetFats = Math.round((targetCalories * 0.20) / 9);
+        const targetFats = Math.round((targetCalories * 0.20) / 9);
 
         if (userProfile && userProfile.carbDeficitApplied) {
             targetCarbs = Math.round(targetCarbs * 0.80);
-            targetCalories = Math.round(targetProtein * 4 + targetCarbs * 4 + targetFats * 9);
         }
 
         userProfile = {
-            name, age, height, gender,
-            currentWeight: currentWeightFromSettings,
-            targetWeight, activityFactor, targetDate,
+            name, age, height, gender, currentWeight, targetWeight, activityFactor, targetDate,
             dailyCaloricNeeds: Math.round(dailyCaloricNeeds),
             targetCalories,
             targetProtein,
@@ -349,9 +377,10 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
 
-        if (weightHistory.length === 0 || weightHistory[weightHistory.length - 1].weight !== currentWeightFromSettings) {
-            const dateToLog = new Date().toISOString().split('T')[0];
-            addWeightEntry(currentWeightFromSettings, dateToLog, false);
+        if (weightHistory.length === 0 || weightHistory[weightHistory.length - 1].weight !== currentWeight) {
+            if (event && event.type === 'submit') {
+                addWeightEntry(currentWeight, new Date().toLocaleDateString('pt-BR'), false);
+            }
         }
 
         renderUserProfile();
@@ -361,11 +390,9 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Perfil salvo e o app está pronto para uso!');
             showPage('home-page');
         }
-        console.log("saveProfile: Profile saved.");
     }
 
     function updateProgressBars() {
-        console.log("updateProgressBars: Updating progress bars.");
         if (!userProfile) {
             caloriesNum.textContent = '0 / 0 Kcal';
             caloriesProgressBar.style.width = '0%';
@@ -378,7 +405,6 @@ document.addEventListener('DOMContentLoaded', () => {
             weightNum.textContent = '0 Kg / 0 Kg';
             weightProgressBar.style.width = '0%';
             weightRemainingText.textContent = '';
-            targetDateInput.textContent = '';
             weightLostGainedText.textContent = '';
             return;
         }
@@ -411,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let weightProgress;
 
         if (weightHistory.length > 0) {
-            const lastRecordedWeight = userProfile.currentWeight;
+            const lastRecordedWeight = weightHistory[weightHistory.length - 1].weight;
             const initialWeight = weightHistory[0].weight;
 
             const totalWeightChangeGoal = Math.abs(initialWeight - targetWeight);
@@ -437,6 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     weightLostGainedText.textContent = '';
                 }
             }
+
+
             weightProgressBar.style.width = `${weightProgress}%`;
             weightProgressBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vibrant-blue');
             weightNum.textContent = `${lastRecordedWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
@@ -447,19 +475,43 @@ document.addEventListener('DOMContentLoaded', () => {
             weightRemainingText.textContent = `Faltam ${Math.abs(userProfile.currentWeight - targetWeight).toFixed(1)} Kg para atingir sua meta.`;
             weightLostGainedText.textContent = '';
         }
-        console.log("updateProgressBars: Progress bars updated.");
     }
 
+    function calculateExpectedWeight(initialWeight, targetWeight, initialDate, targetDate, currentDate) {
+        initialDate.setHours(0, 0, 0, 0);
+        targetDate.setHours(23, 59, 59, 999);
+        currentDate.setHours(0, 0, 0, 0);
+
+        const totalDurationMs = targetDate.getTime() - initialDate.getTime();
+        const totalDurationDays = totalDurationMs / (1000 * 60 * 60 * 24);
+
+        if (totalDurationDays <= 0 || currentDate.getTime() < initialDate.getTime()) {
+            return initialWeight;
+        }
+
+        const daysPassedSinceInitial = (currentDate.getTime() - initialDate.getTime()) / (1000 * 60 * 60 * 24);
+        if (daysPassedSinceInitial > totalDurationDays) {
+            return targetWeight;
+        }
+
+        const totalWeightDifference = targetWeight - initialWeight;
+        const requiredChangePerDay = totalWeightDifference / totalDurationDays;
+
+        return initialWeight + (requiredChangePerDay * daysPassedSinceInitial);
+    }
+
+
     function updateWeightPrediction() {
-        console.log("updateWeightPrediction: Updating weight prediction.");
         if (!userProfile || weightHistory.length < 1 || !userProfile.targetDate) {
             weightPredictionText.textContent = 'Registre seu peso atual e defina a data final da meta para uma previsão.';
             return;
         }
 
+        const lastWeightEntry = weightHistory[weightHistory.length - 1];
         const initialWeightEntry = weightHistory[0];
         const initialWeight = initialWeightEntry.weight;
-        const initialDate = new Date(initialWeightEntry.date.split('/').reverse().join('-') + 'T00:00:00');
+        const initialDateParts = initialWeightEntry.date.split('/');
+        const initialDate = new Date(`${initialDateParts[2]}-${initialDateParts[1]}-${initialDateParts[0]}T00:00:00`);
 
         const targetWeight = userProfile.targetWeight;
         const targetDate = new Date(userProfile.targetDate + 'T23:59:59');
@@ -471,10 +523,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalDurationDays = totalDurationMs / (1000 * 60 * 60 * 24);
 
         if (totalDurationDays <= 0) {
-            if (Math.abs(userProfile.currentWeight - targetWeight) < 0.1) {
+            if (Math.abs(lastWeightEntry.weight - targetWeight) < 0.1) {
                 weightPredictionText.textContent = `Parabéns! Você atingiu sua meta de ${targetWeight.toFixed(1)} Kg!`;
             } else if (today > targetDate) {
-                weightPredictionText.textContent = `A data da sua meta (${userProfile.targetDate}) já passou. Você terminou em ${userProfile.currentWeight.toFixed(1)} Kg.`;
+                weightPredictionText.textContent = `A data da sua meta (${userProfile.targetDate}) já passou. Você terminou em ${lastWeightEntry.weight.toFixed(1)} Kg.`;
             } else {
                 weightPredictionText.textContent = 'A data final da meta deve ser no futuro.';
             }
@@ -487,72 +539,55 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const totalWeightDifference = targetWeight - initialWeight;
-        const requiredChangePerDay = totalWeightDifference / totalDurationDays;
-
-        const expectedWeightToday = initialWeight + (requiredChangePerDay * daysPassedSinceInitial);
+        const expectedWeightToday = calculateExpectedWeight(initialWeight, targetWeight, initialDate, targetDate, today);
 
         let statusMessage = '';
-        const deviation = userProfile.currentWeight - expectedWeightToday;
+        const deviation = lastWeightEntry.weight - expectedWeightToday;
 
         if (Math.abs(deviation) < 0.2) {
-            statusMessage = `Você está no caminho certo! Seu peso atual (${userProfile.currentWeight.toFixed(1)} Kg) está próximo do esperado (${expectedWeightToday.toFixed(1)} Kg).`;
+            statusMessage = `Você está no caminho certo! Seu peso atual (${lastWeightEntry.weight.toFixed(1)} Kg) está próximo do esperado (${expectedWeightToday.toFixed(1)} Kg).`;
         } else if (targetWeight > initialWeight) {
             if (deviation > 0) {
-                statusMessage = `Você está adiantado na sua meta de ganho de peso! Atual: ${userProfile.currentWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+                statusMessage = `Você está adiantado na sua meta de ganho de peso! Atual: ${lastWeightEntry.weight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
             } else {
-                statusMessage = `Você está um pouco atrasado na sua meta de ganho de peso. Atual: ${userProfile.currentWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+                statusMessage = `Você está um pouco atrasado na sua meta de ganho de peso. Atual: ${lastWeightEntry.weight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
             }
         } else {
             if (deviation < 0) {
-                statusMessage = `Você está adiantado na sua meta de perda de peso! Atual: ${userProfile.currentWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+                statusMessage = `Você está adiantado na sua meta de perda de peso! Atual: ${lastWeightEntry.weight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
             } else {
-                statusMessage = `Você está um pouco atrasado na sua meta de perda de peso. Atual: ${userProfile.currentWeight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
+                statusMessage = `Você está um pouco atrasado na sua meta de perda de peso. Atual: ${lastWeightEntry.weight.toFixed(1)} Kg, Esperado: ${expectedWeightToday.toFixed(1)} Kg.`;
             }
         }
         weightPredictionText.textContent = statusMessage;
-        console.log("updateWeightPrediction: Weight prediction updated.");
     }
 
     function checkWeeklyWeightProgress() {
-        console.log("checkWeeklyWeightProgress: Starting weekly weight progress check.");
-        // Clear pending feedback at start of check, regardless of whether a prompt is shown
-        // This ensures old messages don't linger if the conditions for a new prompt aren't met.
-        pendingDietFeedback = { message: '', color: '' }; 
+        dietFeedbackMessage.textContent = '';
 
         if (!userProfile || weightHistory.length < 2) {
-            console.log("checkWeeklyWeightProgress: Not enough data for check.");
             return;
         }
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const todayString = today.toLocaleDateString('pt-BR');
 
-        const lastCheckDateString = lastWeightCheckDate ? lastWeightCheckDate.toLocaleDateString('pt-BR') : '';
-
-        // Only run the prompt logic if it's been at least 7 days since the last check (or never checked)
-        // AND if a prompt hasn't already been shown for today
-        if (lastCheckDateString === todayString) {
-            console.log("checkWeeklyWeightProgress: Already checked today. Skipping prompt.");
-            // Even if already checked, we want to ensure the last feedback message is displayed
-            displayDietFeedback(); 
-            return;
-        }
+        const lastRecordedWeightDateParts = weightHistory[weightHistory.length - 1].date.split('/');
+        const lastRecordedWeightDate = new Date(`${lastRecordedWeightDateParts[2]}-${lastRecordedWeightDateParts[1]}-${lastRecordedWeightDateParts[0]}`);
+        lastRecordedWeightDate.setHours(0, 0, 0, 0);
 
         const daysSinceLastCheck = lastWeightCheckDate ?
             Math.floor((today.getTime() - lastWeightCheckDate.getTime()) / (1000 * 60 * 60 * 24)) :
-            7; 
-
-        console.log(`Days since last check: ${daysSinceLastCheck}`);
+            7;
 
         if (daysSinceLastCheck >= 7) {
             let weight7DaysAgoEntry = null;
             for (let i = weightHistory.length - 1; i >= 0; i--) {
-                const entryDate = new Date(weightHistory[i].date.split('/').reverse().join('-'));
+                const entryDateParts = weightHistory[i].date.split('/');
+                const entryDate = new Date(`${entryDateParts[2]}-${entryDateParts[1]}-${entryDateParts[0]}`);
                 entryDate.setHours(0, 0, 0, 0);
-                const diffDaysFromToday = Math.floor((today.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-                if (diffDaysFromToday >= 7) {
+                const diffDays = Math.floor((lastRecordedWeightDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 7) {
                     weight7DaysAgoEntry = weightHistory[i];
                     break;
                 }
@@ -563,147 +598,80 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!weight7DaysAgoEntry) {
-                localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                console.log("checkWeeklyWeightProgress: No historical data for 7 days ago. Setting last check date.");
-                displayDietFeedback(); // Try to display feedback even if conditions aren't met
                 return;
             }
 
-            const currentWeight = userProfile.currentWeight;
+            const currentWeight = weightHistory[weightHistory.length - 1].weight;
             const weight7DaysAgo = weight7DaysAgoEntry.weight;
             const weightChange = currentWeight - weight7DaysAgo;
 
-            console.log(`Current Weight: ${currentWeight}, Weight 7 days ago: ${weight7DaysAgo}, Change: ${weightChange}`);
+            const targetLoss = userProfile.currentWeight - userProfile.targetWeight;
+            const targetGain = userProfile.targetWeight - userProfile.currentWeight;
 
-            // Set lastWeightCheckDate immediately after the check logic to prevent re-prompting
-            localStorage.setItem('lastWeightCheckDate', today.toISOString());
-
-            // Scenario: User has a weight loss goal
-            if (userProfile.targetWeight < currentWeight) {
-                if (weightChange >= -0.5) { // Lost less than 500g (or gained/maintained)
-                    const followedDiet = confirm(`Nos últimos ${daysSinceLastCheck} dias, seu peso mudou em ${weightChange.toFixed(1)} Kg (meta: perder peso). Você seguiu a dieta e os treinos corretamente?
+            if (userProfile.targetWeight < userProfile.currentWeight) {
+                if (weightChange >= -0.5) {
+                    setTimeout(() => {
+                        const followedDiet = confirm(`Nos últimos ${daysSinceLastCheck} dias, seu peso mudou em ${weightChange.toFixed(1)} Kg (meta: perder). Você seguiu a dieta e os treinos corretamente?
                         \n(Clique em 'OK' para SIM, 'Cancelar' para NÃO)`);
-
-                    if (followedDiet) {
-                        userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 0.80);
-                        userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
-                        userProfile.carbDeficitApplied = true;
-                        localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                        saveProfile(null);
-                        pendingDietFeedback = {
-                            message: `Ajuste de metas: Foi aplicado um déficit de 20% nos carboidratos (Nova meta de Carb: ${userProfile.targetCarbs}g) e Kcal recalculadas para ${userProfile.targetCalories} Kcal, devido ao baixo progresso na perda de peso. Mantenha o foco!`,
-                            color: 'var(--vibrant-orange)'
-                        };
-                        console.log("checkWeeklyWeightProgress: Diet adjusted for loss.");
-                    } else {
-                        userProfile.carbDeficitApplied = false;
-                        localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                        saveProfile(null);
-                        pendingDietFeedback = {
-                            message: 'Metas mantidas. Tente seguir a dieta e treinos corretamente pelos próximos 7 dias para avaliar o progresso.',
-                            color: 'var(--vibrant-blue)'
-                        };
-                        console.log("checkWeeklyWeightProgress: Diet maintained for loss.");
-                    }
-                } else { // User lost 500g or more, good progress!
-                    if (userProfile.carbDeficitApplied) {
-                        userProfile.carbDeficitApplied = false;
-                        localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                        saveProfile(null);
-                        pendingDietFeedback = {
-                            message: 'Parabéns! Suas metas de carboidratos foram normalizadas pois você está no caminho certo para perder peso!',
-                            color: 'var(--vibrant-blue)'
-                        };
-                        console.log("checkWeeklyWeightProgress: Carb deficit removed, good loss progress.");
-                    } else {
-                        pendingDietFeedback = {
-                            message: `Ótimo trabalho! Você perdeu ${Math.abs(weightChange).toFixed(1)} Kg nos últimos ${daysSinceLastCheck} dias. Continue assim!`,
-                            color: 'var(--vibrant-blue)'
-                        };
-                        console.log("checkWeeklyWeightProgress: Good loss progress.");
-                    }
+                        if (followedDiet) {
+                            userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 0.80);
+                            userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
+                            userProfile.carbDeficitApplied = true;
+                            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                            localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                            saveProfile();
+                            dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um déficit de 20% nos carboidratos devido ao baixo progresso na perda de peso. Mantenha o foco!';
+                            dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
+                        } else {
+                            userProfile.carbDeficitApplied = false;
+                            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                            localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                            saveProfile();
+                            dietFeedbackMessage.textContent = 'Metas mantidas. Tente seguir a dieta e treinos corretamente pelos próximos 7 dias para avaliar o progresso.';
+                            dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
+                        }
+                    }, 500);
                 }
-            } else if (userProfile.targetWeight > currentWeight) { // Goal is to gain weight
-                if (weightChange <= 0.5) { // Gained less than 500g (or lost/maintained)
-                    const followedDiet = confirm(`Nos últimos ${daysSinceLastCheck} dias, seu peso mudou em ${weightChange.toFixed(1)} Kg (meta: ganhar peso). Você seguiu a dieta e os treinos corretamente?
+            } else if (userProfile.targetWeight > userProfile.currentWeight) {
+                if (weightChange <= 0.5) {
+                    setTimeout(() => {
+                        const followedDiet = confirm(`Nos últimos ${daysSinceLastCheck} dias, seu peso mudou em ${weightChange.toFixed(1)} Kg (meta: ganhar). Você seguiu a dieta e os treinos corretamente?
                         \n(Clique em 'OK' para SIM, 'Cancelar' para NÃO)`);
-
-                    if (followedDiet) {
-                        userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 1.10);
-                        userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
-                        localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                        saveProfile(null);
-                        pendingDietFeedback = {
-                            message: `Ajuste de metas: Foi aplicado um aumento de 10% nos carboidratos (Nova meta de Carb: ${userProfile.targetCarbs}g) e Kcal recalculadas para ${userProfile.targetCalories} Kcal, para auxiliar no ganho de peso. Mantenha o foco!`,
-                            color: 'var(--vibrant-orange)'
-                        };
-                        console.log("checkWeeklyWeightProgress: Diet adjusted for gain.");
-                    } else {
-                        localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                        saveProfile(null);
-                        pendingDietFeedback = {
-                            message: 'Metas mantidas. Tente seguir a dieta e treinos corretamente pelos próximos 7 dias para avaliar o progresso.',
-                            color: 'var(--vibrant-blue)'
-                        };
-                        console.log("checkWeeklyWeightProgress: Diet maintained for gain.");
-                    }
-                } else {
-                    pendingDietFeedback = {
-                        message: `Ótimo trabalho! Você ganhou ${weightChange.toFixed(1)} Kg nos últimos ${daysSinceLastCheck} dias. Continue assim!`,
-                        color: 'var(--vibrant-blue)'
-                    };
-                    console.log("checkWeeklyWeightProgress: Good gain progress.");
+                        if (followedDiet) {
+                            userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 1.10);
+                            userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
+                            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                            localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                            saveProfile();
+                            dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um aumento de 10% nos carboidratos para auxiliar no ganho de peso. Mantenha o foco!';
+                            dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
+                        } else {
+                            localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                            dietFeedbackMessage.textContent = 'Metas mantidas. Tente seguir a dieta e treinos corretamente pelos próximos 7 dias para avaliar o progresso.';
+                            dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
+                        }
+                    }, 500);
                 }
-            } else { // Already at target weight or no significant change needed
+            } else {
                 if (userProfile.carbDeficitApplied) {
                     userProfile.carbDeficitApplied = false;
                     localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                    saveProfile(null);
-                    pendingDietFeedback = {
-                        message: 'Parabéns! Suas metas de carboidratos foram normalizadas pois você atingiu ou está próximo de sua meta de peso.',
-                        color: 'var(--vibrant-blue)'
-                    };
-                    console.log("checkWeeklyWeightProgress: Carb deficit removed, target reached.");
-                } else {
-                    pendingDietFeedback = {
-                        message: `Você está no peso ideal (${currentWeight.toFixed(1)} Kg). Mantenha o foco!`,
-                        color: 'var(--vibrant-blue)'
-                    };
-                    console.log("checkWeeklyWeightProgress: At ideal weight.");
+                    saveProfile();
+                    dietFeedbackMessage.textContent = 'Parabéns! Suas metas de carboidratos foram normalizadas.';
+                    dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
                 }
+                localStorage.setItem('lastWeightCheckDate', today.toISOString());
             }
         }
-        console.log("checkWeeklyWeightProgress: Weekly weight progress check finished.");
-        // After the check, ensure the feedback is displayed if on the weight page
-        const currentPageId = document.querySelector('.page-content.active').id;
-        if (currentPageId === 'weight-page') {
-            displayDietFeedback();
-        }
-    }
-
-    // Function to display pending diet feedback
-    function displayDietFeedback() {
-        console.log("displayDietFeedback: Attempting to display feedback.");
-        if (pendingDietFeedback.message) {
-            dietFeedbackMessage.textContent = pendingDietFeedback.message;
-            dietFeedbackMessage.style.color = pendingDietFeedback.color;
-            // The pendingDietFeedback is now only cleared at the START of checkWeeklyWeightProgress
-            console.log("displayDietFeedback: Feedback displayed.");
-        } else {
-            dietFeedbackMessage.textContent = ''; // Ensure it's cleared if no pending message
-            console.log("displayDietFeedback: No pending feedback to display.");
-        }
     }
 
 
-    // Helper function to remove accents and convert to lowercase
     function normalizeString(str) {
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     }
 
 
     function renderMealGroups() {
-        console.log("renderMealGroups: Rendering meal groups.");
         mealGroupsContainer.innerHTML = '';
         if (dailyData.mealGroups.length === 0) {
             mealGroupsContainer.innerHTML = '<p class="no-data-message">Nenhum grupo de refeição adicionado ainda. Clique em "Adicionar Grupo de Refeição".</p>';
@@ -755,13 +723,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             searchInput.addEventListener('input', () => handleFoodSearch(searchInput, dataList));
             searchInput.addEventListener('change', (e) => {
-                if (foodDatabase.some(food => normalizeString(food.name) === normalizeString(e.target.value))) {
-                } else {
+                const isValidFood = foodDatabase.some(food => normalizeString(food.name) === normalizeString(e.target.value));
+                if (!isValidFood) {
                     e.target.value = '';
                 }
             });
         });
-        console.log("renderMealGroups: Meal groups rendered.");
     }
 
     function handleFoodSearch(inputElement, dataListElement) {
@@ -785,8 +752,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function renderCheckinHistory() {
-        console.log("renderCheckinHistory: Rendering check-in history.");
         checkinHistoryList.innerHTML = '';
+        checkinHistory = JSON.parse(localStorage.getItem('checkinHistory')) || [];
         if (checkinHistory.length === 0) {
             checkinHistoryList.innerHTML = '<p class="no-data-message">Nenhum check-in registrado ainda.</p>';
             return;
@@ -802,39 +769,77 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             checkinHistoryList.appendChild(listItem);
         });
-        console.log("renderCheckinHistory: Check-in history rendered.");
     }
 
+    function updateCheckinStreakDisplay() {
+        document.getElementById('current-streak-display').textContent = currentStreak;
+        document.getElementById('max-streak-display').textContent = maxStreak;
+    }
+
+    function getRankName(streak) {
+        if (streak >= 30) return '🧘 Monge';
+        if (streak === 29) return '🦁 Rei';
+        if (streak === 28) return '🐺 General de Exército';
+        if (streak === 27) return '🔥 Coronel';
+        if (streak === 26) return '👑 Major';
+        if (streak === 25) return '🌠 Capitão';
+        if (streak === 24) return '🚀 Primeiro Tenente';
+        if (streak >= 21 && streak <= 23) return '💎 Segundo Tenente';
+        if (streak >= 16 && streak <= 20) return '✨ Aspirante a Oficial';
+        if (streak >= 14 && streak <= 15) return '🌟 Subtenente';
+        if (streak >= 11 && streak <= 13) return '🥇 Primeiro Sargento';
+        if (streak >= 6 && streak <= 10) return '🥈 Segundo Sargento';
+        if (streak >= 3 && streak <= 5) return '🥉 Terceiro Sargento';
+        if (streak === 2) return '🛡️ Cabo';
+        if (streak === 1) return '⚔️ Soldado';
+        return 'Novato';
+    }
+
+    function updateUserRank() {
+        userRankDisplay.textContent = getRankName(currentStreak);
+        const currentRankName = getRankName(currentStreak);
+        const highestRankOrder = [
+            'Novato',
+            '⚔️ Soldado',
+            '🛡️ Cabo',
+            '🥉 Terceiro Sargento',
+            '🥈 Segundo Sargento',
+            '🥇 Primeiro Sargento',
+            '🌟 Subtenente',
+            '✨ Aspirante a Oficial',
+            '💎 Segundo Tenente',
+            '🚀 Primeiro Tenente',
+            '🌠 Capitão',
+            '👑 Major',
+            '🔥 Coronel',
+            '🐺 General de Exército',
+            '🦁 Rei',
+            '🧘 Monge'
+        ];
+        const currentRankIndex = highestRankOrder.indexOf(currentRankName);
+        const highestAchievedRankIndex = highestRankOrder.indexOf(highestAchievedRank);
+
+        if (currentRankIndex > highestAchievedRankIndex) {
+            highestAchievedRank = currentRankName;
+            localStorage.setItem('highestAchievedRank', highestAchievedRank);
+            updateHighestRankDisplay();
+        }
+    }
+
+    function updateHighestRankDisplay() {
+        highestRankDisplay.textContent = highestAchievedRank;
+    }
+
+
     function renderWeightHistory() {
-        console.log("renderWeightHistory: Rendering weight history and chart.");
-        weightHistoryList.innerHTML = ''; // Clear existing list items
+        weightHistoryList.innerHTML = '';
         if (weightHistory.length === 0) {
             weightHistoryList.innerHTML = '<p class="no-data-message">Nenhum peso registrado ainda.</p>';
-            chartNoDataMessage.style.display = 'block';
-            weightChartCanvas.style.display = 'none'; // Hide canvas if no data
-            if (weightChartInstance) {
-                weightChartInstance.destroy();
-                weightChartInstance = null;
-            }
-            displayDietFeedback(); // Display feedback message if any, even with no weight history
-            console.log("renderWeightHistory: No weight history.");
             return;
         }
-
-        // Sort weight history by date to ensure chronological order for chart and correct display
-        weightHistory.sort((a, b) => {
-            // Convert "DD/MM/YYYY" to "YYYY-MM-DD" for accurate Date object creation
-            const dateA = new Date(a.date.split('/').reverse().join('-'));
-            const dateB = new Date(b.date.split('/').reverse().join('-'));
-            return dateA - dateB;
-        });
-
-        // Displaying the list (most recent first)
         weightHistory.slice().reverse().forEach((entry, originalIndex) => {
             const listItem = document.createElement('li');
-            // Find actual index to ensure correct editing/deletion of original sorted array
-            const actualIndex = weightHistory.findIndex(wh => wh.date === entry.date && wh.weight === entry.weight);
-
+            const actualIndex = weightHistory.length - 1 - originalIndex;
             listItem.innerHTML = `
                 <span>${entry.date}</span>
                 <span>${entry.weight.toFixed(1)} Kg</span>
@@ -846,173 +851,16 @@ document.addEventListener('DOMContentLoaded', () => {
             weightHistoryList.appendChild(listItem);
         });
 
-        // Add event listeners for edit and delete buttons
         weightHistoryList.querySelectorAll('.edit-weight-btn').forEach(button => {
             button.addEventListener('click', editWeightEntry);
         });
         weightHistoryList.querySelectorAll('.delete-weight-btn').forEach(button => {
             button.addEventListener('click', deleteWeightEntry);
         });
-
-        // Render the chart only if there's enough data
-        if (weightHistory.length >= 1 && userProfile) {
-            renderWeightChart();
-        } else {
-            chartNoDataMessage.style.display = 'block';
-            weightChartCanvas.style.display = 'none';
-            if (weightChartInstance) {
-                weightChartInstance.destroy();
-                weightChartInstance = null;
-            }
-        }
-        displayDietFeedback(); // Display feedback message after rendering history and chart
-        console.log("renderWeightHistory: Weight history and chart rendered.");
+        updateWeightChart();
     }
-
-    function renderWeightChart() {
-        console.log("renderWeightChart: Drawing weight chart.");
-        if (weightHistory.length < 1 || !userProfile) {
-            chartNoDataMessage.style.display = 'block';
-            weightChartCanvas.style.display = 'none';
-            if (weightChartInstance) { // Destroy existing chart if data is insufficient
-                weightChartInstance.destroy();
-                weightChartInstance = null;
-            }
-            console.log("renderWeightChart: Not enough data for chart.");
-            return;
-        }
-
-        chartNoDataMessage.style.display = 'none';
-        weightChartCanvas.style.display = 'block';
-
-        const labels = weightHistory.map(entry => entry.date);
-        const actualWeightData = weightHistory.map(entry => entry.weight);
-
-        const expectedWeightData = [];
-        const initialWeight = weightHistory[0].weight;
-        const initialDate = new Date(weightHistory[0].date.split('/').reverse().join('-'));
-        const targetWeight = userProfile.targetWeight;
-        const targetDate = new Date(userProfile.targetDate + 'T23:59:59');
-
-        const totalDurationMs = targetDate.getTime() - initialDate.getTime();
-        const totalDurationDays = totalDurationMs / (1000 * 60 * 60 * 24);
-        const totalWeightDifference = targetWeight - initialWeight;
-
-        weightHistory.forEach(entry => {
-            const currentDate = new Date(entry.date.split('/').reverse().join('-'));
-            const daysPassedSinceInitial = (currentDate.getTime() - initialDate.getTime()) / (1000 * 60 * 60 * 24);
-            let expectedWeight;
-
-            if (totalDurationDays > 0) {
-                expectedWeight = initialWeight + (totalWeightDifference / totalDurationDays) * daysPassedSinceInitial;
-            } else {
-                expectedWeight = initialWeight;
-            }
-            expectedWeightData.push(parseFloat(expectedWeight.toFixed(1)));
-        });
-
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        const lastLabelDate = new Date(labels[labels.length - 1].split('/').reverse().join('-'));
-        lastLabelDate.setHours(0,0,0,0);
-
-        if (today.getTime() > lastLabelDate.getTime()) {
-            labels.push(today.toLocaleDateString('pt-BR'));
-            const daysPassedSinceInitial = (today.getTime() - initialDate.getTime()) / (1000 * 60 * 60 * 24);
-            let expectedWeightToday;
-            if (totalDurationDays > 0) {
-                expectedWeightToday = initialWeight + (totalWeightDifference / totalDurationDays) * daysPassedSinceInitial;
-            } else {
-                expectedWeightToday = initialWeight;
-            }
-            expectedWeightData.push(parseFloat(expectedWeightToday.toFixed(1)));
-            actualWeightData.push(null);
-        }
-
-
-        const ctx = weightChartCanvas.getContext('2d');
-
-        if (weightChartInstance) {
-            weightChartInstance.destroy();
-        }
-
-        weightChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Peso Atual',
-                        data: actualWeightData,
-                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--vibrant-blue'),
-                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
-                        fill: false,
-                        tension: 0.1,
-                        pointRadius: 5,
-                        pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--vibrant-blue'),
-                        pointBorderColor: '#fff',
-                        pointHoverRadius: 8
-                    },
-                    {
-                        label: 'Peso Esperado',
-                        data: expectedWeightData,
-                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--vibrant-orange'),
-                        backgroundColor: 'rgba(230, 126, 34, 0.2)',
-                        fill: false,
-                        tension: 0.1,
-                        borderDash: [5, 5],
-                        pointRadius: 0
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: 'category',
-                        title: {
-                            display: true,
-                            text: 'Data',
-                            color: 'var(--text-light)'
-                        },
-                        ticks: {
-                            color: 'var(--text-gray)'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Peso (Kg)',
-                            color: 'var(--text-light)'
-                        },
-                        ticks: {
-                            color: 'var(--text-gray)'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        beginAtZero: false
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: 'var(--text-light)'
-                        }
-                    }
-                }
-            }
-        });
-        console.log("renderWeightChart: Chart drawn successfully.");
-    }
-
 
     function renderPastMealsHistory() {
-        console.log("renderPastMealsHistory: Rendering past meals history.");
         pastMealsList.innerHTML = '';
         if (pastDailySummaries.length === 0) {
             pastMealsList.innerHTML = '<p class="no-data-message">Nenhum histórico de refeições anteriores.</p>';
@@ -1025,12 +873,10 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             pastMealsList.appendChild(listItem);
         });
-        console.log("renderPastMealsHistory: Past meals history rendered.");
     }
 
 
     function renderCustomFoodList() {
-        console.log("renderCustomFoodList: Rendering custom food list.");
         customFoodList.innerHTML = '';
         const customFoods = foodDatabase.filter(food => food.isCustom);
 
@@ -1061,7 +907,668 @@ document.addEventListener('DOMContentLoaded', () => {
         customFoodList.querySelectorAll('.delete-custom-food-btn').forEach(button => {
             button.addEventListener('click', deleteCustomFood);
         });
-        console.log("renderCustomFoodList: Custom food list rendered.");
+    }
+
+    function calculateMovingAverage(data, windowSize) {
+        if (data.length < windowSize) {
+            return new Array(data.length).fill(null); // Not enough data for average
+        }
+        const averages = [];
+        for (let i = 0; i < data.length; i++) {
+            if (i < windowSize - 1) {
+                averages.push(null); // Not enough previous data for the first few points
+            } else {
+                let sum = 0;
+                for (let j = 0; j < windowSize; j++) {
+                    sum += data[i - j];
+                }
+                averages.push(sum / windowSize);
+            }
+        }
+        return averages;
+    }
+
+    function setupWeightChart() {
+        if (weightChart) {
+            weightChart.destroy();
+        }
+
+        const labels = weightHistory.map(entry => entry.date);
+        const actualWeightData = weightHistory.map(entry => entry.weight);
+
+        let expectedWeightData = [];
+        if (userProfile && weightHistory.length > 0 && userProfile.targetDate) {
+            const initialWeightEntry = weightHistory[0];
+            const initialWeight = initialWeightEntry.weight;
+            const initialDateParts = initialWeightEntry.date.split('/');
+            const initialDate = new Date(`${initialDateParts[2]}-${initialDateParts[1]}-${initialDateParts[0]}T00:00:00`);
+            const targetWeight = userProfile.targetWeight;
+            const targetDate = new Date(userProfile.targetDate + 'T23:59:59');
+
+            labels.forEach(labelDateStr => {
+                const labelDateParts = labelDateStr.split('/');
+                const currentDate = new Date(`${labelDateParts[2]}-${labelDateParts[1]}-${labelDateParts[0]}T00:00:00`);
+                expectedWeightData.push(calculateExpectedWeight(initialWeight, targetWeight, initialDate, targetDate, currentDate));
+            });
+        }
+
+        // Calculate a 7-day moving average for the actual weight data
+        const averageWeightData = calculateMovingAverage(actualWeightData, 7);
+
+
+        weightChart = new Chart(weightChartCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Peso Atual (Kg)',
+                    data: actualWeightData,
+                    borderColor: 'rgb(0, 123, 255)',
+                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 5,
+                    pointBackgroundColor: 'rgb(0, 123, 255)'
+                },
+                {
+                    label: 'Peso Esperado (Kg)',
+                    data: expectedWeightData,
+                    borderColor: 'rgb(230, 126, 34)',
+                    backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                    borderDash: [5, 5],
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 0
+                },
+                {
+                    label: 'Média de Peso (7 dias)',
+                    data: averageWeightData,
+                    borderColor: 'rgba(150, 150, 150, 0.5)', // Esmaecido
+                    backgroundColor: 'rgba(150, 150, 150, 0.1)',
+                    borderDash: [2, 2], // Linha tracejada para média
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'category',
+                        title: {
+                            display: true,
+                            text: 'Data',
+                            color: 'var(--text-light)'
+                        },
+                        ticks: {
+                            color: 'var(--text-gray)'
+                        },
+                        grid: {
+                            color: 'rgba(63, 74, 107, 0.3)'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Peso (Kg)',
+                            color: 'var(--text-light)'
+                        },
+                        ticks: {
+                            color: 'var(--text-gray)'
+                        },
+                        grid: {
+                            color: 'rgba(63, 74, 107, 0.3)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'var(--text-light)'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw.toFixed(1)} Kg`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateWeightChart() {
+        if (weightChart) {
+            weightChart.data.labels = weightHistory.map(entry => entry.date);
+            weightChart.data.datasets[0].data = weightHistory.map(entry => entry.weight);
+
+            if (userProfile && weightHistory.length > 0 && userProfile.targetDate) {
+                const initialWeightEntry = weightHistory[0];
+                const initialWeight = initialWeightEntry.weight;
+                const initialDateParts = initialWeightEntry.date.split('/');
+                const initialDate = new Date(`${initialDateParts[2]}-${initialDateParts[1]}-${initialDateParts[0]}T00:00:00`);
+                const targetWeight = userProfile.targetWeight;
+                const targetDate = new Date(userProfile.targetDate + 'T23:59:59');
+
+                let expectedWeightData = [];
+                weightChart.data.labels.forEach(labelDateStr => {
+                    const labelDateParts = labelDateStr.split('/');
+                    const currentDate = new Date(`${labelDateParts[2]}-${labelDateParts[1]}-${labelDateParts[0]}T00:00:00`);
+                    expectedWeightData.push(calculateExpectedWeight(initialWeight, targetWeight, initialDate, targetDate, currentDate));
+                });
+                if (weightChart.data.datasets.length < 2) {
+                    weightChart.data.datasets.push({
+                        label: 'Peso Esperado (Kg)',
+                        data: expectedWeightData,
+                        borderColor: 'rgb(230, 126, 34)',
+                        backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                        borderDash: [5, 5],
+                        tension: 0.1,
+                        fill: false,
+                        pointRadius: 0
+                    });
+                } else {
+                    weightChart.data.datasets[1].data = expectedWeightData;
+                }
+            } else {
+                if (weightChart.data.datasets.length > 1) {
+                    weightChart.data.datasets.splice(1, 1);
+                }
+            }
+
+            // Update or add the moving average line
+            const actualWeightData = weightHistory.map(entry => entry.weight);
+            const averageWeightData = calculateMovingAverage(actualWeightData, 7);
+            if (weightChart.data.datasets.length < 3) {
+                weightChart.data.datasets.push({
+                    label: 'Média de Peso (7 dias)',
+                    data: averageWeightData,
+                    borderColor: 'rgba(150, 150, 150, 0.5)',
+                    backgroundColor: 'rgba(150, 150, 150, 0.1)',
+                    borderDash: [2, 2],
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 0
+                });
+            } else {
+                weightChart.data.datasets[2].data = averageWeightData;
+            }
+
+
+            weightChart.update();
+        }
+    }
+
+
+    // --- Interaction Functions ---
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page-content').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById(pageId).classList.add('active');
+
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`nav-${pageId.replace('-page', '')}`).classList.add('active');
+
+        if (pageId === 'weight-page') {
+            renderWeightHistory();
+            updateWeightPrediction();
+            checkWeeklyWeightProgress();
+            newWeightDateInput.valueAsDate = new Date();
+        }
+        if (pageId === 'settings-page') {
+            renderUserProfile();
+            renderCustomFoodList();
+        }
+        if (pageId === 'meals-page') {
+            renderPastMealsHistory();
+        }
+        if (pageId === 'checkin-page') {
+            renderCheckinHistory();
+            updateCheckinStreakDisplay();
+        }
+        if (pageId !== 'home-page') {
+            dietFeedbackMessage.textContent = '';
+        }
+    }
+
+    // Navigation
+    navButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const pageId = button.id.replace('nav-', '') + '-page';
+            showPage(pageId);
+        });
+    });
+
+    // Save profile settings
+    profileForm.addEventListener('submit', saveProfile);
+
+    // Add meal group
+    addMealGroupBtn.addEventListener('click', () => {
+        const mealGroupName = prompt('Qual o nome do grupo de refeição? (Ex: Café da Manhã)');
+        if (mealGroupName) {
+            dailyData.mealGroups.push({
+                name: mealGroupName,
+                foods: [],
+                totalKcal: 0,
+                totalProtein: 0,
+                totalCarbs: 0,
+                totalFats: 0
+            });
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+            renderMealGroups();
+        }
+    });
+
+    function addFoodItem(event) {
+        event.preventDefault();
+        const form = event.target;
+        const groupIndex = parseInt(form.dataset.groupIndex);
+        const foodName = form.querySelector('.food-search-input').value.trim();
+        const quantity = parseFloat(form.querySelector('.food-quantity').value);
+
+        if (!foodName || isNaN(quantity) || quantity <= 0) {
+            alert('Por favor, digite o nome de um alimento, selecione-o e insira uma quantidade válida.');
+            return;
+        }
+
+        const foodInfo = foodDatabase.find(food => normalizeString(food.name) === normalizeString(foodName));
+        if (foodInfo) {
+            const factor = quantity / 100;
+            const kcal = Math.round(foodInfo.kcalPer100g * factor);
+            const protein = parseFloat((foodInfo.proteinPer100g * factor).toFixed(1));
+            const carbs = parseFloat((foodInfo.carbsPer100g * factor).toFixed(1));
+            const fats = parseFloat((foodInfo.fatsPer100g * factor).toFixed(1));
+
+            dailyData.mealGroups[groupIndex].foods.push({
+                name: foodInfo.name,
+                quantity,
+                kcal,
+                protein,
+                carbs,
+                fats
+            });
+
+            dailyData.mealGroups[groupIndex].totalKcal += kcal;
+            dailyData.mealGroups[groupIndex].totalProtein += protein;
+            dailyData.mealGroups[groupIndex].totalCarbs += carbs;
+            dailyData.mealGroups[groupIndex].totalFats += fats;
+
+            dailyData.consumedCalories += kcal;
+            dailyData.consumedProtein += protein;
+            dailyData.consumedCarbs += carbs;
+            dailyData.consumedFats += fats;
+
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+            renderMealGroups();
+            updateProgressBars();
+            form.reset();
+        } else {
+            alert('Alimento não encontrado no banco de dados. Verifique a ortografia ou adicione-o na aba de Configurações.');
+        }
+    }
+
+    function removeFoodItem(event) {
+        const groupIndex = parseInt(event.target.dataset.groupIndex);
+        const foodIndex = parseInt(event.target.dataset.foodIndex);
+
+        const foodToRemove = dailyData.mealGroups[groupIndex].foods[foodIndex];
+
+        dailyData.consumedCalories -= foodToRemove.kcal;
+        dailyData.consumedProtein -= foodToRemove.protein;
+        dailyData.consumedCarbs -= foodToRemove.carbs;
+        dailyData.consumedFats -= foodToRemove.fats;
+
+        dailyData.mealGroups[groupIndex].totalKcal -= foodToRemove.kcal;
+        dailyData.mealGroups[groupIndex].totalProtein -= foodToRemove.protein;
+        dailyData.mealGroups[groupIndex].totalCarbs -= foodToRemove.carbs;
+        dailyData.mealGroups[groupIndex].totalFats -= foodToRemove.fats;
+
+        dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1);
+
+        if (dailyData.mealGroups[groupIndex].foods.length === 0) {
+            dailyData.mealGroups.splice(groupIndex, 1);
+        }
+
+        localStorage.setItem('dailyData', JSON.stringify(dailyData));
+        renderMealGroups();
+        updateProgressBars();
+    }
+
+    function removeMealGroup(event) {
+        const groupIndex = parseInt(event.target.dataset.groupIndex);
+
+        if (confirm(`Tem certeza que deseja remover o grupo de refeição "${dailyData.mealGroups[groupIndex].name}"? Todos os alimentos dentro dele também serão removidos.`)) {
+            const groupToRemove = dailyData.mealGroups[groupIndex];
+
+            dailyData.consumedCalories -= groupToRemove.totalKcal;
+            dailyData.consumedProtein -= groupToRemove.totalProtein;
+            dailyData.consumedCarbs -= groupToRemove.totalCarbs;
+            dailyData.consumedFats -= groupToRemove.totalFats;
+
+            dailyData.mealGroups.splice(groupIndex, 1);
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+            renderMealGroups();
+            updateProgressBars();
+            alert('Grupo de refeição removido.');
+        }
+    }
+
+
+    // Save Check-in
+    saveCheckinBtn.addEventListener('click', () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayLocaleString = today.toLocaleDateString('pt-BR');
+
+        const currentCheckinState = {
+            sleep: document.getElementById('check-sleep').checked,
+            workout: document.getElementById('check-workout').checked,
+            diet: document.getElementById('check-diet').checked,
+            nofap: document.getElementById('check-nofap').checked,
+        };
+
+        const allChecked = Object.values(currentCheckinState).every(Boolean);
+
+        const existingCheckinEntryIndex = checkinHistory.findIndex(entry => entry.date === todayLocaleString);
+        let wasPreviouslyAllChecked = false;
+
+        if (existingCheckinEntryIndex !== -1) {
+            const previousState = checkinHistory[existingCheckinEntryIndex];
+            wasPreviouslyAllChecked = previousState.sleep && previousState.workout && previousState.diet && previousState.nofap;
+        }
+
+        // --- Streak Logic ---
+        const lastSuccessfulCheckinDayStart = lastSuccessfulCheckinDate ? new Date(lastSuccessfulCheckinDate) : null;
+        if (lastSuccessfulCheckinDayStart) {
+            lastSuccessfulCheckinDayStart.setHours(0, 0, 0, 0);
+        }
+
+        const diffDaysSinceLastSuccess = lastSuccessfulCheckinDayStart ?
+            Math.round((today.getTime() - lastSuccessfulCheckinDayStart.getTime()) / (1000 * 60 * 60 * 24)) :
+            Infinity;
+
+        if (allChecked) {
+            if (diffDaysSinceLastSuccess === 0) {
+                // Same day, and it's now all checked. If it wasn't previously all checked, it's a completion for today.
+                // Streak is already correct if it continued from yesterday or started today. No new increment needed.
+            } else if (diffDaysSinceLastSuccess === 1) {
+                // It's the day after the last successful check-in, streak continues
+                currentStreak++;
+            } else if (diffDaysSinceLastSuccess > 1) {
+                // A day was missed, reset streak and start a new one
+                currentStreak = 1;
+            } else { // Covers initial state where lastSuccessfulCheckinDate is null or other edge cases
+                 currentStreak = 1;
+            }
+            lastSuccessfulCheckinDate = today.toISOString();
+        } else { // Not all checkboxes are checked
+            // If today was previously all checked, but now it's not, then reset streak.
+            // Or if we are in the middle of a streak, and today is incomplete, reset.
+            // If the last successful check-in was yesterday, and today is not completed, reset streak.
+            if (wasPreviouslyAllChecked || (diffDaysSinceLastSuccess === 1 && currentStreak > 0) || (diffDaysSinceLastSuccess === 0 && currentStreak > 0 && !allChecked)) {
+                currentStreak = 0;
+            }
+            // If it's a new day and not all checked, and there was a gap, streak is already 0 (handled by checkDailyReset)
+            // No update to lastSuccessfulCheckinDate if current check-in is not all checked.
+        }
+
+        if (currentStreak > maxStreak) {
+            maxStreak = currentStreak;
+        }
+
+        localStorage.setItem('currentStreak', currentStreak);
+        localStorage.setItem('maxStreak', maxStreak);
+        // Only update lastSuccessfulCheckinDate if the current check-in is allChecked
+        if (allChecked) {
+            localStorage.setItem('lastSuccessfulCheckinDate', lastSuccessfulCheckinDate);
+        }
+
+
+        // Update or add checkin entry in history
+        if (existingCheckinEntryIndex !== -1) {
+            checkinHistory[existingCheckinEntryIndex] = { date: todayLocaleString, ...currentCheckinState };
+        } else {
+            checkinHistory.push({ date: todayLocaleString, ...currentCheckinState });
+        }
+        localStorage.setItem('checkinHistory', JSON.stringify(checkinHistory));
+        localStorage.setItem('currentDayCheckinState', JSON.stringify(currentCheckinState));
+
+        renderCheckinHistory();
+        updateCheckinStreakDisplay();
+        updateUserRank();
+        alert('Check-in salvo!');
+    });
+
+
+    // Add weight entry
+    addWeightEntryBtn.addEventListener('click', () => {
+        const weight = parseFloat(newCurrentWeightInput.value);
+        const date = newWeightDateInput.value;
+
+        if (isNaN(weight) || weight <= 0) {
+            alert('Por favor, insira um peso válido.');
+            return;
+        }
+        if (!date) {
+            alert('Por favor, selecione uma data para o registro de peso.');
+            return;
+        }
+
+        const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('pt-BR');
+
+        addWeightEntry(weight, formattedDate, true);
+        newCurrentWeightInput.value = '';
+        newWeightDateInput.valueAsDate = new Date();
+    });
+
+    function addWeightEntry(weight, date, showAlert = true) {
+        const existingEntryIndex = weightHistory.findIndex(entry => entry.date === date);
+
+        if (existingEntryIndex !== -1) {
+            const oldWeight = weightHistory[existingEntryIndex].weight;
+            weightHistory[existingEntryIndex].weight = parseFloat(weight.toFixed(1));
+            weightHistory.sort((a, b) => {
+                const [dayA, monthA, yearA] = a.date.split('/').map(Number);
+                const [dayB, monthB, yearB] = b.date.split('/').map(Number);
+                return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+            });
+            localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+
+            if (showAlert) {
+                alert(`Registro de peso para ${date} atualizado de ${oldWeight.toFixed(1)} Kg para ${weight.toFixed(1)} Kg.`);
+            }
+        } else {
+            weightHistory.push({ date: date, weight: parseFloat(weight.toFixed(1)) });
+            weightHistory.sort((a, b) => {
+                const [dayA, monthA, yearA] = a.date.split('/').map(Number);
+                const [dayB, monthB, yearB] = b.date.split('/').map(Number);
+                return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+            });
+            localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+            if (showAlert) {
+                alert('Peso registrado com sucesso!');
+            }
+        }
+
+        if (userProfile && weightHistory.length > 0) {
+            userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            saveProfile(null);
+        }
+
+        renderWeightHistory();
+        updateProgressBars();
+        updateWeightPrediction();
+    }
+
+
+    function editWeightEntry(event) {
+        const index = parseInt(event.target.dataset.index);
+        const entryToEdit = weightHistory[index];
+
+        const newWeight = prompt(`Editar peso para ${entryToEdit.weight} Kg (Data: ${entryToEdit.date}). Insira o novo peso:`, entryToEdit.weight);
+        if (newWeight === null) return;
+        const parsedNewWeight = parseFloat(newWeight);
+        if (isNaN(parsedNewWeight) || parsedNewWeight <= 0) {
+            alert('Por favor, insira um peso válido.');
+            return;
+        }
+
+        const newDate = prompt(`Editar data para ${entryToEdit.date} (Peso: ${entryToEdit.weight} Kg). Insira a nova data (DD/MM/AAAA):`, entryToEdit.date);
+        if (newDate === null) return;
+        const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+        if (!dateRegex.test(newDate.trim())) {
+            alert('Por favor, insira a data no formato DD/MM/AAAA.');
+            return;
+        }
+        const formattedNewDate = newDate.trim();
+
+
+        const duplicateIndex = weightHistory.findIndex((entry, i) =>
+            i !== index && entry.date === formattedNewDate && entry.weight === parseFloat(parsedNewWeight.toFixed(1))
+        );
+        if (duplicateIndex !== -1) {
+            alert('Já existe um registro de peso com essa data e peso. Por favor, ajuste os valores.');
+            return;
+        }
+
+
+        entryToEdit.weight = parseFloat(parsedNewWeight.toFixed(1));
+        entryToEdit.date = formattedNewDate;
+
+        weightHistory.sort((a, b) => {
+            const [dayA, monthA, yearA] = a.date.split('/').map(Number);
+            const [dayB, monthB, yearB] = b.date.split('/').map(Number);
+            return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+        });
+
+        localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+
+        if (userProfile && weightHistory.length > 0) {
+            userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            saveProfile(null);
+        }
+        renderWeightHistory();
+        updateProgressBars();
+        updateWeightPrediction();
+        alert('Peso atualizado com sucesso!');
+    }
+
+    function deleteWeightEntry(event) {
+        const index = parseInt(event.target.dataset.index);
+        if (confirm(`Tem certeza que deseja excluir o registro de peso de ${weightHistory[index].weight} Kg em ${weightHistory[index].date}?`)) {
+            weightHistory.splice(index, 1);
+            localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+
+            if (userProfile) {
+                userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                saveProfile(null);
+            }
+            renderWeightHistory();
+            updateProgressBars();
+            updateWeightPrediction();
+            alert('Registro de peso excluído.');
+        }
+    }
+
+
+    // Add custom food
+    addCustomFoodForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const customFoodName = document.getElementById('custom-food-name').value.trim();
+        const customFoodKcal = parseFloat(document.getElementById('custom-food-kcal').value);
+        const customFoodProtein = parseFloat(document.getElementById('custom-food-protein').value);
+        const customFoodCarbs = parseFloat(document.getElementById('custom-food-carbs').value);
+        const customFoodFats = parseFloat(document.getElementById('custom-food-fats').value);
+
+        if (!customFoodName || isNaN(customFoodKcal) || isNaN(customFoodProtein) || isNaN(customFoodCarbs) || isNaN(customFoodFats) || customFoodKcal < 0 || customFoodProtein < 0 || customFoodCarbs < 0 || customFoodFats < 0) {
+            alert('Por favor, preencha todos os campos do alimento personalizado com valores válidos.');
+            return;
+        }
+
+        const allFoods = defaultFoods.concat(foodDatabase.filter(food => food.isCustom));
+        const existingFood = allFoods.find(food => normalizeString(food.name) === normalizeString(customFoodName));
+        if (existingFood) {
+            alert('Um alimento com este nome já existe no banco de dados. Use um nome diferente.');
+            return;
+        }
+
+        foodDatabase.push({
+            name: customFoodName,
+            kcalPer100g: customFoodKcal,
+            proteinPer100g: customFoodProtein,
+            carbsPer100g: customFoodCarbs,
+            fatsPer100g: customFoodFats,
+            isCustom: true
+        });
+        localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
+        renderMealGroups();
+        renderCustomFoodList();
+        addCustomFoodForm.reset();
+        alert(`Alimento "${customFoodName}" adicionado com sucesso!`);
+    });
+
+    function editCustomFood(event) {
+        const index = parseInt(event.target.dataset.index);
+        const foodToEdit = foodDatabase[index];
+
+        const newName = prompt(`Editar nome de "${foodToEdit.name}". Novo nome:`, foodToEdit.name);
+        if (newName === null || newName.trim() === '') return;
+
+        const newKcal = prompt(`Editar Kcal de "${foodToEdit.name}" (${foodToEdit.kcalPer100g} Kcal/100g). Novas Kcal:`, foodToEdit.kcalPer100g);
+        if (newKcal === null || isNaN(parseFloat(newKcal)) || parseFloat(newKcal) < 0) return alert('Kcal inválidas.');
+
+        const newProtein = prompt(`Editar Proteína de "${foodToEdit.name}" (${foodToEdit.proteinPer100g}g/100g). Nova Proteína:`, foodToEdit.proteinPer100g);
+        if (newProtein === null || isNaN(parseFloat(newProtein)) || parseFloat(newProtein) < 0) return alert('Proteína inválida.');
+
+        const newCarbs = prompt(`Editar Carboidratos de "${foodToEdit.name}" (${foodToEdit.carbsPer100g}g/100g). Novos Carboidratos:`, foodToEdit.carbsPer100g);
+        if (newCarbs === null || isNaN(parseFloat(newCarbs)) || parseFloat(newCarbs) < 0) return alert('Carboidratos inválidos.');
+
+        const newFats = prompt(`Editar Gorduras de "${foodToEdit.name}" (${foodToEdit.fatsPer100g}g/100g). Novas Gorduras:`, foodToEdit.fatsPer100g);
+        if (newFats === null || isNaN(parseFloat(newFats)) || parseFloat(newFats) < 0) return alert('Gorduras inválidas.');
+
+        const existingFoodWithNewName = foodDatabase.find((food, i) => i !== index && normalizeString(food.name) === normalizeString(newName));
+        if (existingFoodWithNewName) {
+            alert('Já existe um alimento com este novo nome. Por favor, escolha um nome diferente.');
+            return;
+        }
+
+        foodToEdit.name = newName.trim();
+        foodToEdit.kcalPer100g = parseFloat(newKcal);
+        foodToEdit.proteinPer100g = parseFloat(newProtein);
+        foodToEdit.carbsPer100g = parseFloat(newCarbs);
+        foodToEdit.fatsPer100g = parseFloat(newFats);
+
+        localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
+        renderCustomFoodList();
+        renderMealGroups();
+        alert(`Alimento "${foodToEdit.name}" atualizado com sucesso!`);
+    }
+
+    function deleteCustomFood(event) {
+        const index = parseInt(event.target.dataset.index);
+        const foodToDelete = foodDatabase[index];
+
+        if (!foodToDelete.isCustom) {
+            alert('Você não pode excluir alimentos padrão do sistema.');
+            return;
+        }
+
+        if (confirm(`Tem certeza que deseja excluir o alimento personalizado "${foodToDelete.name}"?`)) {
+            foodDatabase.splice(index, 1);
+            localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
+            renderCustomFoodList();
+            renderMealGroups();
+            alert('Alimento personalizado excluído.');
+        }
     }
 
 
@@ -1081,11 +1588,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Initialize the app on DOMContentLoaded
-    initApp();
+    // Toggle all ranks list visibility
+    showAllRanksBtn.addEventListener('click', () => {
+        allRanksList.classList.toggle('visible');
+        if (allRanksList.classList.contains('visible')) {
+            showAllRanksBtn.textContent = 'Esconder Níveis';
+        } else {
+            showAllRanksBtn.textContent = 'Mostrar Todos os Níveis';
+        }
+    });
 
-    // Set today's date as default for new weight entry
-    newWeightDateInput.valueAsDate = new Date();
+
+    // Initialize the app
+    initApp();
 
     // Show home page by default, or settings if no profile
     if (!userProfile) {

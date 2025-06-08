@@ -16,6 +16,7 @@ body {
     background-color: var(--primary-dark);
     color: var(--text-light);
     display: flex;
+    flex-direction: column; /* Changed to column to put footer at bottom */
     justify-content: center;
     align-items: center;
     min-height: 100vh;
@@ -34,6 +35,7 @@ body {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    flex-grow: 1; /* Allow app-container to grow */
 }
 
 header {
@@ -85,6 +87,7 @@ nav button.active {
 .page-content {
     display: none;
     padding: 20px 0;
+    flex-grow: 1; /* Allow content to push footer down */
 }
 
 .page-content.active {
@@ -345,35 +348,6 @@ form {
     background-color: #0056b3; /* Darker shade of vibrant blue */
 }
 
-/* Search Results */
-.search-results {
-    position: absolute;
-    top: 100%; /* Below the search input */
-    left: 0;
-    right: 0;
-    background-color: var(--secondary-dark);
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    max-height: 150px;
-    overflow-y: auto;
-    z-index: 10;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-}
-
-.search-results div {
-    padding: 8px 10px;
-    cursor: pointer;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.search-results div:last-child {
-    border-bottom: none;
-}
-
-.search-results div:hover {
-    background-color: var(--accent-blue);
-}
-
 
 /* Check-in */
 .checkin-item {
@@ -475,6 +449,23 @@ form {
 }
 
 /* Weight History */
+#weight-history-chart {
+    background-color: var(--accent-blue);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative; /* Needed for chart responsiveness inside this div */
+    max-height: 400px; /* Add a maximum height to control vertical growth */
+}
+
+#weight-history-chart canvas {
+    max-height: 350px; /* Ensure the canvas itself respects a max height */
+    width: 100% !important; /* Important to override Chart.js inline styles */
+    height: auto !important; /* Important to override Chart.js inline styles */
+}
+
+
 #weight-history-list {
     list-style: none;
     padding: 0;
@@ -557,6 +548,7 @@ form {
     margin-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 20px;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
 .input-group-inline label {
@@ -567,7 +559,12 @@ form {
 
 .input-group-inline input {
     flex-grow: 1;
+    min-width: 120px; /* Ensure inputs don't become too small */
 }
+.input-group-inline button {
+    flex-shrink: 0;
+}
+
 
 /* Custom Food List */
 #custom-food-list {
@@ -659,15 +656,132 @@ form {
     font-weight: bold;
 }
 
-/* Chart Canvas Specifics */
-#weightChart {
-    width: 100% !important; /* Ensure it takes full width of parent */
-    height: 300px; /* Set a fixed height for the canvas */
-    max-height: 300px; /* Prevent it from growing beyond this */
+/* New CSS for check-in summary and user rank display */
+.checkin-summary {
+    background-color: var(--accent-blue);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.checkin-summary p {
+    margin: 5px 0;
+    font-size: 1.1em;
+    color: var(--text-light);
+}
+
+.checkin-summary span {
+    font-weight: bold;
+    color: var(--vibrant-orange);
+}
+
+.user-rank-section {
+    background-color: var(--accent-blue);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.user-rank-section h3 {
+    color: var(--vibrant-orange);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4em;
+}
+
+/* Make the rank itself more flashy */
+.animated-rank {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.2em;
+    font-weight: bold;
+    color: var(--vibrant-blue);
+    text-shadow: 0 0 15px rgba(0, 123, 255, 0.8), 0 0 25px rgba(0, 123, 255, 0.6);
+    margin-bottom: 15px;
+    padding: 10px 0;
+    animation: pulse-glow 2s infinite alternate; /* Animation for a subtle glow */
+}
+
+@keyframes pulse-glow {
+    0% {
+        text-shadow: 0 0 10px rgba(0, 123, 255, 0.7), 0 0 20px rgba(0, 123, 255, 0.5);
+    }
+    100% {
+        text-shadow: 0 0 15px rgba(0, 123, 255, 1), 0 0 30px rgba(0, 123, 255, 0.8);
+    }
+}
+
+.highest-rank {
+    font-size: 1em;
+    color: var(--text-light);
+    margin-bottom: 10px;
+}
+.highest-rank span {
+    font-weight: bold;
+    color: var(--vibrant-orange);
+}
+
+
+.hidden-ranks {
+    max-height: 0;
+    overflow: hidden; /* Keep overflow hidden when collapsed */
+    transition: max-height 0.5s ease-out;
+}
+
+.hidden-ranks.visible {
+    max-height: 500px; /* Sufficient height to show all list items */
+    overflow-y: auto; /* Allow scrolling if content exceeds max-height */
+}
+
+.hidden-ranks h4 {
+    color: var(--vibrant-blue);
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+.hidden-ranks ul {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    margin: 0 auto;
+    max-width: 300px; /* Keep list contained */
+}
+
+.hidden-ranks ul li {
+    background-color: var(--secondary-dark);
+    padding: 8px 15px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+footer {
+    margin-top: auto; /* Pushes footer to the bottom */
+    padding: 20px;
+    text-align: center;
+    color: var(--text-gray);
+    font-size: 0.85em;
+    border-top: 1px solid var(--border-color);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Responsiveness */
 @media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
     .app-container {
         padding: 15px;
     }
@@ -694,7 +808,7 @@ form {
 
     .input-group input,
     .input-group select,
-    .add-food-form input { /* Removed select */
+    .add-food-form input {
         font-size: 0.9em;
         padding: 10px;
     }
@@ -703,18 +817,26 @@ form {
         flex-direction: column;
     }
 
-    .input-group-inline { /* Adjust for inline group on small screens */
+    .input-group-inline {
         flex-direction: column;
         align-items: stretch;
     }
 
     .input-group-inline label {
-        display: block; /* Show the label again */
+        display: block;
         padding-bottom: 8px;
     }
 
-    .search-results {
-        position: static; /* Remove absolute positioning for better flow on mobile */
-        margin-top: 10px;
+    .animated-rank {
+        font-size: 1.8em;
+    }
+
+    .hidden-ranks ul {
+        max-width: 90%; /* Adjust for smaller screens */
+    }
+
+    footer {
+        padding: 15px 10px;
+        font-size: 0.75em;
     }
 }
