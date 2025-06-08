@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 ALPHA TRACKER - Controle de Macros e Dieta</title>
+    <title>🐺 ALPHA TRACKER - Controle de Macros e Dieta</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app-container">
         <header>
-            <h1>💪 ALPHA TRACKER</h1>
+            <h1>🐺 ALPHA TRACKER</h1>
             <nav>
                 <button id="nav-home" class="active">Início</button>
                 <button id="nav-meals">Refeições</button>
@@ -68,6 +69,7 @@
                     <p id="weight-lost-gained-text"></p>
                     <p id="weight-remaining-text"></p>
                     <p id="weight-prediction-text"></p>
+                    <p id="diet-feedback-message" class="feedback-message"></p>
                 </div>
             </section>
 
@@ -75,7 +77,13 @@
                 <h2>Minhas Refeições</h2>
                 <button id="add-meal-group-btn" class="main-btn">Adicionar Grupo de Refeição</button>
                 <div id="meal-groups-container">
-                    </div>
+                </div>
+                <div id="past-meals-history">
+                    <h3>Histórico de Refeições Anteriores (Últimos 7 Dias)</h3>
+                    <ul id="past-meals-list">
+                        <p class="no-data-message">Nenhum histórico de refeições anteriores.</p>
+                    </ul>
+                </div>
             </section>
 
             <section id="weight-page" class="page-content">
@@ -83,10 +91,14 @@
                 <div class="input-group-inline">
                     <label for="new-current-weight">Registrar Peso (Kg):</label>
                     <input type="number" step="0.1" id="new-current-weight" placeholder="Insira seu peso atual">
+                    <label for="new-weight-date">Data:</label>
+                    <input type="date" id="new-weight-date">
                     <button id="add-weight-entry-btn" class="main-btn small-btn">Registrar</button>
                 </div>
                 <div id="weight-history-chart">
-                    <p>Aqui você veria um gráfico de sua evolução de peso.</p>
+                    <h3>Evolução do Peso</h3>
+                    <canvas id="weightChart"></canvas>
+                    <p class="no-data-message" id="chart-no-data" style="display: none;">Dados insuficientes para o gráfico. Registre mais pesos!</p>
                     <ul id="weight-history-list"></ul>
                 </div>
             </section>
@@ -167,7 +179,7 @@
                                 <option value="1.9">Extremamente Ativo (exercício diário/trabalho físico)</option>
                             </select>
                         </div>
-                        <button type="submit" class="main-btn small-btn">Salvar Perfil e Recalcular Metas</button>
+                        <button type="submit" class="main-btn small-btn">Salvar Perfil</button>
                     </form>
                 </div>
 
@@ -201,7 +213,7 @@
                 <div class="settings-section">
                     <h3>Meus Alimentos Personalizados</h3>
                     <ul id="custom-food-list">
-                        </ul>
+                    </ul>
                 </div>
             </section>
         </main>

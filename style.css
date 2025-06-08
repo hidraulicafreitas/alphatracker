@@ -1,13 +1,13 @@
 :root {
-    --primary-dark: #1a1a2e;
-    --secondary-dark: #16213e;
-    --accent-blue: #0f3460;
-    --vibrant-green: #2ecc71;
+    --primary-dark: #0d1223; /* Even darker blue */
+    --secondary-dark: #1a2036; /* Darker blue */
+    --accent-blue: #2a3459; /* Slightly lighter accent blue */
+    --vibrant-blue: #007bff; /* Vibrant blue for accents */
     --vibrant-orange: #e67e22;
     --vibrant-red: #e74c3c;
     --text-light: #e0e0e0;
     --text-gray: #b0b0b0;
-    --border-color: #3f5d81;
+    --border-color: #3f4a6b; /* Adjusted border color */
 }
 
 body {
@@ -43,11 +43,11 @@ header {
 
 header h1 {
     font-family: 'Orbitron', sans-serif;
-    color: var(--vibrant-green);
+    color: var(--vibrant-blue); /* Changed to vibrant blue */
     font-size: 2.5em;
     letter-spacing: 2px;
     margin-bottom: 20px;
-    text-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+    text-shadow: 0 0 10px rgba(0, 123, 255, 0.6); /* Adjusted shadow for vibrant blue */
 }
 
 nav {
@@ -76,10 +76,10 @@ nav button {
 
 nav button:hover,
 nav button.active {
-    color: var(--vibrant-orange);
+    color: var(--vibrant-blue); /* Changed to vibrant blue */
     background-color: var(--accent-blue);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(230, 126, 34, 0.3);
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3); /* Adjusted shadow for vibrant blue */
 }
 
 .page-content {
@@ -92,7 +92,7 @@ nav button.active {
 }
 
 h2 {
-    color: var(--vibrant-green);
+    color: var(--vibrant-blue); /* Changed to vibrant blue */
     text-align: center;
     margin-bottom: 25px;
     font-family: 'Orbitron', sans-serif;
@@ -158,8 +158,8 @@ form {
 
 .input-group input:focus,
 .input-group select:focus {
-    border-color: var(--vibrant-green);
-    box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+    border-color: var(--vibrant-blue); /* Changed to vibrant blue */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.4); /* Adjusted shadow for vibrant blue */
 }
 
 /* Progress Section with Numbers */
@@ -194,7 +194,7 @@ form {
     display: block;
     font-size: 1.1em;
     font-weight: bold;
-    color: var(--vibrant-green); /* Cor para os números */
+    color: var(--vibrant-blue); /* Changed to vibrant blue */
     margin-bottom: 5px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
 }
@@ -210,7 +210,7 @@ form {
 
 .progress-bar {
     height: 100%;
-    background-color: var(--vibrant-green);
+    background-color: var(--vibrant-blue); /* Changed to vibrant blue */
     width: 0%;
     border-radius: 10px;
     transition: width 0.5s ease-out;
@@ -226,28 +226,28 @@ form {
 }
 
 .meal-group h4 {
-    color: var(--vibrant-green);
+    color: var(--vibrant-blue); /* Changed to vibrant blue */
     margin-top: 0;
     margin-bottom: 15px;
     font-size: 1.4em;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: relative; /* Para posicionar o botão de remover grupo */
+    position: relative; /* For positioning the remove group button */
 }
 
 .meal-group h4 .meal-total-macros {
     font-size: 0.8em;
     color: var(--text-gray);
-    margin-left: auto; /* Empurra para a direita */
-    margin-right: 10px; /* Espaçamento antes do botão X */
+    margin-left: auto; /* Pushes to the right */
+    margin-right: 10px; /* Spacing before the X button */
 }
 
 .meal-group h4 .remove-meal-group-btn {
     background-color: var(--vibrant-red);
     color: white;
     border: none;
-    border-radius: 50%; /* Torna-o circular */
+    border-radius: 50%; /* Makes it circular */
     width: 25px;
     height: 25px;
     display: flex;
@@ -256,7 +256,7 @@ form {
     font-size: 0.9em;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    flex-shrink: 0; /* Não deixa encolher */
+    flex-shrink: 0; /* Prevents shrinking */
 }
 
 .meal-group h4 .remove-meal-group-btn:hover {
@@ -292,8 +292,8 @@ form {
     font-size: 0.8em;
 }
 
-/* Botões de remover alimento dentro do grupo */
-.meal-item .remove-food-item-btn { /* Nova classe para diferenciar */
+/* Remove food buttons within the group */
+.meal-item .remove-food-item-btn { /* New class to differentiate */
     background-color: var(--vibrant-red);
     color: white;
     border: none;
@@ -317,7 +317,7 @@ form {
     margin-top: 15px;
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
-    position: relative; /* Para posicionar os resultados da busca */
+    position: relative; /* For positioning search results */
 }
 
 .add-food-form input.food-search-input,
@@ -332,7 +332,7 @@ form {
 }
 
 .add-food-form button {
-    background-color: var(--vibrant-green);
+    background-color: var(--vibrant-blue); /* Changed to vibrant blue */
     color: var(--primary-dark);
     border: none;
     padding: 8px 15px;
@@ -342,13 +342,13 @@ form {
 }
 
 .add-food-form button:hover {
-    background-color: #27ae60;
+    background-color: #0056b3; /* Darker shade of vibrant blue */
 }
 
 /* Search Results */
 .search-results {
     position: absolute;
-    top: 100%; /* Abaixo do input de busca */
+    top: 100%; /* Below the search input */
     left: 0;
     right: 0;
     background-color: var(--secondary-dark);
@@ -390,7 +390,7 @@ form {
     appearance: none;
     width: 25px;
     height: 25px;
-    border: 2px solid var(--vibrant-green);
+    border: 2px solid var(--vibrant-blue); /* Changed to vibrant blue */
     border-radius: 5px;
     cursor: pointer;
     margin-right: 15px;
@@ -399,8 +399,8 @@ form {
 }
 
 .checkin-item input[type="checkbox"]:checked {
-    background-color: var(--vibrant-green);
-    border-color: var(--vibrant-green);
+    background-color: var(--vibrant-blue); /* Changed to vibrant blue */
+    border-color: var(--vibrant-blue); /* Changed to vibrant blue */
 }
 
 .checkin-item input[type="checkbox"]:checked::after {
@@ -495,7 +495,7 @@ form {
 
 #weight-history-list li span {
     font-weight: bold;
-    color: var(--vibrant-green);
+    color: var(--vibrant-blue); /* Changed to vibrant blue */
 }
 
 #weight-history-list li span:last-child {
@@ -560,16 +560,16 @@ form {
 }
 
 .input-group-inline label {
-    flex-shrink: 0; /* Não encolher */
+    flex-shrink: 0; /* No shrink */
     margin-bottom: 0;
-    padding-bottom: 10px; /* Alinha com o input */
+    padding-bottom: 10px; /* Aligns with input */
 }
 
 .input-group-inline input {
     flex-grow: 1;
 }
 
-/* Lista de alimentos personalizados */
+/* Custom Food List */
 #custom-food-list {
     list-style: none;
     padding: 0;
@@ -622,8 +622,51 @@ form {
     background-color: var(--vibrant-red);
 }
 
+/* Past Meals History */
+#past-meals-history {
+    margin-top: 30px;
+    background-color: var(--accent-blue);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
 
-/* Responsividade */
+#past-meals-history h3 {
+    color: var(--vibrant-orange);
+    text-align: center;
+    margin-bottom: 15px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+#past-meals-list {
+    list-style: none;
+    padding: 0;
+}
+
+#past-meals-list li {
+    background-color: var(--secondary-dark);
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    border: 1px solid var(--border-color);
+}
+
+.feedback-message {
+    color: var(--vibrant-orange); /* Or red, depending on the message */
+    text-align: center;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+/* Chart Canvas Specifics */
+#weightChart {
+    width: 100% !important; /* Ensure it takes full width of parent */
+    height: 300px; /* Set a fixed height for the canvas */
+    max-height: 300px; /* Prevent it from growing beyond this */
+}
+
+/* Responsiveness */
 @media (max-width: 600px) {
     .app-container {
         padding: 15px;
@@ -651,7 +694,7 @@ form {
 
     .input-group input,
     .input-group select,
-    .add-food-form input { /* Removido select */
+    .add-food-form input { /* Removed select */
         font-size: 0.9em;
         padding: 10px;
     }
@@ -660,18 +703,18 @@ form {
         flex-direction: column;
     }
 
-    .input-group-inline { /* Ajuste para o grupo inline em telas pequenas */
+    .input-group-inline { /* Adjust for inline group on small screens */
         flex-direction: column;
         align-items: stretch;
     }
 
     .input-group-inline label {
-        display: block; /* Mostra a label novamente */
+        display: block; /* Show the label again */
         padding-bottom: 8px;
     }
 
     .search-results {
-        position: static; /* Remove a posição absoluta para melhor fluxo em mobile */
+        position: static; /* Remove absolute positioning for better flow on mobile */
         margin-top: 10px;
     }
 }
