@@ -640,33 +640,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const weight7DaysAgo = weight7DaysAgoEntry.weight;
             const weightChange = currentWeight - weight7DaysAgo;
 
-            // Target calculations are not needed here for the prompt, focus on current change vs. goal direction
-            // const targetLoss = userProfile.currentWeight - userProfile.targetWeight;
-            // const targetGain = userProfile.targetWeight - userProfile.currentWeight;
-
             if (userProfile.targetWeight < userProfile.currentWeight) { // User wants to lose weight
                 if (weightChange >= -0.5) { // Lost less than 500g or gained
-                    setTimeout(() => {
-                        const followedDiet = confirm(`Nos últimos ${daysSinceLastCheck} dias, seu peso mudou em ${weightChange.toFixed(1)} Kg (meta: perder). Você seguiu a dieta e os treinos corretamente?
-                        \n(Clique em 'OK' para SIM, 'Cancelar' para NÃO)`);
-                        if (followedDiet) {
-                            userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 0.80);
-                            userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
-                            userProfile.carbDeficitApplied = true;
-                            localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                            localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                            saveProfile(null); // Call saveProfile without event to re-render without page change
-                            dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um déficit de 20% nos carboidratos devido ao baixo progresso na perda de peso. Mantenha o foco!';
-                            dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
-                        } else {
-                            userProfile.carbDeficitApplied = false; // Reset if they didn't follow and want to try again
-                            localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                            localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                            saveProfile(null);
-                            dietFeedbackMessage.textContent = 'Metas mantidas. Tente seguir a dieta e treinos corretamente pelos próximos 7 dias para avaliar o progresso.';
-                            dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
-                        }
-                    }, 500);
+                    // Removed the alert prompt
+                    userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 0.80);
+                    userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
+                    userProfile.carbDeficitApplied = true;
+                    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                    localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                    saveProfile(null); // Call saveProfile without event to re-render without page change
+                    dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um déficit de 20% nos carboidratos devido ao baixo progresso na perda de peso. Mantenha o foco!';
+                    dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
+
                 } else { // Good progress on losing weight
                     if (userProfile.carbDeficitApplied) { // If a deficit was applied previously due to slow progress
                         userProfile.carbDeficitApplied = false; // Normalize carbs
@@ -683,23 +668,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (userProfile.targetWeight > userProfile.currentWeight) { // User wants to gain weight
                 if (weightChange <= 0.5) { // Gained less than 500g or lost
-                    setTimeout(() => {
-                        const followedDiet = confirm(`Nos últimos ${daysSinceLastCheck} dias, seu peso mudou em ${weightChange.toFixed(1)} Kg (meta: ganhar). Você seguiu a dieta e os treinos corretamente?
-                        \n(Clique em 'OK' para SIM, 'Cancelar' para NÃO)`);
-                        if (followedDiet) {
-                            userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 1.10);
-                            userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
-                            localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                            localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                            saveProfile(null);
-                            dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um aumento de 10% nos carboidratos para auxiliar no ganho de peso. Mantenha o foco!';
-                            dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
-                        } else {
-                            localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                            dietFeedbackMessage.textContent = 'Metas mantidas. Tente seguir a dieta e treinos corretamente pelos próximos 7 dias para avaliar o progresso.';
-                            dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
-                        }
-                    }, 500);
+                    // Removed the alert prompt
+                    userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 1.10);
+                    userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
+                    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                    localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                    saveProfile(null);
+                    dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um aumento de 10% nos carboidratos para auxiliar no ganho de peso. Mantenha o foco!';
+                    dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
                 } else { // Good progress on gaining weight
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
                     dietFeedbackMessage.textContent = 'Ótimo progresso! Continue assim.';
