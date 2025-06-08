@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderWeightHistory();
         renderCustomFoodList();
         updateWeightPrediction();
-        renderPastMealsHistory();
+        renderPastMealsSummaries(); // Changed to renderPastMealSummaries
         checkWeeklyWeightProgress();
         setupWeightChart();
         updateCheckinStreakDisplay();
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (dailyData.date !== todayLocaleString) {
             console.log("Reiniciando dados diários e salvando resumo do dia anterior...");
-            if (dailyData.consumedCalories > 0 || dailyData.consumedProtein > 0 || dailyData.carbsPer100g > 0 || dailyData.consumedFats > 0) {
+            if (dailyData.consumedCalories > 0 || dailyData.consumedProtein > 0 || dailyData.consumedCarbs > 0 || dailyData.consumedFats > 0) { // Corrected property name
                 pastDailySummaries.unshift({
                     date: dailyData.date,
                     calories: dailyData.consumedCalories,
@@ -358,38 +358,60 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        let dailyCaloricNeedsRecalculated = calculateDailyCaloricNeeds(currentWeight, height, age, gender, activityFactor);
-        let caloricDeficit = dailyCaloricNeedsRecalculated * 0.20;
-        let targetCaloriesRecalculated = Math.round(dailyCaloricNeedsRecalculated - caloricDeficit);
+        // Calculate initial targets based on profile, without any deficit applied yet
+        const initialDailyCaloricNeeds = calculateDailyCaloricNeeds(currentWeight, height, age, gender, activityFactor);
+        const initialCaloricDeficit = initialDailyCaloricNeeds * 0.20;
+        const initialTargetCalories = Math.round(initialDailyCaloricNeeds - initialCaloricDeficit);
 
-        let targetProteinRecalculated = Math.round((targetCaloriesRecalculated * 0.40) / 4);
-        let targetCarbsRecalculated = Math.round((targetCaloriesRecalculated * 0.40) / 4);
-        let targetFatsRecalculated = Math.round((targetCaloriesRecalculated * 0.20) / 9);
+        const initialTargetProtein = Math.round((initialTargetCalories * 0.40) / 4);
+        const initialTargetCarbs = Math.round((initialTargetCalories * 0.40) / 4);
+        const initialTargetFats = Math.round((initialTargetCalories * 0.20) / 9);
 
-        // Preserve carbDeficitApplied flag if it was previously set
-        let carbDeficitAppliedStatus = userProfile ? userProfile.carbDeficitApplied : false;
+        // If userProfile already exists, use its target values as the base for further adjustments
+        // This ensures subsequent deficit button presses always apply to the *current* target, not recalculate from scratch
+        let currentTargetCalories = userProfile ? userProfile.targetCalories : initialTargetCalories;
+        let currentTargetProtein = userProfile ? userProfile.targetProtein : initialTargetProtein;
+        let currentTargetCarbs = userProfile ? userProfile.targetCarbs : initialTargetCarbs;
+        let currentTargetFats = userProfile ? userProfile.targetFats : initialTargetFats;
 
-        // Apply carb deficit if the flag is true
-        if (carbDeficitAppliedStatus) {
-            targetCarbsRecalculated = Math.round(targetCarbsRecalculated * 0.80);
-            // Recalculate targetCalories based on adjusted carbs to reflect accurate total
-            targetCaloriesRecalculated = Math.round(targetProteinRecalculated * 4 + targetCarbsRecalculated * 4 + targetFatsRecalculated * 9);
+        // The carbDeficitApplied flag indicates if an *initial* 20% deficit was part of the profile setup,
+        // or if it was applied via the weekly check-in. The button will apply additional deficits.
+        // For the purpose of "saveProfile", if it's triggered by the form submit,
+        // we should re-calculate based on the core profile data, and then apply *only* the carbDeficitApplied status.
+        // The button logic directly modifies userProfile.targetCarbs and userProfile.targetCalories.
+
+        // This section ensures the profile values are always consistent with the latest calculations
+        // based on activity factor and age/gender/height/weight, and then applies the "carbDeficitApplied" state.
+        // It does NOT re-apply a fixed 20% initial deficit here unless carbDeficitApplied is true.
+        // The "create deficit" button will handle progressive 20% reductions.
+
+        // If carbDeficitApplied is true, ensure it's still applied.
+        // Note: The 'carbDeficitApplied' flag is primarily for the weekly check-in and the initial setup.
+        // The 'createDeficitBtn' directly modifies the target carbs and calories, so this flag is less critical for repeated button presses.
+        // However, if the user modifies profile settings, we should re-apply the carbDeficitApplied logic if it was set externally.
+        if (userProfile && userProfile.carbDeficitApplied && event && event.type === 'submit') { // Only apply if coming from settings form and flag was set
+            // If the user modified profile, reset carb deficit status to false, and then apply if needed based on the new logic.
+            // This prevents an eternal deficit if they change activity levels etc.
+            userProfile.carbDeficitApplied = false; // Reset to recalculate cleanly
+            currentTargetCarbs = initialTargetCarbs;
+            currentTargetCalories = initialTargetCalories;
         }
-
 
         userProfile = {
             name, age, height, gender, currentWeight, targetWeight, activityFactor, targetDate,
-            dailyCaloricNeeds: Math.round(dailyCaloricNeedsRecalculated),
-            targetCalories: targetCaloriesRecalculated,
-            targetProtein: targetProteinRecalculated,
-            targetCarbs: targetCarbsRecalculated,
-            targetFats: targetFatsRecalculated,
-            carbDeficitApplied: carbDeficitAppliedStatus // Ensure this state is preserved
+            dailyCaloricNeeds: Math.round(initialDailyCaloricNeeds), // Store original calculation before deficit
+            targetCalories: currentTargetCalories, // Use calculated or existing target
+            targetProtein: currentTargetProtein,
+            targetCarbs: currentTargetCarbs,
+            targetFats: currentTargetFats,
+            carbDeficitApplied: userProfile ? userProfile.carbDeficitApplied : false // Preserve the flag
         };
+
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
 
+        // If current weight is different from the last recorded weight, or no weight recorded, add it
         if (weightHistory.length === 0 || weightHistory[weightHistory.length - 1].weight !== currentWeight) {
-            if (event && event.type === 'submit') {
+            if (event && event.type === 'submit') { // Only add if coming from profile form submission
                 addWeightEntry(currentWeight, new Date().toLocaleDateString('pt-BR'), false);
             }
         }
@@ -580,8 +602,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Logic for "Criar Défit 20%" button
         if (weightHistory.length >= 2) {
-            const previousWeight = weightHistory[weightHistory.length - 2].weight;
-            const weightChangeFromPrevious = Math.abs(lastWeightEntry.weight - previousWeight);
+            const lastTwoWeights = weightHistory.slice(-2);
+            const weightChangeFromPrevious = Math.abs(lastTwoWeights[1].weight - lastTwoWeights[0].weight);
 
             if (weightChangeFromPrevious < 0.5) { // Less than 500g variation
                 createDeficitBtn.style.display = 'block';
@@ -642,7 +664,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (userProfile.targetWeight < userProfile.currentWeight) { // User wants to lose weight
                 if (weightChange >= -0.5) { // Lost less than 500g or gained
-                    // Removed the alert prompt
                     userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 0.80);
                     userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
                     userProfile.carbDeficitApplied = true;
@@ -668,7 +689,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (userProfile.targetWeight > userProfile.currentWeight) { // User wants to gain weight
                 if (weightChange <= 0.5) { // Gained less than 500g or lost
-                    // Removed the alert prompt
                     userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 1.10);
                     userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
                     localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -893,7 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWeightChart();
     }
 
-    function renderPastMealsHistory() {
+    function renderPastMealsSummaries() { // Renamed from renderPastMealsHistory for consistency
         pastMealsList.innerHTML = '';
         if (pastDailySummaries.length === 0) {
             pastMealsList.innerHTML = '<p class="no-data-message">Nenhum histórico de refeições anteriores.</p>';
@@ -942,6 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Function to calculate a moving average
     function calculateMovingAverage(data, windowSize) {
         if (data.length < windowSize) {
             return new Array(data.length).fill(null); // Not enough data for average
@@ -953,6 +974,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 let sum = 0;
                 for (let j = 0; j < windowSize; j++) {
+                    // Access data from the end backwards to simulate a true "moving average"
+                    // where current point is the average of current and (windowSize-1) previous points
                     sum += data[i - j];
                 }
                 averages.push(sum / windowSize);
@@ -1159,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCustomFoodList();
         }
         if (pageId === 'meals-page') {
-            renderPastMealsHistory();
+            renderPastMealsSummaries(); // Changed to renderPastMealSummaries
         }
         if (pageId === 'checkin-page') {
             renderCheckinHistory();
@@ -1614,18 +1637,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const confirmDeficit = confirm('Tem certeza que deseja aplicar um déficit de 20% nas calorias, focado em carboidratos? Isso ajustará suas metas.');
+        const confirmDeficit = confirm('Tem certeza que deseja aplicar um DÉFICIT ADICIONAL de 20% nas calorias, focado em carboidratos? Isso ajustará suas metas.');
         if (confirmDeficit) {
-            userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 0.80); // 20% deficit on carbs
-            // Recalculate total calories based on new carb target
+            // Apply 20% deficit to current target carbs
+            userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 0.80);
+            // Recalculate total calories based on the *new* carb target
             userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
-            userProfile.carbDeficitApplied = true; // Set flag
+
+            // Update userProfile in localStorage
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            saveProfile(null); // Save and re-render progress bars
-            alert('Déficit de 20% aplicado com sucesso nas metas de carboidratos!');
-            // Hide the button after applying the deficit
-            createDeficitBtn.style.display = 'none';
-            weightPageFeedbackMessage.textContent = ''; // Clear the message
+
+            // Re-render UI elements affected by target changes
+            saveProfile(null); // This call re-renders profile, progress bars, and weight prediction
+            
+            alert('Déficit adicional de 20% aplicado com sucesso nas metas de carboidratos!');
+            
+            // Optionally, hide the button or change its text/behavior if it's meant to be a one-time per 'condition' action
+            // For now, it will remain visible if the weight condition is still met, allowing repeated presses.
+            // createDeficitBtn.style.display = 'none'; // Uncomment if you want it to disappear after one press
+            // weightPageFeedbackMessage.textContent = ''; // Uncomment if you want the message to clear
         }
     });
 
