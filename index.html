@@ -24,7 +24,79 @@
         <main id="app-content">
             <section id="home-page" class="page-content active">
                 <h2>Bem-vindo, <span id="user-name">Guerreiro</span>!</h2>
-                <!-- Content omitted for brevity -->
+                <div class="user-rank-section">
+                    <h3>Seu Nível Atual</h3>
+                    <div id="user-rank" class="animated-rank">Novato</div>
+                    <p class="highest-rank">Nível Mais Alto Registrado: <span id="highest-rank-display">Novato</span></p>
+                    <button id="show-all-ranks-btn" class="main-btn small-btn">Mostrar Todos os Níveis</button>
+                    <div id="all-ranks-list" class="hidden-ranks">
+                        <h4>Hierarquia dos Níveis</h4>
+                        <ul>
+                            <li>⚔️ Soldado (1 dia)</li>
+                            <li>🛡️ Cabo (2 dias)</li>
+                            <li>🥉 Terceiro Sargento (3-5 dias)</li>
+                            <li>🥈 Segundo Sargento (6-10 dias)</li>
+                            <li>🥇 Primeiro Sargento (11-13 dias)</li>
+                            <li>🌟 Subtenente (14-15 dias)</li>
+                            <li>✨ Aspirante a Oficial (16-20 dias)</li>
+                            <li>💎 Segundo Tenente (21-23 dias)</li>
+                            <li>🚀 Primeiro Tenente (24 dias)</li>
+                            <li>🌠 Capitão (25 dias)</li>
+                            <li>👑 Major (26 dias)</li>
+                            <li>🔥 Coronel (27 dias)</li>
+                            <li>🐺 General de Exército (28 dias)</li>
+                            <li>🦁 Rei (29 dias)</li>
+                            <li>🧘 Monge (30 dias ou mais)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <h3>Metas do Dia</h3>
+                    <div class="progress-item-detail" id="calories-detail">
+                        <span class="detail-label">Calorias:</span>
+                        <span class="detail-value" id="calories-num">0 / 0 Kcal</span>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="calories-progress"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item-detail" id="protein-detail">
+                        <span class="detail-label">Proteína:</span>
+                        <span class="detail-value" id="protein-num">0 / 0 g</span>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="protein-progress"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item-detail" id="carbs-detail">
+                        <span class="detail-label">Carboidratos:</span>
+                        <span class="detail-value" id="carbs-num">0 / 0 g</span>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="carbs-progress"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item-detail" id="fats-detail">
+                        <span class="detail-label">Gorduras:</span>
+                        <span class="detail-value" id="fats-num">0 / 0 g</span>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="fats-progress"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <h3>Meta de Peso</h3>
+                    <div class="progress-item-detail">
+                        <span class="detail-label">Progresso de Peso:</span>
+                        <span class="detail-value" id="weight-num">0 Kg / 0 Kg</span>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar" id="weight-progress"></div>
+                        </div>
+                    </div>
+                    <p id="weight-lost-gained-text"></p>
+                    <p id="weight-remaining-text"></p>
+                    <p id="weight-prediction-text"></p>
+                    <p id="diet-feedback-message" class="feedback-message"></p>
+                </div>
             </section>
 
             <section id="meals-page" class="page-content">
@@ -40,25 +112,132 @@
                 </div>
             </section>
 
+            <section id="weight-page" class="page-content">
+                <h2>Acompanhamento de Peso</h2>
+                <p id="weight-page-feedback-message" class="feedback-message"></p>
+                <button id="create-deficit-btn" class="main-btn small-btn" style="display: none; margin-bottom: 20px;">CRIAR DÉFICIT 20%</button>
+                <div class="input-group-inline">
+                    <label for="new-current-weight">Registrar Peso (Kg):</label>
+                    <input type="number" step="0.1" id="new-current-weight" placeholder="Insira seu peso atual">
+                    <label for="new-weight-date">Data:</label>
+                    <input type="date" id="new-weight-date">
+                    <button id="add-weight-entry-btn" class="main-btn small-btn">Registrar</button>
+                </div>
+                <div id="weight-history-chart">
+                    <h3>Sua Evolução de Peso</h3>
+                    <canvas id="weightChart"></canvas>
+                </div>
+                <ul id="weight-history-list"></ul>
+            </section>
+
+            <section id="checkin-page" class="page-content">
+                <h2>Check-in Diário</h2>
+                <div class="checkin-summary">
+                    <p>Dias no Foco: <span id="current-streak-display">0</span></p>
+                    <p>Máximo de Dias: <span id="max-streak-display">0</span></p>
+                </div>
+                <div class="checkin-item">
+                    <input type="checkbox" id="check-sleep">
+                    <label for="check-sleep">Dormiu bem?</label>
+                    <div class="check-animation" data-animation="sleep"></div>
+                </div>
+                <div class="checkin-item">
+                    <input type="checkbox" id="check-workout">
+                    <label for="check-workout">Fez o treino?</label>
+                    <div class="check-animation" data-animation="workout"></div>
+                </div>
+                <div class="checkin-item">
+                    <input type="checkbox" id="check-diet">
+                    <label for="check-diet">Dieta corretamente?</label>
+                    <div class="check-animation" data-animation="diet"></div>
+                </div>
+                <div class="checkin-item">
+                    <input type="checkbox" id="check-nofap">
+                    <label for="check-nofap">NoFap firme?</label>
+                    <div class="check-animation" data-animation="nofap"></div>
+                </div>
+                <button id="save-checkin-btn" class="main-btn">Salvar Check-in</button>
+                <div id="checkin-history">
+                    <h3>Histórico de Check-ins</h3>
+                    <ul id="checkin-history-list"></ul>
+                </div>
+            </section>
+
             <section id="settings-page" class="page-content">
                 <h2>Configurações</h2>
 
                 <div class="settings-section">
                     <h3>Perfil do Usuário</h3>
                     <form id="profile-form" class="settings-form">
-                        <!-- Form fields omitted for brevity -->
+                        <div class="input-group">
+                            <label for="name">Nome:</label>
+                            <input type="text" id="name" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="age">Idade:</label>
+                            <input type="number" id="age" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="height">Altura (cm):</label>
+                            <input type="number" id="height" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="gender">Sexo:</label>
+                            <select id="gender" required>
+                                <option value="male">Masculino</option>
+                                <option value="female">Feminino</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="current-weight-settings">Peso Atual (Kg):</label>
+                            <input type="number" step="0.1" id="current-weight-settings" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="target-weight">Peso Objetivo (Kg):</label>
+                            <input type="number" step="0.1" id="target-weight" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="target-date">Data Final da Meta de Peso:</label>
+                            <input type="date" id="target-date" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="activity-factor">Nível de Atividade:</label>
+                            <select id="activity-factor" required>
+                                <option value="1.2">Sedentário (pouco ou nenhum exercício)</option>
+                                <option value="1.375">Levemente Ativo (exercício 1-3 dias/semana)</option>
+                                <option value="1.55">Moderadamente Ativo (exercício 3-5 dias/semana)</option>
+                                <option value="1.725">Muito Ativo (exercício 6-7 dias/semana)</option>
+                                <option value="1.9">Extremamente Ativo (exercício diário/trabalho físico)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="main-btn small-btn">Salvar Perfil</button>
                     </form>
-                </div>
-
-                <div class="settings-section">
-                    <h3>Excluir Perfil</h3>
-                    <button id="delete-profile-btn" class="main-btn">Excluir Perfil</button>
                 </div>
 
                 <div class="settings-section">
                     <h3>Adicionar Novo Alimento</h3>
                     <form id="add-custom-food-form" class="settings-form">
-                        <!-- Form fields omitted for brevity -->
+                        <div class="input-group">
+                            <label for="custom-food-name">Nome do Alimento:</label>
+                            <input type="text" id="custom-food-name" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="custom-food-kcal">Kcal (por 100g):</label>
+                            <input type="number" step="0.1" id="custom-food-kcal" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="custom-food-protein">Proteína (por 100g):</label>
+                            <input type="number" step="0.1" id="custom-food-protein" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="custom-food-carbs">Carboidratos (por 100g):</label>
+                            <input type="number" step="0.1" id="custom-food-carbs" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="custom-food-fats">Gorduras (por 100g):</label>
+                            <input type="number" step="0.1" id="custom-food-fats" required>
+                        </div>
+                        <button type="submit" class="main-btn small-btn">Adicionar Alimento Personalizado</button>
                     </form>
                 </div>
 
