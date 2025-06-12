@@ -136,22 +136,22 @@
                     <p>Dias no Foco: <span id="current-streak-display">0</span></p>
                     <p>Máximo de Dias: <span id="max-streak-display">0</span></p>
                 </div>
-                <div class="checkin-item">
+                <div class="checkin-item checkin-sleep">
                     <input type="checkbox" id="check-sleep">
                     <label for="check-sleep">Dormiu bem?</label>
                     <div class="check-animation" data-animation="sleep"></div>
                 </div>
-                <div class="checkin-item">
+                <div class="checkin-item checkin-workout">
                     <input type="checkbox" id="check-workout">
                     <label for="check-workout">Fez o treino?</label>
                     <div class="check-animation" data-animation="workout"></div>
                 </div>
-                <div class="checkin-item">
+                <div class="checkin-item checkin-diet">
                     <input type="checkbox" id="check-diet">
                     <label for="check-diet">Dieta corretamente?</label>
                     <div class="check-animation" data-animation="diet"></div>
                 </div>
-                <div class="checkin-item">
+                <div class="checkin-item checkin-nofap">
                     <input type="checkbox" id="check-nofap">
                     <label for="check-nofap">NoFap firme?</label>
                     <div class="check-animation" data-animation="nofap"></div>
@@ -209,6 +209,21 @@
                                 <option value="1.725">Muito Ativo (exercício 6-7 dias/semana)</option>
                                 <option value="1.9">Extremamente Ativo (exercício diário/trabalho físico)</option>
                             </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="difficulty-mode">Modo de Dificuldade:</label>
+                            <div class="difficulty-control">
+                                <select id="difficulty-mode" required>
+                                    <option value="easy">Fácil (Apenas Dieta)</option>
+                                    <option value="hard">Hard (Dieta e Treino)</option>
+                                    <option value="god">God (Dieta, Treino e NoFap)</option>
+                                </select>
+                                <button type="button" id="help-difficulty-mode" class="help-btn">?</button>
+                            </div>
+                        </div>
+                         <div class="input-group">
+                            <label for="manual-current-rank">Ajustar Nível Atual (Dias de Foco):</label>
+                            <input type="number" id="manual-current-rank" min="0" placeholder="Ex: 5" title="Insira o número de dias de foco para ajustar seu nível. Isso afetará sua sequência.">
                         </div>
                         <button type="submit" class="main-btn small-btn">Salvar Perfil</button>
                     </form>

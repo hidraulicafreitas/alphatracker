@@ -165,6 +165,40 @@ form {
     box-shadow: 0 0 10px rgba(0, 123, 255, 0.4); /* Adjusted shadow for vibrant blue */
 }
 
+/* New: Style for difficulty control and help button */
+.difficulty-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.difficulty-control select {
+    flex-grow: 1;
+}
+
+.help-btn {
+    background-color: var(--vibrant-blue);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.help-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+}
+
+
 /* Progress Section with Numbers */
 .progress-section {
     background-color: var(--accent-blue);
@@ -283,11 +317,14 @@ form {
     align-items: center;
     font-size: 0.95em;
     border: 1px solid var(--border-color);
+    flex-wrap: wrap; /* Allow wrapping for better responsiveness */
+    gap: 10px; /* Space between details and actions */
 }
 
 .meal-item-details {
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
 }
 
 .meal-item-details span {
@@ -295,20 +332,45 @@ form {
     font-size: 0.8em;
 }
 
+.meal-item-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+/* New: Daily Standard Tag */
+.daily-standard-tag {
+    background-color: #3498db; /* A blueish tag */
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7em;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
 /* Remove food buttons within the group */
-.meal-item .remove-food-item-btn { /* New class to differentiate */
+.meal-item .remove-food-item-btn,
+.meal-item .toggle-daily-standard-btn { /* New class to differentiate */
     background-color: var(--vibrant-red);
     color: white;
     border: none;
     padding: 5px 10px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.8em;
     transition: background-color 0.2s ease;
+}
+
+.meal-item .toggle-daily-standard-btn {
+    background-color: var(--vibrant-blue); /* Different color for the toggle button */
 }
 
 .meal-item .remove-food-item-btn:hover {
     background-color: #c0392b;
+}
+.meal-item .toggle-daily-standard-btn:hover {
+    background-color: #0056b3;
 }
 
 
