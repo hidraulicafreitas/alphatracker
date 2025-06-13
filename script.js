@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Difficulty Mode
     const difficultyModeSelect = document.getElementById('difficulty-mode');
+    const genderSelect = document.getElementById('gender'); // Get the gender select element
     const checkinSleep = document.querySelector('.checkin-sleep');
     const checkinWorkout = document.querySelector('.checkin-workout');
     const checkinDiet = document.querySelector('.checkin-diet');
@@ -248,6 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initApp() {
         checkDailyReset();
+        applyTheme(); // Apply theme on app load
         renderUserProfile();
         updateProgressBars();
         renderMealGroups();
@@ -263,6 +265,26 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHighestRankDisplay();
         updateCheckinVisibility();
     }
+
+    function applyTheme() {
+        if (userProfile && userProfile.gender === 'female') {
+            document.documentElement.style.setProperty('--vibrant-blue', '#ff69b4'); // Hot Pink
+            document.documentElement.style.setProperty('--accent-blue', '#5e3b5e'); // Darker purple-pink
+            document.documentElement.style.setProperty('--primary-dark', '#330033'); // Even darker purple
+            document.documentElement.style.setProperty('--secondary-dark', '#4a1a4a'); // Darker purple-pink
+            document.documentElement.style.setProperty('--vibrant-orange', '#8a2be2'); // Blue Violet for accent
+            document.documentElement.style.setProperty('--border-color', '#7c4d7c'); // Adjusted border color
+        } else {
+            // Reset to default if male or no profile (or other genders added later)
+            document.documentElement.style.setProperty('--vibrant-blue', '#007bff');
+            document.documentElement.style.setProperty('--accent-blue', '#2a3459');
+            document.documentElement.style.setProperty('--primary-dark', '#0d1223');
+            document.documentElement.style.setProperty('--secondary-dark', '#1a2036');
+            document.documentElement.style.setProperty('--vibrant-orange', '#e67e22');
+            document.documentElement.style.setProperty('--border-color', '#3f4a6b');
+        }
+    }
+
 
     function checkDailyReset() {
         const today = new Date();
@@ -388,15 +410,48 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userProfile.targetDate) {
                 targetDateInput.value = userProfile.targetDate;
             }
-            difficultyModeSelect.value = userProfile.difficultyMode || 'easy';
+            // Populate difficulty mode options
+            populateDifficultyModeOptions(userProfile.gender);
+            difficultyModeSelect.value = userProfile.difficultyMode || 'easy'; // Set selected value AFTER populating options
             manualCurrentRankInput.value = currentStreak; // Display current streak in the manual input
         } else {
             userNameSpan.textContent = 'Guerreiro';
+            populateDifficultyModeOptions('male'); // Default to male options if no profile
             difficultyModeSelect.value = 'easy';
             manualCurrentRankInput.value = 0;
         }
         updateCheckinVisibility();
     }
+
+    function populateDifficultyModeOptions(gender) {
+        difficultyModeSelect.innerHTML = '';
+        const options = [
+            { value: 'easy', text: 'Fácil (Apenas Dieta)' },
+            { value: 'hard', text: 'Hard (Dieta e Treino)' }
+        ];
+
+        // Only add 'God' option if gender is male
+        if (gender === 'male') {
+            options.push({ value: 'god', text: 'God (Dieta, Treino e NoFap)' });
+        }
+
+        options.forEach(optionData => {
+            const optionElement = document.createElement('option');
+            optionElement.value = optionData.value;
+            optionElement.textContent = optionData.text;
+            difficultyModeSelect.appendChild(optionElement);
+        });
+    }
+
+    // Listener for gender change to update difficulty options and theme immediately
+    genderSelect.addEventListener('change', (event) => { // Use genderSelect variable
+        populateDifficultyModeOptions(event.target.value);
+        // If 'god' was selected and gender changes to female, reset difficulty to 'hard'
+        if (event.target.value === 'female' && difficultyModeSelect.value === 'god') {
+            difficultyModeSelect.value = 'hard';
+        }
+        applyTheme(event.target.value); // Call applyTheme with the new gender
+    });
 
     function calculateDailyCaloricNeeds(weight, height, age, gender, activityFactor) {
         let tmb;
@@ -445,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let currentTargetCalories = userProfile ? userProfile.targetCalories : initialTargetCalories;
         let currentTargetProtein = userProfile ? userProfile.targetProtein : initialTargetProtein;
-        let currentTargetCarbs = userProfile ? userProfile.targetCarbs : initialTargetCarbs;
+        let currentTargetCarbs = userProfile ? userProfile.carbsTarget : initialTargetCarbs; // Check if carbsTarget is correctly named here
         let currentTargetFats = userProfile ? userProfile.targetFats : initialTargetFats;
 
         if (userProfile && userProfile.carbDeficitApplied && event && event.type === 'submit') {
@@ -467,6 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        applyTheme(); // Apply theme immediately after gender is saved
 
         // If it's a new profile and currentWeight is set, add this to weight history as initial.
         // This only happens on the *first* successful profile save if history is empty.
@@ -500,6 +556,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userProfile.targetDate) {
             targetDateInput.value = userProfile.targetDate;
         }
+        // Repopulate difficulty options, just in case gender changed
+        populateDifficultyModeOptions(userProfile.gender);
         difficultyModeSelect.value = userProfile.difficultyMode || 'easy';
         manualCurrentRankInput.value = currentStreak;
         
@@ -1436,8 +1494,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const foodToRemove = dailyData.mealGroups[groupIndex].foods[foodIndex];
 
-        // Se for um alimento padrão diário, remova-o também do storedMealGroups
-        // Apenas remova da lista de padrões, não remova o alimento da lista principal dailyData.mealGroups[groupIndex].foods
+        // Se for um alimento padrão diário, remova-o apenas da lista de padrões, não da refeição atual
         if (foodToRemove.isDailyStandard) {
             const storedGroup = storedMealGroups.find(g => g.name === dailyData.mealGroups[groupIndex].name);
             if (storedGroup) {
@@ -1459,7 +1516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyData.mealGroups[groupIndex].totalCarbs -= foodToRemove.carbs;
         dailyData.mealGroups[groupIndex].totalFats -= foodToRemove.fats;
 
-        dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1); // Remove the food from the daily group
+        dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1); // Remove o alimento da refeição diária
 
         // NÂO REMOVE O GRUPO SE FICAR VAZIO. APENAS ZERA OS TOTAIS.
         // A remoção de grupos só deve ser feita explicitamente pelo botão "X" do grupo.
@@ -1559,6 +1616,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const mode = userProfile.difficultyMode;
+        const gender = userProfile.gender;
 
         checkinSleep.style.display = 'flex';
         checkinDiet.style.display = 'flex';
@@ -1569,9 +1627,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (mode === 'hard') {
             checkinWorkout.style.display = 'flex';
             checkinNofap.style.display = 'none';
-        } else if (mode === 'god') {
+        } else if (mode === 'god' && gender === 'male') { // Only allow God mode visibility if gender is male
             checkinWorkout.style.display = 'flex';
             checkinNofap.style.display = 'flex';
+        } else { // Fallback if mode is 'god' but gender is female, or other invalid modes
+            checkinWorkout.style.display = 'none'; 
+            checkinNofap.style.display = 'none';
         }
     }
 
@@ -1597,12 +1658,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let allRequiredChecked = true;
         if (userProfile) {
             const mode = userProfile.difficultyMode;
+            const gender = userProfile.gender;
             if (mode === 'easy') {
                 allRequiredChecked = sleepChecked && dietChecked;
             } else if (mode === 'hard') {
                 allRequiredChecked = sleepChecked && workoutChecked && dietChecked;
-            } else if (mode === 'god') {
+            } else if (mode === 'god' && gender === 'male') { // Only consider nofap if God mode and male
                 allRequiredChecked = sleepChecked && workoutChecked && dietChecked && nofapChecked;
+            } else { // Fallback for female 'god' or other invalid modes
+                allRequiredChecked = sleepChecked && dietChecked;
             }
         } else {
             allRequiredChecked = sleepChecked && dietChecked;
@@ -1615,12 +1679,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const previousState = checkinHistory[existingCheckinEntryIndex];
             if (userProfile) {
                 const mode = userProfile.difficultyMode;
+                const gender = userProfile.gender;
                 if (mode === 'easy') {
                     wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
                 } else if (mode === 'hard') {
                     wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet;
-                } else if (mode === 'god') {
+                } else if (mode === 'god' && gender === 'male') {
                     wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet && previousState.nofap;
+                } else {
+                    wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
                 }
             } else {
                 wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
@@ -1668,6 +1735,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             checkinHistory.push({ date: todayLocaleString, ...currentCheckinState });
         }
+        checkinHistory = checkinHistory.sort((a,b) => { // Sort check-in history by date
+            const [dayA, monthA, yearA] = a.date.split('/').map(Number);
+            const [dayB, monthB, yearB] = b.date.split('/').map(Number);
+            return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+        });
         localStorage.setItem('checkinHistory', JSON.stringify(checkinHistory));
         localStorage.setItem('currentDayCheckinState', JSON.stringify(currentCheckinState));
 
@@ -1734,8 +1806,8 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
         }
 
-        renderWeightHistory(); // This will also call updateWeightChart
-        updateProgressBars(); // Ensure progress bars reflect the latest weight in userProfile
+        renderWeightHistory(); 
+        updateProgressBars(); 
         updateWeightPrediction();
         checkWeeklyWeightProgress();
     }
@@ -1788,8 +1860,8 @@ document.addEventListener('DOMContentLoaded', () => {
             userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
         }
-        renderWeightHistory(); // This will also call updateWeightChart
-        updateProgressBars(); // Ensure progress bars reflect the latest weight in userProfile
+        renderWeightHistory(); 
+        updateProgressBars(); 
         updateWeightPrediction();
         checkWeeklyWeightProgress();
         alert('Peso atualizado com sucesso!');
@@ -1806,8 +1878,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
                 localStorage.setItem('userProfile', JSON.stringify(userProfile));
             }
-            renderWeightHistory(); // This will also call updateWeightChart
-            updateProgressBars(); // Ensure progress bars reflect the latest weight in userProfile
+            renderWeightHistory(); 
+            updateProgressBars(); 
             updateWeightPrediction();
             checkWeeklyWeightProgress();
             alert('Registro de peso excluído.');
@@ -1956,12 +2028,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Help button for difficulty mode
     helpDifficultyModeBtn.addEventListener('click', () => {
-        alert(
+        let helpText = 
             'O Modo de Dificuldade define quais itens do Check-in diário são obrigatórios para você manter ou avançar sua sequência de dias de foco:\n\n' +
             '💪 Fácil (Dieta): Você precisa apenas registrar que Dormiu bem e que fez a Dieta corretamente.\n\n' +
-            '🏋️ Hard (Dieta e Treino): Além de Dormir bem e fazer a Dieta corretamente, você também precisa registrar que Fez o treino.\n\n' +
-            '🧘 God (Dieta, Treino e NoFap): Para este modo, todos os itens (Dormiu bem, Fez o treino, Dieta corretamente e NoFap firme?) são obrigatórios para o avanço de nível. Escolha este modo para o desafio máximo!'
-        );
+            '🏋️ Hard (Dieta e Treino): Além de Dormir bem e fazer a Dieta corretamente, você também precisa registrar que Fez o treino.\n\n';
+        
+        // Only add God mode explanation if gender is male in userProfile or if userProfile is null (defaulting to male behavior)
+        if (!userProfile || userProfile.gender === 'male') {
+            helpText += '🧘 God (Dieta, Treino e NoFap): Para este modo, todos os itens (Dormiu bem, Fez o treino, Dieta corretamente e NoFap firme?) são obrigatórios para o avanço de nível. Escolha este modo para o desafio máximo!';
+        }
+        alert(helpText);
     });
 
 
