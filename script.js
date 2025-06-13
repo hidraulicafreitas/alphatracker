@@ -478,12 +478,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const difficultyMode = difficultyModeSelect.value;
         const manualRankValue = parseInt(manualCurrentRankInput.value);
 
-        // Determine the current weight for profile calculation
         let weightForProfile = currentWeightFromSettings;
-        if (userProfile && weightHistory.length > 0) { // If profile exists and weight history is not empty
-            weightForProfile = weightHistory[weightHistory.length - 1].weight; // Use the latest weight from history
+        if (userProfile && weightHistory.length > 0) {
+            weightForProfile = weightHistory[weightHistory.length - 1].weight;
         }
-
 
         if (!name || isNaN(age) || isNaN(height) || isNaN(weightForProfile) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
             alert('Por favor, preencha todos os campos do perfil corretamente, incluindo a data final da meta.');
@@ -491,47 +489,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const initialDailyCaloricNeeds = calculateDailyCaloricNeeds(weightForProfile, height, age, gender, activityFactor);
-        const initialCaloricDeficit = initialDailyCaloricNeeds * 0.20;
-        const initialTargetCalories = Math.round(initialDailyCaloricNeeds - initialCaloricDeficit);
+        
+        let newTargetCalories, newTargetProtein, newTargetCarbs, newTargetFats;
+        let newCarbDeficitApplied = userProfile ? userProfile.carbDeficitApplied : false;
 
-        const initialTargetProtein = Math.round((initialTargetCalories * 0.40) / 4);
-        const initialTargetCarbs = Math.round((initialTargetCalories * 0.40) / 4);
-        const initialTargetFats = Math.round((initialTargetCalories * 0.20) / 9);
-
-        let currentTargetCalories = userProfile ? userProfile.targetCalories : initialTargetCalories;
-        let currentTargetProtein = userProfile ? userProfile.targetProtein : initialTargetProtein;
-        let currentTargetCarbs = userProfile ? userProfile.carbsTarget : initialTargetCarbs; // Check if carbsTarget is correctly named here
-        let currentTargetFats = userProfile ? userProfile.targetFats : initialTargetFats;
-
-        if (userProfile && userProfile.carbDeficitApplied && event && event.type === 'submit') {
-            userProfile.carbDeficitApplied = false;
-            currentTargetCarbs = initialTargetCarbs;
-            currentTargetCalories = initialTargetCalories;
+        // Se é o primeiro setup do perfil OU se o botão de déficit foi clicado
+        if (!userProfile || (event && event.type === 'deficit_button_click')) {
+            const caloricDeficit = initialDailyCaloricNeeds * 0.20;
+            newTargetCalories = Math.round(initialDailyCaloricNeeds - caloricDeficit);
+            newTargetProtein = Math.round((newTargetCalories * 0.40) / 4);
+            newTargetCarbs = Math.round((newTargetCalories * 0.40) / 4);
+            newTargetFats = Math.round((newTargetCalories * 0.20) / 9);
+            newCarbDeficitApplied = true; // Marca que o déficit foi aplicado
+        } else {
+            // Se o perfil já existe e NÃO é clique do botão de déficit, mantém as metas anteriores.
+            newTargetCalories = userProfile.targetCalories;
+            newTargetProtein = userProfile.targetProtein;
+            newTargetCarbs = userProfile.targetCarbs;
+            newTargetFats = userProfile.targetFats;
+            newCarbDeficitApplied = userProfile.carbDeficitApplied; // Mantém o estado existente
         }
-
-        const isCreatingNewProfile = !userProfile; // Check if profile is being created for the first time
-
+        
         userProfile = {
             name, age, height, gender, currentWeight: weightForProfile, targetWeight, activityFactor, targetDate, difficultyMode,
-            dailyCaloricNeeds: Math.round(initialDailyCaloricNeeds),
-            targetCalories: currentTargetCalories,
-            targetProtein: currentTargetProtein,
-            targetCarbs: currentTargetCarbs,
-            targetFats: currentTargetFats,
-            carbDeficitApplied: userProfile ? userProfile.carbDeficitApplied : false
+            dailyCaloricNeeds: Math.round(initialDailyCaloricNeeds), 
+            targetCalories: newTargetCalories,
+            targetProtein: newTargetProtein,
+            targetCarbs: newTargetCarbs,
+            targetFats: newTargetFats,
+            carbDeficitApplied: newCarbDeficitApplied 
         };
 
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
-        applyTheme(); // Apply theme immediately after gender is saved
+        applyTheme();
 
-        // If it's a new profile and currentWeight is set, add this to weight history as initial.
-        // This only happens on the *first* successful profile save if history is empty.
-        if (isCreatingNewProfile && userProfile.currentWeight > 0 && weightHistory.length === 0) {
-            addWeightEntry(userProfile.currentWeight, new Date().toLocaleDateString('pt-BR'), false); // Add as initial, suppress alert
+        if (!userProfile && userProfile.currentWeight > 0 && weightHistory.length === 0) {
+            addWeightEntry(userProfile.currentWeight, new Date().toLocaleDateString('pt-BR'), false);
         }
 
-
-        // Update currentStreak if manual input is provided and valid AND called from settings page
         if (fromSettingsPage && !isNaN(manualRankValue) && manualRankValue >= 0 && manualRankValue !== currentStreak) {
             currentStreak = manualRankValue;
             localStorage.setItem('currentStreak', currentStreak);
@@ -543,8 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateUserRank();
             if (!suppressAlert) alert('Nível atual ajustado manualmente!');
         }
-
-        // Re-render profile-dependent displays
+        
         userNameSpan.textContent = userProfile.name;
         document.getElementById('name').value = userProfile.name;
         document.getElementById('age').value = userProfile.age;
@@ -556,7 +550,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userProfile.targetDate) {
             targetDateInput.value = userProfile.targetDate;
         }
-        // Repopulate difficulty options, just in case gender changed
         populateDifficultyModeOptions(userProfile.gender);
         difficultyModeSelect.value = userProfile.difficultyMode || 'easy';
         manualCurrentRankInput.value = currentStreak;
@@ -857,39 +850,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const weight7DaysAgo = weight7DaysAgoEntry.weight;
             const weightChange = currentWeight - weight7DaysAgo;
 
+            // Chefão, aqui a gente remove a lógica de ajuste automático de carboidratos e calorias.
+            // A mensagem de feedback e a atualização da data de check-in semanal ainda acontecem.
             if (userProfile.targetWeight < userProfile.currentWeight) { // User wants to lose weight
                 if (weightChange >= -0.5) { // Lost less than 500g or gained
-                    userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 0.80);
-                    userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
-                    userProfile.carbDeficitApplied = true;
-                    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                    // No automatic deficit application here.
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
-                    dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um déficit de 20% nos carboidratos devido ao baixo progresso na perda de peso. Mantenha o foco!';
+                    dietFeedbackMessage.textContent = 'Você perdeu menos de 500g na última semana. Considere aplicar um déficit adicional de carboidratos se necessário.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
-
                 } else { // Good progress on losing weight
-                    if (userProfile.carbDeficitApplied) {
-                        userProfile.carbDeficitApplied = false;
-                        localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                        localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                        saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
-                        dietFeedbackMessage.textContent = 'Parabéns! Suas metas de carboidratos foram normalizadas após bom progresso.';
-                        dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
-                    } else {
-                        localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                        dietFeedbackMessage.textContent = 'Ótimo progresso! Continue assim.';
-                        dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
-                    }
+                    // No automatic normalization here.
+                    localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                    dietFeedbackMessage.textContent = 'Ótimo progresso! Continue assim.';
+                    dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
                 }
             } else if (userProfile.targetWeight > userProfile.currentWeight) { // User wants to gain weight
                 if (weightChange <= 0.5) { // Gained less than 500g or lost
-                    userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 1.10);
-                    userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
-                    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                    // No automatic increase application here.
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
-                    dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um aumento de 10% nos carboidratos para auxiliar no ganho de peso. Mantenha o foco!';
+                    dietFeedbackMessage.textContent = 'Você ganhou menos de 500g na última semana. Considere aumentar as calorias se necessário.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
                 } else { // Good progress on gaining weight
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
@@ -897,13 +876,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
                 }
             } else { // Target weight is current weight (maintenance)
-                if (userProfile.carbDeficitApplied) {
-                    userProfile.carbDeficitApplied = false;
-                    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                if (Math.abs(weightChange) >= 0.5) { // Gained or lost more than 500g
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
-                    dietFeedbackMessage.textContent = 'Parabéns! Suas metas de carboidratos foram normalizadas.';
-                    dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
+                    dietFeedbackMessage.textContent = 'Seu peso variou mais de 500g na última semana. Sugiro rever suas metas para manutenção.';
+                    dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
                 } else {
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
                     dietFeedbackMessage.textContent = 'Mantenha o bom trabalho!';
@@ -1663,9 +1639,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 allRequiredChecked = sleepChecked && dietChecked;
             } else if (mode === 'hard') {
                 allRequiredChecked = sleepChecked && workoutChecked && dietChecked;
-            } else if (mode === 'god' && gender === 'male') { // Only consider nofap if God mode and male
+            }
+            // Chefão, esta é a parte que você pediu para garantir que o NoFap só seja obrigatório para homens em modo God.
+            else if (mode === 'god' && gender === 'male') { 
                 allRequiredChecked = sleepChecked && workoutChecked && dietChecked && nofapChecked;
-            } else { // Fallback for female 'god' or other invalid modes
+            } else if (mode === 'god' && gender === 'female') { // Para mulheres no modo God, NoFap não é obrigatório
+                allRequiredChecked = sleepChecked && workoutChecked && dietChecked;
+            }
+            else { // Fallback for other invalid modes or if profile not fully set up
                 allRequiredChecked = sleepChecked && dietChecked;
             }
         } else {
@@ -1684,9 +1665,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
                 } else if (mode === 'hard') {
                     wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet;
-                } else if (mode === 'god' && gender === 'male') {
+                }
+                 // Chefão, aqui também para verificar a consistência no God mode
+                else if (mode === 'god' && gender === 'male') {
                     wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet && previousState.nofap;
-                } else {
+                } else if (mode === 'god' && gender === 'female') {
+                    wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet;
+                }
+                 else {
                     wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
                 }
             } else {
@@ -1856,8 +1842,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
         // Always update userProfile.currentWeight with the most recent weight after any weight change
-        if (userProfile && weightHistory.length > 0) {
-            userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
+        if (userProfile) {
+            userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
         }
         renderWeightHistory(); 
@@ -1987,14 +1973,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const confirmDeficit = confirm('Tem certeza que deseja aplicar um DÉFICIT ADICIONAL de 20% nas calorias, focado em carboidratos? Isso ajustará suas metas.');
         if (confirmDeficit) {
-            userProfile.targetCarbs = Math.round(userProfile.targetCarbs * 0.80);
-            userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
-
-            localStorage.setItem('userProfile', JSON.stringify(userProfile));
-
-            saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
+            // Criar um evento simulado para 'saveProfile' que indica que é o clique do botão de déficit
+            const customEvent = { type: 'deficit_button_click', preventDefault: () => {} };
+            saveProfile(customEvent, true, false); 
             
-            alert('Déficit adicional de 20% aplicado com sucesso nas metas de carboidratos!');
+            alert('Déficit adicional de 20% aplicado com sucesso nas metas de carboidratos e calorias!');
         }
     });
 
