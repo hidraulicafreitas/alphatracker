@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const appContent = document.getElementById('app-content');
+    let appContent = null; // Inicializa como null, será preenchido em initApp
+
     const navButtons = document.querySelectorAll('nav button');
     const profileForm = document.getElementById('profile-form');
     const addMealGroupBtn = document.getElementById('add-meal-group-btn');
@@ -24,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const proteinNum = document = document.getElementById('protein-num');
     const carbsProgressBar = document.getElementById('carbs-progress');
     const carbsNum = document.getElementById('carbs-num');
-    const fatsProgressBar = document.getElementById('fats-progress');
+    const fatsProgressBar = document = document.getElementById('fats-progress');
     const fatsNum = document.getElementById('fats-num');
     const weightProgressBar = document.getElementById('weight-progress');
     const weightNum = document.getElementById('weight-num');
@@ -43,21 +44,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const weightChartCanvas = document.getElementById('weightChart');
     let weightChart;
 
-    // New elements for Weight Page
-    const createDeficitBtn = document.getElementById('create-deficit-btn');
-    const weightPageFeedbackMessage = document.getElementById('weight-page-feedback-message');
+    // Campos de ajuste manual de metas
+    const manualTargetCaloriesInput = document.getElementById('manual-target-calories');
+    const manualTargetProteinInput = document.getElementById('manual-target-protein');
+    const manualTargetCarbsInput = document.getElementById('manual-target-carbs');
+    const manualTargetFatsInput = document.getElementById('manual-target-fats');
+    const saveManualTargetsBtn = document.getElementById('save-manual-targets-btn'); 
+    
+    // Elementos para ocultar/mostrar seções de ajuste
+    const toggleAddCustomFoodBtn = document.getElementById('toggle-add-custom-food-btn');
+    const addCustomFoodSection = document.getElementById('add-custom-food-section');
+    const toggleAdjustTargetsBtn = document.getElementById('toggle-adjust-targets-btn');
+    const adjustTargetsSection = document.getElementById('adjust-targets-section');
+
 
     // Difficulty Mode
     const difficultyModeSelect = document.getElementById('difficulty-mode');
-    const genderSelect = document.getElementById('gender'); // Get the gender select element
+    const genderSelect = document.getElementById('gender');
     const checkinSleep = document.querySelector('.checkin-sleep');
     const checkinWorkout = document.querySelector('.checkin-workout');
     const checkinDiet = document.querySelector('.checkin-diet');
     const checkinNofap = document.querySelector('.checkin-nofap');
     const helpDifficultyModeBtn = document.getElementById('help-difficulty-mode');
+    const helpManualRankBtn = document.getElementById('help-manual-rank');
+    const helpTargetDateBtn = document.getElementById('help-target-date');
 
     // Manual Rank Adjustment
     const manualCurrentRankInput = document.getElementById('manual-current-rank');
+
+    // New: Initial Weight Settings
+    const initialWeightSettingsInput = document.getElementById('initial-weight-settings');
 
 
     // --- Application Data (simulating a "database" with LocalStorage) ---
@@ -83,12 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     let foodDatabase = JSON.parse(localStorage.getItem('foodDatabase')) || [];
-    let defaultFoods = [
-        // NOVAS ADIÇÕES
+    const defaultFoods = [
         { name: 'Whey Protein Growth (Concentrado)', kcalPer100g: 380, proteinPer100g: 75, carbsPer100g: 8, fatsPer100g: 5, isCustom: false },
         { name: 'Leite Integral', kcalPer100g: 60, proteinPer100g: 3.2, carbsPer100g: 4.7, fatsPer100g: 3.3, isCustom: false },
         { name: 'Leite Desnatado', kcalPer100g: 35, proteinPer100g: 3.4, carbsPer100g: 5, fatsPer100g: 0.5, isCustom: false },
-        // Carnes
         { name: 'Picanha Grelhada', kcalPer100g: 290, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 20, isCustom: false },
         { name: 'Alcatra Grelhada', kcalPer100g: 190, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 9, isCustom: false },
         { name: 'Maminha Grelhada', kcalPer100g: 210, proteinPer100g: 27, carbsPer100g: 0, fatsPer100g: 11, isCustom: false },
@@ -126,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Truta Assada', kcalPer100g: 148, proteinPer100g: 23, carbsPer100g: 0, fatsPer100g: 6, isCustom: false },
         { name: 'Pescada Cozida', kcalPer100g: 80, proteinPer100g: 17, carbsPer100g: 0, fatsPer100g: 1, isCustom: false },
         { name: 'Pernil de Porco Assado', kcalPer100g: 250, proteinPer100g: 25, carbsPer100g: 0, fatsPer100g: 16, isCustom: false },
-        // Frutas
         { name: 'Maçã', kcalPer100g: 52, proteinPer100g: 0.3, carbsPer100g: 14, fatsPer100g: 0.2, isCustom: false },
         { name: 'Banana', kcalPer100g: 89, proteinPer100g: 1.1, carbsPer100g: 22.8, fatsPer100g: 0.3, isCustom: false },
         { name: 'Laranja', kcalPer100g: 47, proteinPer100g: 0.9, carbsPer100g: 11.8, fatsPer100g: 0.1, isCustom: false },
@@ -144,7 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Ameixa', kcalPer100g: 46, proteinPer100g: 0.7, carbsPer100g: 11, fatsPer100g: 0.3, isCustom: false },
         { name: 'Tangerina', kcalPer100g: 53, proteinPer100g: 0.8, carbsPer100g: 13, fatsPer100g: 0.3, isCustom: false },
         { name: 'Limão', kcalPer100g: 29, proteinPer100g: 1.1, carbsPer100g: 9, fatsPer100g: 0.3, isCustom: false },
-        // Vegetais
         { name: 'Brócolis Cozido', kcalPer100g: 55, proteinPer100g: 3.7, carbsPer100g: 11.2, fatsPer100g: 0.6, isCustom: false },
         { name: 'Cenoura Crua', kcalPer100g: 41, proteinPer100g: 0.9, carbsPer100g: 9.6, fatsPer100g: 0.2, isCustom: false },
         { name: 'Tomate', kcalPer100g: 18, proteinPer100g: 0.9, carbsPer100g: 3.9, fatsPer100g: 0.2, isCustom: false },
@@ -162,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Abóbora Cozida', kcalPer100g: 26, proteinPer100g: 1, carbsPer100g: 6.5, fatsPer100g: 0.1, isCustom: false },
         { name: 'Inhame Cozido', kcalPer100g: 118, proteinPer100g: 1.5, carbsPer100g: 27.5, fatsPer100g: 0.2, isCustom: false },
         { name: 'Mandioca Cozida', kcalPer100g: 160, proteinPer100g: 1.4, carbsPer100g: 38, fatsPer100g: 0.3, isCustom: false },
-        // Proteins (existing ones)
         { name: 'Frango Grelhado (Peito)', kcalPer100g: 165, proteinPer100g: 31, carbsPer100g: 0, fatsPer100g: 3.6, isCustom: false },
         { name: 'Bife Grelhado (Patinho)', kcalPer100g: 200, proteinPer100g: 29, carbsPer100g: 0, fatsPer100g: 9, isCustom: false },
         { name: 'Ovo Cozido', kcalPer100g: 155, proteinPer100g: 13, carbsPer100g: 1.1, fatsPer100g: 11, isCustom: false },
@@ -179,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Presunto Cozido', kcalPer100g: 145, proteinPer100g: 18, carbsPer100g: 1, fatsPer100g: 8, isCustom: false },
         { name: 'Bacalhau Cozido', kcalPer100g: 105, proteinPer100g: 23, carbsPer100g: 0, fatsPer100g: 1, isCustom: false },
         { name: 'Soja Cozida', kcalPer100g: 172, proteinPer100g: 18, carbsPer100g: 9, fatsPer100g: 9, isCustom: false },
-        // Carbohydrates
         { name: 'Arroz Branco Cozido', kcalPer100g: 130, proteinPer100g: 2.7, carbsPer100g: 28, fatsPer100g: 0.3, isCustom: false },
         { name: 'Batata Doce Cozida', kcalPer100g: 86, proteinPer100g: 1.6, carbsPer100g: 20, fatsPer100g: 0.1, isCustom: false },
         { name: 'Aveia em Flocos', kcalPer100g: 389, proteinPer100g: 16.9, carbsPer100g: 66.3, fatsPer100g: 6.9, isCustom: false },
@@ -204,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Pão de Centeio', kcalPer100g: 250, proteinPer100g: 8.5, carbsPer100g: 48, fatsPer100g: 2, isCustom: false },
         { name: 'Pão de Milho', kcalPer100g: 270, proteinPer100g: 7, carbsPer100g: 50, fatsPer100g: 4, isCustom: false },
         { name: 'Cereal Matinal (açucarado)', kcalPer100g: 380, proteinPer100g: 5, carbsPer100g: 85, fatsPer100g: 2, isCustom: false },
-        // Fats and Others
         { name: 'Azeite de Oliva Extra Virgem', kcalPer100g: 884, proteinPer100g: 0, carbsPer100g: 0, fatsPer100g: 100, isCustom: false },
         { name: 'Pasta de Amendoim Natural', kcalPer100g: 588, proteinPer100g: 25, carbsPer100g: 20, fatsPer100g: 50, isCustom: false },
         { name: 'Amêndoas', kcalPer100g: 579, proteinPer100g: 21, carbsPer100g: 21, fatsPer100g: 49, isCustom: false },
@@ -238,18 +247,18 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Doce de Leite', kcalPer100g: 320, proteinPer100g: 6, carbsPer100g: 55, fatsPer100g: 8, isCustom: false },
         { name: 'Brigadeiro', kcalPer100g: 450, proteinPer100g: 5, carbsPer100g: 60, fatsPer100g: 20, isCustom: false },
     ];
-    // Add default foods to foodDatabase if it's empty or they haven't been added yet
-    if (foodDatabase.length === 0 || !foodDatabase.some(food => !food.isCustom)) {
-        foodDatabase = defaultFoods.concat(foodDatabase.filter(food => food.isCustom));
-        localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
-    }
+    defaultFoods.forEach(defaultFood => {
+        if (!foodDatabase.some(food => normalizeString(food.name) === normalizeString(defaultFood.name))) {
+            foodDatabase.push(defaultFood);
+        }
+    });
+    localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
 
-
-    // --- Initialization and Rendering Functions ---
 
     function initApp() {
+        appContent = document.getElementById('app-container'); // Agora appContent é definido aqui
         checkDailyReset();
-        applyTheme(); // Apply theme on app load
+        applyTheme();
         renderUserProfile();
         updateProgressBars();
         renderMealGroups();
@@ -264,18 +273,29 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUserRank();
         updateHighestRankDisplay();
         updateCheckinVisibility();
+
+        // Inicializa as seções ocultas, verificando se os elementos existem
+        if (addCustomFoodSection) {
+            addCustomFoodSection.style.display = 'none';
+        }
+        if (adjustTargetsSection) {
+            adjustTargetsSection.style.display = 'none';
+        }
     }
 
     function applyTheme() {
-        if (userProfile && userProfile.gender === 'female') {
-            document.documentElement.style.setProperty('--vibrant-blue', '#ff69b4'); // Hot Pink
-            document.documentElement.style.setProperty('--accent-blue', '#5e3b5e'); // Darker purple-pink
-            document.documentElement.style.setProperty('--primary-dark', '#330033'); // Even darker purple
-            document.documentElement.style.setProperty('--secondary-dark', '#4a1a4a'); // Darker purple-pink
-            document.documentElement.style.setProperty('--vibrant-orange', '#8a2be2'); // Blue Violet for accent
-            document.documentElement.style.setProperty('--border-color', '#7c4d7c'); // Adjusted border color
+        // Atualiza userProfile antes de aplicar o tema para garantir que o gênero mais recente seja usado
+        userProfile = JSON.parse(localStorage.getItem('userProfile')) || { gender: 'male' }; // Garante um valor padrão
+        const currentGender = document.getElementById('gender').value || userProfile.gender; // Pega do select se disponível, senão do profile
+
+        if (currentGender === 'female') {
+            document.documentElement.style.setProperty('--vibrant-blue', '#ff69b4');
+            document.documentElement.style.setProperty('--accent-blue', '#5e3b5e');
+            document.documentElement.style.setProperty('--primary-dark', '#330033');
+            document.documentElement.style.setProperty('--secondary-dark', '#4a1a4a');
+            document.documentElement.style.setProperty('--vibrant-orange', '#8a2be2');
+            document.documentElement.style.setProperty('--border-color', '#7c4d7c');
         } else {
-            // Reset to default if male or no profile (or other genders added later)
             document.documentElement.style.setProperty('--vibrant-blue', '#007bff');
             document.documentElement.style.setProperty('--accent-blue', '#2a3459');
             document.documentElement.style.setProperty('--primary-dark', '#0d1223');
@@ -283,13 +303,82 @@ document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.style.setProperty('--vibrant-orange', '#e67e22');
             document.documentElement.style.setProperty('--border-color', '#3f4a6b');
         }
+
+        // Força o navegador a recalcular os estilos e a renderizar novamente
+        if (appContent) { // Verifica se appContent não é null
+            appContent.classList.add('temp-restyle');
+            void appContent.offsetWidth; 
+            appContent.classList.remove('temp-restyle');
+        }
+    }
+
+    function getDateOnly(date) {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    // NOVA FUNÇÃO: Recalcula dailyData com base nas metas e padrões.
+    function recalculateDailyDataFromProfileAndStandards() {
+        const todayLocaleString = getDateOnly(new Date()).toLocaleDateString('pt-BR');
+
+        dailyData.consumedCalories = 0;
+        dailyData.consumedProtein = 0;
+        dailyData.consumedCarbs = 0;
+        dailyData.consumedFats = 0;
+        dailyData.mealGroups = [];
+
+        if (userProfile && userProfile.targetCalories) {
+            storedMealGroups.forEach(storedGroup => {
+                const newGroup = {
+                    name: storedGroup.name,
+                    foods: [],
+                    totalKcal: 0,
+                    totalProtein: 0,
+                    totalCarbs: 0,
+                    totalFats: 0
+                };
+                storedGroup.foods.filter(food => food.isDailyStandard).forEach(food => {
+                    const clonedFood = JSON.parse(JSON.stringify(food));
+                    newGroup.foods.push(clonedFood);
+                    newGroup.totalKcal += clonedFood.kcal;
+                    newGroup.totalProtein += clonedFood.protein;
+                    newGroup.totalCarbs += clonedFood.carbs;
+                    newGroup.totalFats += clonedFood.fats;
+
+                    dailyData.consumedCalories += clonedFood.kcal;
+                    dailyData.consumedProtein += clonedFood.protein;
+                    dailyData.consumedCarbs += clonedFood.carbs;
+                    dailyData.consumedFats += clonedFood.fats;
+                });
+                if (newGroup.foods.length > 0) {
+                    dailyData.mealGroups.push(newGroup);
+                }
+            });
+        }
+        dailyData.date = todayLocaleString;
+        localStorage.setItem('dailyData', JSON.stringify(dailyData));
     }
 
 
     function checkDailyReset() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = getDateOnly(new Date());
         const todayLocaleString = today.toLocaleDateString('pt-BR');
+
+        if (lastSuccessfulCheckinDate) {
+            const lastCheckinDay = getDateOnly(new Date(lastSuccessfulCheckinDate));
+            const diffTime = today.getTime() - lastCheckinDay.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 1) {
+                currentStreak = 0;
+                localStorage.removeItem('lastSuccessfulCheckinDate');
+            }
+        } else {
+            currentStreak = 0;
+        }
+        localStorage.setItem('currentStreak', currentStreak);
+
 
         if (dailyData.date !== todayLocaleString) {
             console.log("Reiniciando dados diários e salvando resumo do dia anterior...");
@@ -305,94 +394,72 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('pastDailySummaries', JSON.stringify(pastDailySummaries));
             }
 
-            // Streak continuity check based on lastSuccessfulCheckinDate
-            if (lastSuccessfulCheckinDate) {
-                const lastCheckinDay = new Date(lastSuccessfulCheckinDate);
-                lastCheckinDay.setHours(0, 0, 0, 0);
-
-                const diffTime = today.getTime() - lastCheckinDay.getTime();
-                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDays > 1) {
-                    currentStreak = 0;
-                    console.log("Streak resetado devido a falha na continuidade.");
-                }
-            } else {
-                currentStreak = 0;
-            }
-            localStorage.setItem('currentStreak', currentStreak);
-
-            // ONLY reset consumed macros and non-daily foods in meal groups
-            dailyData.consumedCalories = 0;
-            dailyData.consumedProtein = 0;
-            dailyData.consumedCarbs = 0;
-            dailyData.consumedFats = 0;
-
-            // Preserve meal group structure, but clear non-daily foods and recalculate totals
-            dailyData.mealGroups = storedMealGroups.map(group => {
-                const newFoods = group.foods.filter(food => food.isDailyStandard);
-                let totalKcal = 0;
-                let totalProtein = 0;
-                let totalCarbs = 0;
-                let totalFats = 0;
-
-                newFoods.forEach(food => {
-                    totalKcal += food.kcal;
-                    totalProtein += food.protein;
-                    totalCarbs += food.carbs;
-                    totalFats += food.fats;
-                });
-
-                dailyData.consumedCalories += totalKcal;
-                dailyData.consumedProtein += totalProtein;
-                dailyData.consumedCarbs += totalCarbs;
-                dailyData.consumedFats += totalFats;
-
-                return {
-                    name: group.name,
-                    foods: newFoods,
-                    totalKcal: totalKcal,
-                    totalProtein: totalProtein,
-                    totalCarbs: totalCarbs,
-                    totalFats: totalFats
-                };
-            });
-            
-            dailyData.date = todayLocaleString;
-            localStorage.setItem('dailyData', JSON.stringify(dailyData));
-            
+            recalculateDailyDataFromProfileAndStandards();
             checkinCheckboxes.forEach(checkbox => checkbox.checked = false);
             localStorage.removeItem('currentDayCheckinState');
         } else {
-            // Ensure mealGroups in dailyData reflect the current storedMealGroups structure,
-            // but keep today's consumed items if already present.
-            if (dailyData.mealGroups.length !== storedMealGroups.length) {
-                const tempDailyMealGroups = [...dailyData.mealGroups];
-
-                dailyData.mealGroups = storedMealGroups.map(storedGroup => {
-                    const existingDailyGroup = tempDailyMealGroups.find(dg => dg.name === storedGroup.name);
-                    if (existingDailyGroup) {
-                        return existingDailyGroup;
-                    } else {
-                        return {
-                            name: storedGroup.name,
-                            foods: [],
-                            totalKcal: 0,
-                            totalProtein: 0,
-                            totalCarbs: 0,
-                            totalFats: 0
-                        };
-                    }
-                });
-                localStorage.setItem('dailyData', JSON.stringify(dailyData));
-            }
-
             const savedCheckinState = JSON.parse(localStorage.getItem('currentDayCheckinState'));
             if (savedCheckinState) {
                 checkinCheckboxes.forEach(checkbox => {
                     checkbox.checked = savedCheckinState[checkbox.id] || false;
                 });
             }
+            const updatedDailyMealGroups = [];
+            const currentDailyMealGroups = dailyData.mealGroups;
+
+            storedMealGroups.forEach(storedGroup => {
+                let existingDailyGroup = currentDailyMealGroups.find(dg => dg.name === storedGroup.name);
+                if (existingDailyGroup) {
+                    updatedDailyMealGroups.push(existingDailyGroup);
+                } else {
+                    const newGroup = {
+                        name: storedGroup.name,
+                        foods: [],
+                        totalKcal: 0,
+                        totalProtein: 0,
+                        totalCarbs: 0,
+                        totalFats: 0
+                    };
+                    storedGroup.foods.filter(food => food.isDailyStandard).forEach(food => {
+                        const clonedFood = JSON.parse(JSON.stringify(food));
+                        newGroup.foods.push(clonedFood);
+                        newGroup.totalKcal += clonedFood.kcal;
+                        newGroup.totalProtein += clonedFood.protein;
+                        newGroup.totalCarbs += clonedFood.carbs;
+                        newGroup.totalFats += clonedFood.fats;
+                    });
+                    updatedDailyMealGroups.push(newGroup);
+                }
+            });
+
+            currentDailyMealGroups.forEach(dailyGroup => {
+                const alreadyInUpdated = updatedDailyMealGroups.some(g => g.name === dailyGroup.name);
+                if (!alreadyInUpdated) {
+                    updatedDailyMealGroups.push(dailyGroup);
+                }
+            });
+
+
+            let totalConsumedCalories = 0;
+            let totalConsumedProtein = 0;
+            let totalConsumedCarbs = 0;
+            let totalConsumedFats = 0;
+
+            updatedDailyMealGroups.forEach(group => {
+                group.foods.forEach(food => {
+                    totalConsumedCalories += food.kcal;
+                    totalConsumedProtein += food.protein;
+                    totalConsumedCarbs += food.carbs;
+                    totalConsumedFats += food.fats;
+                });
+            });
+            dailyData.mealGroups = updatedDailyMealGroups;
+            dailyData.consumedCalories = totalConsumedCalories;
+            dailyData.consumedProtein = totalConsumedProtein;
+            dailyData.consumedCarbs = totalConsumedCarbs;
+            dailyData.consumedFats = totalConsumedFats;
+
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
         }
     }
 
@@ -403,22 +470,33 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('age').value = userProfile.age;
             document.getElementById('height').value = userProfile.height;
             document.getElementById('gender').value = userProfile.gender;
-            // Ensure current-weight-settings reflects userProfile.currentWeight
-            document.getElementById('current-weight-settings').value = userProfile.currentWeight;
+            initialWeightSettingsInput.value = userProfile.initialWeight;
             document.getElementById('target-weight').value = userProfile.targetWeight;
             document.getElementById('activity-factor').value = userProfile.activityFactor;
             if (userProfile.targetDate) {
                 targetDateInput.value = userProfile.targetDate;
             }
-            // Populate difficulty mode options
             populateDifficultyModeOptions(userProfile.gender);
-            difficultyModeSelect.value = userProfile.difficultyMode || 'easy'; // Set selected value AFTER populating options
-            manualCurrentRankInput.value = currentStreak; // Display current streak in the manual input
+            difficultyModeSelect.value = userProfile.difficultyMode || 'easy';
+            manualCurrentRankInput.value = currentStreak;
+
+            // Preenche os campos de ajuste manual de metas
+            manualTargetCaloriesInput.value = userProfile.targetCalories || '';
+            manualTargetProteinInput.value = userProfile.targetProtein || '';
+            manualTargetCarbsInput.value = userProfile.targetCarbs || '';
+            manualTargetFatsInput.value = userProfile.targetFats || '';
+
         } else {
             userNameSpan.textContent = 'Guerreiro';
-            populateDifficultyModeOptions('male'); // Default to male options if no profile
+            populateDifficultyModeOptions('male');
             difficultyModeSelect.value = 'easy';
             manualCurrentRankInput.value = 0;
+            initialWeightSettingsInput.value = '';
+            // Limpa os campos de ajuste manual de metas se não houver perfil
+            manualTargetCaloriesInput.value = '';
+            manualTargetProteinInput.value = '';
+            manualTargetCarbsInput.value = '';
+            manualTargetFatsInput.value = '';
         }
         updateCheckinVisibility();
     }
@@ -430,7 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
             { value: 'hard', text: 'Hard (Dieta e Treino)' }
         ];
 
-        // Only add 'God' option if gender is male
         if (gender === 'male') {
             options.push({ value: 'god', text: 'God (Dieta, Treino e NoFap)' });
         }
@@ -443,88 +520,80 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Listener for gender change to update difficulty options and theme immediately
-    genderSelect.addEventListener('change', (event) => { // Use genderSelect variable
+    genderSelect.addEventListener('change', (event) => {
+        userProfile = userProfile || {};
+        userProfile.gender = event.target.value;
         populateDifficultyModeOptions(event.target.value);
-        // If 'god' was selected and gender changes to female, reset difficulty to 'hard'
         if (event.target.value === 'female' && difficultyModeSelect.value === 'god') {
             difficultyModeSelect.value = 'hard';
         }
-        applyTheme(event.target.value); // Call applyTheme with the new gender
+        applyTheme();
     });
 
     function calculateDailyCaloricNeeds(weight, height, age, gender, activityFactor) {
         let tmb;
         if (gender === 'male') {
             tmb = 10 * weight + 6.25 * height - 5 * age + 5;
-        } else { // female
+        } else {
             tmb = 10 * weight + 6.25 * height - 5 * age - 161;
         }
-
         return tmb * activityFactor;
     }
 
-    function saveProfile(event, suppressAlert = false, fromSettingsPage = false) { 
+    function saveProfile(event, suppressAlert = false, fromSettingsPage = false) {
         if (event) event.preventDefault();
 
         const name = document.getElementById('name').value;
         const age = parseInt(document.getElementById('age').value);
         const height = parseInt(document.getElementById('height').value);
         const gender = document.getElementById('gender').value;
-        const currentWeightFromSettings = parseFloat(document.getElementById('current-weight-settings').value); 
+        const initialWeight = parseFloat(initialWeightSettingsInput.value);
         const targetWeight = parseFloat(document.getElementById('target-weight').value);
         const activityFactor = parseFloat(document.getElementById('activity-factor').value);
         const targetDate = document.getElementById('target-date').value;
         const difficultyMode = difficultyModeSelect.value;
         const manualRankValue = parseInt(manualCurrentRankInput.value);
 
-        let weightForProfile = currentWeightFromSettings;
-        if (userProfile && weightHistory.length > 0) {
-            weightForProfile = weightHistory[weightHistory.length - 1].weight;
-        }
-
-        if (!name || isNaN(age) || isNaN(height) || isNaN(weightForProfile) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
-            alert('Por favor, preencha todos os campos do perfil corretamente, incluindo a data final da meta.');
+        if (!name || isNaN(age) || isNaN(height) || isNaN(initialWeight) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
+            alert('Por favor, preencha todos os campos do perfil corretamente, incluindo o peso inicial e a data final da meta.');
             return;
         }
 
-        const initialDailyCaloricNeeds = calculateDailyCaloricNeeds(weightForProfile, height, age, gender, activityFactor);
-        
-        let newTargetCalories, newTargetProtein, newTargetCarbs, newTargetFats;
-        let newCarbDeficitApplied = userProfile ? userProfile.carbDeficitApplied : false;
+        const calculatedDailyCaloricNeeds = calculateDailyCaloricNeeds(initialWeight, height, age, gender, activityFactor);
 
-        // Se é o primeiro setup do perfil OU se o botão de déficit foi clicado
-        if (!userProfile || (event && event.type === 'deficit_button_click')) {
-            const caloricDeficit = initialDailyCaloricNeeds * 0.20;
-            newTargetCalories = Math.round(initialDailyCaloricNeeds - caloricDeficit);
-            newTargetProtein = Math.round((newTargetCalories * 0.40) / 4);
-            newTargetCarbs = Math.round((newTargetCalories * 0.40) / 4);
-            newTargetFats = Math.round((newTargetCalories * 0.20) / 9);
-            newCarbDeficitApplied = true; // Marca que o déficit foi aplicado
-        } else {
-            // Se o perfil já existe e NÃO é clique do botão de déficit, mantém as metas anteriores.
+        let newTargetCalories, newTargetProtein, newTargetCarbs, newTargetFats;
+        
+        // Se já existe userProfile, mantém as metas manuais se elas foram definidas
+        if (userProfile && userProfile.targetCalories && userProfile.targetProtein && userProfile.targetCarbs && userProfile.targetFats) {
             newTargetCalories = userProfile.targetCalories;
             newTargetProtein = userProfile.targetProtein;
             newTargetCarbs = userProfile.targetCarbs;
             newTargetFats = userProfile.targetFats;
-            newCarbDeficitApplied = userProfile.carbDeficitApplied; // Mantém o estado existente
+        } else {
+            // Caso contrário, calcula as metas iniciais com 20% de déficit de calorias, sem afetar a distribuição macro
+            const baseTargetCalories = Math.round(calculatedDailyCaloricNeeds);
+            newTargetCalories = Math.round(baseTargetCalories * 0.80); // 20% de déficit
+
+            // Distribuição padrão de macros (exemplo: 40% Proteína, 40% Carboidrato, 20% Gordura)
+            newTargetProtein = Math.round((newTargetCalories * 0.40) / 4); // 4 Kcal por grama de proteína
+            newTargetCarbs = Math.round((newTargetCalories * 0.40) / 4);   // 4 Kcal por grama de carboidrato
+            newTargetFats = Math.round((newTargetCalories * 0.20) / 9);     // 9 Kcal por grama de gordura
         }
-        
+
+
         userProfile = {
-            name, age, height, gender, currentWeight: weightForProfile, targetWeight, activityFactor, targetDate, difficultyMode,
-            dailyCaloricNeeds: Math.round(initialDailyCaloricNeeds), 
-            targetCalories: newTargetCalories,
+            name, age, height, gender, initialWeight, targetWeight, activityFactor, targetDate, difficultyMode,
+            dailyCaloricNeeds: Math.round(calculatedDailyCaloricNeeds),
+            targetCalories: newTargetCalories,   
             targetProtein: newTargetProtein,
             targetCarbs: newTargetCarbs,
-            targetFats: newTargetFats,
-            carbDeficitApplied: newCarbDeficitApplied 
+            targetFats: newTargetFats
         };
 
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
-        applyTheme();
-
-        if (!userProfile && userProfile.currentWeight > 0 && weightHistory.length === 0) {
-            addWeightEntry(userProfile.currentWeight, new Date().toLocaleDateString('pt-BR'), false);
+        
+        if (weightHistory.length === 0) {
+            addWeightEntry(initialWeight, getDateOnly(new Date()).toLocaleDateString('pt-BR'), false);
         }
 
         if (fromSettingsPage && !isNaN(manualRankValue) && manualRankValue >= 0 && manualRankValue !== currentStreak) {
@@ -532,19 +601,20 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('currentStreak', currentStreak);
             if (currentStreak > maxStreak) {
                 maxStreak = currentStreak;
-                localStorage.setItem('maxStreak', maxStreak);
             }
             updateCheckinStreakDisplay();
             updateUserRank();
             if (!suppressAlert) alert('Nível atual ajustado manualmente!');
         }
-        
+
+        recalculateDailyDataFromProfileAndStandards();
+
         userNameSpan.textContent = userProfile.name;
         document.getElementById('name').value = userProfile.name;
         document.getElementById('age').value = userProfile.age;
         document.getElementById('height').value = userProfile.height;
         document.getElementById('gender').value = userProfile.gender;
-        document.getElementById('current-weight-settings').value = userProfile.currentWeight; 
+        initialWeightSettingsInput.value = userProfile.initialWeight;
         document.getElementById('target-weight').value = userProfile.targetWeight;
         document.getElementById('activity-factor').value = userProfile.activityFactor;
         if (userProfile.targetDate) {
@@ -553,15 +623,55 @@ document.addEventListener('DOMContentLoaded', () => {
         populateDifficultyModeOptions(userProfile.gender);
         difficultyModeSelect.value = userProfile.difficultyMode || 'easy';
         manualCurrentRankInput.value = currentStreak;
-        
+
+        // Atualiza os campos de ajuste manual de metas após salvar o perfil
+        manualTargetCaloriesInput.value = userProfile.targetCalories;
+        manualTargetProteinInput.value = userProfile.targetProtein;
+        manualTargetCarbsInput.value = userProfile.targetCarbs;
+        manualTargetFatsInput.value = userProfile.targetFats;
+
+
         updateProgressBars();
         updateWeightPrediction();
         updateCheckinVisibility();
         if (event && event.type === 'submit' && !suppressAlert) {
             alert('Perfil salvo e o app está pronto para uso!');
             showPage('home-page');
-        }
+        } 
     }
+
+    // NOVA FUNÇÃO: Salvar Metas Manuais
+    function saveManualTargets() {
+        if (!userProfile) {
+            alert('Primeiro, configure seu perfil antes de ajustar as metas.');
+            return;
+        }
+
+        const protein = parseFloat(manualTargetProteinInput.value);
+        const carbs = parseFloat(manualTargetCarbsInput.value);
+        const fats = parseFloat(manualTargetFatsInput.value);
+
+        if (isNaN(protein) || isNaN(carbs) || isNaN(fats) || protein < 0 || carbs < 0 || fats < 0) {
+            alert('Por favor, insira valores válidos para Proteína, Carboidratos e Gorduras.');
+            return;
+        }
+
+        const calculatedKcal = Math.round((protein * 4) + (carbs * 4) + (fats * 9));
+
+        userProfile.targetProtein = protein;
+        userProfile.targetCarbs = carbs;
+        userProfile.targetFats = fats;
+        userProfile.targetCalories = calculatedKcal; // Atualiza KCAL com base nos macros
+
+        localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        
+        updateProgressBars();
+        alert('Metas ajustadas manualmente e Kcal recalculadas!');
+
+        // Garante que os campos de calorias reflitam o cálculo
+        manualTargetCaloriesInput.value = calculatedKcal;
+    }
+
 
     function updateProgressBars() {
         if (!userProfile) {
@@ -580,39 +690,69 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Garante que dailyData esteja sincronizado com as metas do userProfile antes de atualizar as barras
+        const todayLocaleString = getDateOnly(new Date()).toLocaleDateString('pt-BR');
+        if (dailyData.date !== todayLocaleString) {
+             recalculateDailyDataFromProfileAndStandards();
+        }
+
         let caloriesPercentage = (dailyData.consumedCalories / userProfile.targetCalories) * 100;
         caloriesPercentage = Math.min(caloriesPercentage, 100);
         caloriesProgressBar.style.width = `${caloriesPercentage}%`;
+        caloriesProgressBar.classList.remove('red-bar', 'blue-bar'); // Remove classes antigas
+        if (dailyData.consumedCalories > userProfile.targetCalories) {
+            caloriesProgressBar.classList.add('red-bar');
+        } else {
+            caloriesProgressBar.classList.add('blue-bar');
+        }
         caloriesNum.textContent = `${dailyData.consumedCalories} / ${userProfile.targetCalories} Kcal`;
-        caloriesProgressBar.style.backgroundColor = dailyData.consumedCalories > userProfile.targetCalories ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-blue');
+
 
         let proteinPercentage = (dailyData.consumedProtein / userProfile.targetProtein) * 100;
         proteinPercentage = Math.min(proteinPercentage, 100);
         proteinProgressBar.style.width = `${proteinPercentage}%`;
+        proteinProgressBar.classList.remove('red-bar', 'blue-bar');
+        if (dailyData.consumedProtein > userProfile.targetProtein) {
+            proteinProgressBar.classList.add('red-bar');
+        } else {
+            proteinProgressBar.classList.add('blue-bar');
+        }
         proteinNum.textContent = `${dailyData.consumedProtein.toFixed(1)} / ${userProfile.targetProtein} g`;
-        proteinProgressBar.style.backgroundColor = dailyData.consumedProtein > userProfile.targetProtein ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-blue');
+
 
         let carbsPercentage = (dailyData.consumedCarbs / userProfile.targetCarbs) * 100;
         carbsPercentage = Math.min(carbsPercentage, 100);
         carbsProgressBar.style.width = `${carbsPercentage}%`;
+        carbsProgressBar.classList.remove('red-bar', 'blue-bar');
+        if (dailyData.consumedCarbs > userProfile.targetCarbs) {
+            carbsProgressBar.classList.add('red-bar');
+        } else {
+            carbsProgressBar.classList.add('blue-bar');
+        }
         carbsNum.textContent = `${dailyData.consumedCarbs.toFixed(1)} / ${userProfile.targetCarbs} g`;
-        carbsProgressBar.style.backgroundColor = dailyData.consumedCarbs > userProfile.targetCarbs ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-blue');
+
 
         let fatsPercentage = (dailyData.consumedFats / userProfile.targetFats) * 100;
         fatsPercentage = Math.min(fatsPercentage, 100);
         fatsProgressBar.style.width = `${fatsPercentage}%`;
+        fatsProgressBar.classList.remove('red-bar', 'blue-bar');
+        if (dailyData.consumedFats > userProfile.targetFats) {
+            fatsProgressBar.classList.add('red-bar');
+        } else {
+            fatsProgressBar.classList.add('blue-bar');
+        }
         fatsNum.textContent = `${dailyData.consumedFats.toFixed(1)} / ${userProfile.targetFats} g`;
-        fatsProgressBar.style.backgroundColor = dailyData.consumedFats > userProfile.targetFats ? getComputedStyle(document.documentElement).getPropertyValue('--vibrant-red') : getComputedStyle(document.documentElement).getPropertyValue('--vibrant-blue');
+
 
         const targetWeight = userProfile.targetWeight;
         let weightProgress;
 
         if (weightHistory.length > 0) {
             const lastRecordedWeight = weightHistory[weightHistory.length - 1].weight;
-            const initialWeight = weightHistory[0].weight;
+            const initialWeightForProgress = userProfile.initialWeight;
 
-            const totalWeightChangeGoal = Math.abs(initialWeight - targetWeight);
-            const currentWeightChange = Math.abs(initialWeight - lastRecordedWeight);
+            const totalWeightChangeGoal = Math.abs(initialWeightForProgress - targetWeight);
+            const currentWeightChange = Math.abs(initialWeightForProgress - lastRecordedWeight);
 
             if (totalWeightChangeGoal === 0) {
                 weightProgress = 100;
@@ -625,7 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const remaining = Math.abs(lastRecordedWeight - targetWeight).toFixed(1);
                 weightRemainingText.textContent = `Faltam ${remaining} Kg para atingir ${targetWeight.toFixed(1)} Kg!`;
 
-                const weightDiff = lastRecordedWeight - initialWeight;
+                const weightDiff = lastRecordedWeight - initialWeightForProgress;
                 if (weightDiff < 0) {
                     weightLostGainedText.textContent = `Você já perdeu ${Math.abs(weightDiff).toFixed(1)} Kg!`;
                 } else if (weightDiff > 0) {
@@ -641,18 +781,17 @@ document.addEventListener('DOMContentLoaded', () => {
             weightNum.textContent = `${lastRecordedWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
 
         } else {
-            // Use currentWeight from userProfile if weightHistory is empty
-            weightNum.textContent = `${userProfile.currentWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
+            weightNum.textContent = `${userProfile.initialWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
             weightProgressBar.style.width = '0%';
-            weightRemainingText.textContent = `Faltam ${Math.abs(userProfile.currentWeight - targetWeight).toFixed(1)} Kg para atingir sua meta.`;
+            weightRemainingText.textContent = `Faltam ${Math.abs(userProfile.initialWeight - targetWeight).toFixed(1)} Kg para atingir sua meta.`;
             weightLostGainedText.textContent = '';
         }
     }
 
     function calculateExpectedWeight(initialWeight, targetWeight, initialDate, targetDate, currentDate) {
-        initialDate.setHours(0, 0, 0, 0);
-        targetDate.setHours(23, 59, 59, 999);
-        currentDate.setHours(0, 0, 0, 0);
+        initialDate = getDateOnly(initialDate);
+        targetDate = getDateOnly(targetDate);
+        currentDate = getDateOnly(currentDate);
 
         const totalDurationMs = targetDate.getTime() - initialDate.getTime();
         const totalDurationDays = totalDurationMs / (1000 * 60 * 60 * 24);
@@ -674,26 +813,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function updateWeightPrediction() {
-        if (!userProfile || weightHistory.length < 1 || !userProfile.targetDate) {
+        if (!userProfile || !userProfile.targetDate) {
             weightPredictionText.textContent = 'Registre seu peso atual e defina a data final da meta para uma previsão.';
-            createDeficitBtn.style.display = 'none';
-            weightPageFeedbackMessage.textContent = '';
+            dietFeedbackMessage.textContent = '';
             return;
         }
 
-        const lastWeightEntry = weightHistory[weightHistory.length - 1];
-        const initialWeightEntry = weightHistory[0];
-        const initialWeight = initialWeightEntry.weight;
-        const initialDateParts = initialWeightEntry.date.split('/');
-        const initialDate = new Date(`${initialDateParts[2]}-${initialDateParts[1]}-${initialDateParts[0]}T00:00:00`);
+        const lastWeightEntry = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1] : { weight: userProfile.initialWeight };
+        const initialWeight = userProfile.initialWeight;
+
+        const initialDateForPrediction = weightHistory.length > 0 ? 
+                                         parseDateString(weightHistory[0].date) : 
+                                         getDateOnly(new Date(userProfile.targetDate));
 
         const targetWeight = userProfile.targetWeight;
         const targetDate = new Date(userProfile.targetDate + 'T23:59:59');
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = getDateOnly(new Date());
 
-        const totalDurationMs = targetDate.getTime() - initialDate.getTime();
+        const totalDurationMs = targetDate.getTime() - initialDateForPrediction.getTime();
         const totalDurationDays = totalDurationMs / (1000 * 60 * 60 * 24);
 
         if (totalDurationDays <= 0) {
@@ -704,20 +842,18 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 weightPredictionText.textContent = 'A data final da meta deve ser no futuro.';
             }
-            createDeficitBtn.style.display = 'none';
-            weightPageFeedbackMessage.textContent = '';
+            dietFeedbackMessage.textContent = '';
             return;
         }
 
-        const daysPassedSinceInitial = (today.getTime() - initialDate.getTime()) / (1000 * 60 * 60 * 24);
+        const daysPassedSinceInitial = (today.getTime() - initialDateForPrediction.getTime()) / (1000 * 60 * 60 * 24);
         if (daysPassedSinceInitial < 0) {
             weightPredictionText.textContent = 'Aguardando o início da sua meta de peso.';
-            createDeficitBtn.style.display = 'none';
-            weightPageFeedbackMessage.textContent = '';
+            dietFeedbackMessage.textContent = '';
             return;
         }
 
-        const expectedWeightToday = calculateExpectedWeight(initialWeight, targetWeight, initialDate, targetDate, today);
+        const expectedWeightToday = calculateExpectedWeight(initialWeight, targetWeight, initialDateForPrediction, targetDate, today);
 
         let statusMessage = '';
         const deviation = lastWeightEntry.weight - expectedWeightToday;
@@ -739,71 +875,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         weightPredictionText.textContent = statusMessage;
 
-        // Logic for "Criar Défit 20%" button
         if (weightHistory.length >= 2) {
-            // Find weight entry from 7 days ago if available, otherwise use the first entry
+            const currentWeight = lastWeightEntry.weight;
+            
             let weight7DaysAgoEntry = null;
-            const todayDate = new Date();
-            todayDate.setHours(0,0,0,0);
-
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 7);
+            
             for (let i = weightHistory.length - 1; i >= 0; i--) {
-                const entryDateParts = weightHistory[i].date.split('/');
-                const entryDate = new Date(`${entryDateParts[2]}-${entryDateParts[1]}-${entryDateParts[0]}`);
-                entryDate.setHours(0,0,0,0);
-                const diffTime = todayDate.getTime() - entryDate.getTime();
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                if (diffDays >= 7) {
+                const entryDate = parseDateString(weightHistory[i].date);
+                if (entryDate <= sevenDaysAgo) {
                     weight7DaysAgoEntry = weightHistory[i];
                     break;
                 }
             }
-            
-            // If no entry 7 days ago, compare with the first recorded weight
-            if (!weight7DaysAgoEntry && weightHistory.length > 0) {
+
+            if (!weight7DaysAgoEntry) {
                 weight7DaysAgoEntry = weightHistory[0];
             }
 
             if (weight7DaysAgoEntry) {
-                const currentWeight = lastWeightEntry.weight;
                 const weight7DaysAgo = weight7DaysAgoEntry.weight;
                 const weightChange = currentWeight - weight7DaysAgo;
 
-                // Check for maintenance or insufficient progress based on target
-                if (userProfile.targetWeight < userProfile.currentWeight) { // User wants to lose weight
-                    if (weightChange >= -0.5) { // Lost less than 500g or gained
-                        createDeficitBtn.style.display = 'block';
-                        weightPageFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Você perdeu menos de 500g na última semana, sugiro fazer o déficit nas metas. Se você não seguiu o plano 100%, sugiro melhorar o foco nos próximos 7 dias para melhorar os resultados.';
-                        weightPageFeedbackMessage.style.color = 'var(--vibrant-orange)';
+                if (userProfile.targetWeight < initialWeight) {
+                    if (weightChange >= -0.5) {
+                        localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                        dietFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Você perdeu menos de 500g na última semana. Se você não seguiu o plano 100%, sugiro melhorar o foco nos próximos 7 dias para melhorar os resultados.';
+                        dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
                     } else {
-                        createDeficitBtn.style.display = 'none';
-                        weightPageFeedbackMessage.textContent = '';
+                        localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                        dietFeedbackMessage.textContent = 'Ótimo progresso! Continue assim.';
+                        dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
                     }
-                } else if (userProfile.targetWeight > userProfile.currentWeight) { // User wants to gain weight
-                    if (weightChange <= 0.5) { // Gained less than 500g or lost
-                        createDeficitBtn.style.display = 'block';
-                        weightPageFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Você ganhou menos de 500g na última semana, sugiro aumentar as calorias. Se você não seguiu o plano 100%, sugiro melhorar o foco nos próximos 7 dias para melhorar os resultados.';
-                        weightPageFeedbackMessage.style.color = 'var(--vibrant-orange)';
+                } else if (userProfile.targetWeight > initialWeight) {
+                    if (weightChange <= 0.5) {
+                        localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                        dietFeedbackMessage.textContent = 'Você ganhou menos de 500g na última semana. Considere aumentar as calorias se necessário.';
+                        dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
                     } else {
-                        createDeficitBtn.style.display = 'none';
-                        weightPageFeedbackMessage.textContent = '';
+                        dietFeedbackMessage.textContent = '';
                     }
-                } else { // Maintenance
-                    if (Math.abs(weightChange) >= 0.5) { // Gained or lost more than 500g
-                        createDeficitBtn.style.display = 'block';
-                        weightPageFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Seu peso variou mais de 500g na última semana. Sugiro rever suas metas para manutenção.';
-                        weightPageFeedbackMessage.style.color = 'var(--vibrant-orange)';
+                } else {
+                    if (Math.abs(weightChange) >= 0.5) {
+                        localStorage.setItem('lastWeightCheckDate', today.toISOString());
+                        dietFeedbackMessage.textContent = 'Seu peso variou mais de 500g na última semana. Sugiro rever suas metas para manutenção.';
+                        dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
                     } else {
-                        createDeficitBtn.style.display = 'none';
-                        weightPageFeedbackMessage.textContent = '';
+                        dietFeedbackMessage.textContent = '';
                     }
                 }
             } else {
-                createDeficitBtn.style.display = 'none';
-                weightPageFeedbackMessage.textContent = '';
+                dietFeedbackMessage.textContent = '';
             }
         } else {
-            createDeficitBtn.style.display = 'none';
-            weightPageFeedbackMessage.textContent = '';
+            dietFeedbackMessage.textContent = '';
         }
     }
 
@@ -814,31 +940,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const lastRecordedWeightDateParts = weightHistory[weightHistory.length - 1].date.split('/');
-        const lastRecordedWeightDate = new Date(`${lastRecordedWeightDateParts[2]}-${lastRecordedWeightDateParts[1]}-${lastRecordedWeightDateParts[0]}`);
-        lastRecordedWeightDate.setHours(0, 0, 0, 0);
+        const today = getDateOnly(new Date());
+        const lastRecordedWeightDate = parseDateString(weightHistory[weightHistory.length - 1].date);
 
         const daysSinceLastCheck = lastWeightCheckDate ?
-            Math.floor((today.getTime() - lastWeightCheckDate.getTime()) / (1000 * 60 * 60 * 24)) :
+            Math.floor((today.getTime() - getDateOnly(lastWeightCheckDate).getTime()) / (1000 * 60 * 60 * 24)) :
             7;
 
         if (daysSinceLastCheck >= 7) {
             let weight7DaysAgoEntry = null;
+            const sevenDaysBeforeLastEntry = new Date(lastRecordedWeightDate);
+            sevenDaysBeforeLastEntry.setDate(lastRecordedWeightDate.getDate() - 7);
+            
             for (let i = weightHistory.length - 1; i >= 0; i--) {
-                const entryDateParts = weightHistory[i].date.split('/');
-                const entryDate = new Date(`${entryDateParts[2]}-${entryDateParts[1]}-${entryDateParts[0]}`);
-                entryDate.setHours(0, 0, 0, 0);
-                const diffDays = Math.floor((lastRecordedWeightDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-                if (diffDays >= 7) {
+                const entryDate = parseDateString(weightHistory[i].date);
+                if (entryDate <= sevenDaysBeforeLastEntry) {
                     weight7DaysAgoEntry = weightHistory[i];
                     break;
                 }
             }
 
-            if (!weight7DaysAgoEntry && weightHistory.length > 0) {
+            if (!weight7DaysAgoEntry) {
                 weight7DaysAgoEntry = weightHistory[0];
             }
 
@@ -850,33 +972,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const weight7DaysAgo = weight7DaysAgoEntry.weight;
             const weightChange = currentWeight - weight7DaysAgo;
 
-            // Chefão, aqui a gente remove a lógica de ajuste automático de carboidratos e calorias.
-            // A mensagem de feedback e a atualização da data de check-in semanal ainda acontecem.
-            if (userProfile.targetWeight < userProfile.currentWeight) { // User wants to lose weight
-                if (weightChange >= -0.5) { // Lost less than 500g or gained
-                    // No automatic deficit application here.
+            if (userProfile.targetWeight < initialWeight) {
+                if (weightChange >= -0.5) {
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    dietFeedbackMessage.textContent = 'Você perdeu menos de 500g na última semana. Considere aplicar um déficit adicional de carboidratos se necessário.';
+                    dietFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Você perdeu menos de 500g na última semana, sugiro melhorar o foco nos próximos 7 dias para melhorar os resultados.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
-                } else { // Good progress on losing weight
-                    // No automatic normalization here.
+                } else {
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
                     dietFeedbackMessage.textContent = 'Ótimo progresso! Continue assim.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
                 }
-            } else if (userProfile.targetWeight > userProfile.currentWeight) { // User wants to gain weight
-                if (weightChange <= 0.5) { // Gained less than 500g or lost
-                    // No automatic increase application here.
+            } else if (userProfile.targetWeight > initialWeight) {
+                if (weightChange <= 0.5) {
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
                     dietFeedbackMessage.textContent = 'Você ganhou menos de 500g na última semana. Considere aumentar as calorias se necessário.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
-                } else { // Good progress on gaining weight
+                } else {
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
                     dietFeedbackMessage.textContent = 'Ótimo progresso! Continue assim.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
                 }
-            } else { // Target weight is current weight (maintenance)
-                if (Math.abs(weightChange) >= 0.5) { // Gained or lost more than 500g
+            } else {
+                if (Math.abs(weightChange) >= 0.5) {
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
                     dietFeedbackMessage.textContent = 'Seu peso variou mais de 500g na última semana. Sugiro rever suas metas para manutenção.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
@@ -1032,22 +1149,10 @@ document.addEventListener('DOMContentLoaded', () => {
         userRankDisplay.textContent = getRankName(currentStreak);
         const currentRankName = getRankName(currentStreak);
         const highestRankOrder = [
-            'Novato',
-            '⚔️ Soldado',
-            '🛡️ Cabo',
-            '🥉 Terceiro Sargento',
-            '🥈 Segundo Sargento',
-            '🥇 Primeiro Sargento',
-            '🌟 Subtenente',
-            '✨ Aspirante a Oficial',
-            '💎 Segundo Tenente',
-            '🚀 Primeiro Tenente',
-            '🌠 Capitão',
-            '👑 Major',
-            '🔥 Coronel',
-            '🐺 General de Exército',
-            '🦁 Rei',
-            '🧘 Monge'
+            'Novato', '⚔️ Soldado', '🛡️ Cabo', '🥉 Terceiro Sargento', '🥈 Segundo Sargento',
+            '🥇 Primeiro Sargento', '🌟 Subtenente', '✨ Aspirante a Oficial', '💎 Segundo Tenente',
+            '🚀 Primeiro Tenente', '🌠 Capitão', '👑 Major', '🔥 Coronel', '🐺 General de Exército',
+            '🦁 Rei', '🧘 Monge'
         ];
         const currentRankIndex = highestRankOrder.indexOf(currentRankName);
         const highestAchievedRankIndex = highestRankOrder.indexOf(highestAchievedRank);
@@ -1063,6 +1168,10 @@ document.addEventListener('DOMContentLoaded', () => {
         highestRankDisplay.textContent = highestAchievedRank;
     }
 
+    function parseDateString(dateString) {
+        const parts = dateString.split('/');
+        return getDateOnly(new Date(Date.UTC(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]))));
+    }
 
     function renderWeightHistory() {
         weightHistoryList.innerHTML = '';
@@ -1090,7 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         weightHistoryList.querySelectorAll('.delete-weight-btn').forEach(button => {
             button.addEventListener('click', deleteWeightEntry);
         });
-        updateWeightChart(); // Call updateWeightChart here
+        updateWeightChart();
     }
 
     function renderPastMealsSummaries() {
@@ -1142,26 +1251,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to calculate a moving average
-    function calculateMovingAverage(data, windowSize) {
-        if (data.length < windowSize) {
-            return new Array(data.length).fill(null);
-        }
-        const averages = [];
-        for (let i = 0; i < data.length; i++) {
-            if (i < windowSize - 1) {
-                averages.push(null);
-            } else {
-                let sum = 0;
-                for (let j = 0; j < windowSize; j++) {
-                    sum += data[i - j];
-                }
-                averages.push(sum / windowSize);
-            }
-        }
-        return averages;
-    }
-
     function setupWeightChart() {
         if (weightChart) {
             weightChart.destroy();
@@ -1171,24 +1260,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const actualWeightData = weightHistory.map(entry => entry.weight);
 
         let expectedWeightData = [];
-        if (userProfile && weightHistory.length > 0 && userProfile.targetDate) {
-            const initialWeightEntry = weightHistory[0];
-            const initialWeight = initialWeightEntry.weight;
-            const initialDateParts = initialWeightEntry.date.split('/');
-            const initialDate = new Date(`${initialDateParts[2]}-${initialDateParts[1]}-${initialDateParts[0]}T00:00:00`);
+        if (userProfile && userProfile.targetDate) {
+            const initialWeightForChart = userProfile.initialWeight;
+            const initialDateForChart = weightHistory.length > 0 ? 
+                                         parseDateString(weightHistory[0].date) : 
+                                         getDateOnly(new Date(userProfile.targetDate));
+
             const targetWeight = userProfile.targetWeight;
             const targetDate = new Date(userProfile.targetDate + 'T23:59:59');
 
             labels.forEach(labelDateStr => {
-                const labelDateParts = labelDateStr.split('/');
-                const currentDate = new Date(`${labelDateParts[2]}-${labelDateParts[1]}-${labelDateParts[0]}T00:00:00`);
-                expectedWeightData.push(calculateExpectedWeight(initialWeight, targetWeight, initialDate, targetDate, currentDate));
+                const currentDate = parseDateString(labelDateStr);
+                expectedWeightData.push(calculateExpectedWeight(initialWeightForChart, targetWeight, initialDateForChart, targetDate, currentDate));
             });
         }
-
-        const averageWeightData = calculateMovingAverage(actualWeightData, 7);
-
-
+        
         weightChart = new Chart(weightChartCanvas, {
             type: 'line',
             data: {
@@ -1209,16 +1295,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderColor: 'rgb(230, 126, 34)',
                     backgroundColor: 'rgba(230, 126, 34, 0.1)',
                     borderDash: [5, 5],
-                    tension: 0.1,
-                    fill: false,
-                    pointRadius: 0
-                },
-                {
-                    label: 'Média de Peso (7 dias)',
-                    data: averageWeightData,
-                    borderColor: 'rgba(150, 150, 150, 0.5)',
-                    backgroundColor: 'rgba(150, 150, 150, 0.1)',
-                    borderDash: [2, 2],
                     tension: 0.1,
                     fill: false,
                     pointRadius: 0
@@ -1279,23 +1355,25 @@ document.addEventListener('DOMContentLoaded', () => {
             weightChart.data.labels = weightHistory.map(entry => entry.date);
             weightChart.data.datasets[0].data = weightHistory.map(entry => entry.weight);
 
-            if (userProfile && weightHistory.length > 0 && userProfile.targetDate) {
-                const initialWeightEntry = weightHistory[0];
-                const initialWeight = initialWeightEntry.weight;
-                const initialDateParts = initialWeightEntry.date.split('/');
-                const initialDate = new Date(`${initialDateParts[2]}-${initialDateParts[1]}-${initialDateParts[0]}T00:00:00`);
+            let expectedWeightData = [];
+            if (userProfile && userProfile.targetDate) {
+                const initialWeightForChart = userProfile.initialWeight;
+                const initialDateForChart = weightHistory.length > 0 ? 
+                                             parseDateString(weightHistory[0].date) : 
+                                             getDateOnly(new Date(userProfile.targetDate));
+
                 const targetWeight = userProfile.targetWeight;
                 const targetDate = new Date(userProfile.targetDate + 'T23:59:59');
 
-                let expectedWeightData = [];
                 weightChart.data.labels.forEach(labelDateStr => {
-                    const labelDateParts = labelDateStr.split('/');
-                    const currentDate = new Date(`${labelDateParts[2]}-${labelDateParts[1]}-${labelDateParts[0]}T00:00:00`);
-                    expectedWeightData.push(calculateExpectedWeight(initialWeight, targetWeight, initialDate, targetDate, currentDate));
+                    const currentDate = parseDateString(labelDateStr);
+                    expectedWeightData.push(calculateExpectedWeight(initialWeightForChart, targetWeight, initialDateForChart, targetDate, currentDate));
                 });
-                // Find or add the Expected Weight dataset at index 1
-                if (weightChart.data.datasets.length < 2 || weightChart.data.datasets[1].label !== 'Peso Esperado (Kg)') {
-                    weightChart.data.datasets.splice(1, 0, { // Insert at index 1
+
+                if (weightChart.data.datasets.length > 1 && weightChart.data.datasets[1].label === 'Peso Esperado (Kg)') {
+                    weightChart.data.datasets[1].data = expectedWeightData;
+                } else {
+                    weightChart.data.datasets.push({
                         label: 'Peso Esperado (Kg)',
                         data: expectedWeightData,
                         borderColor: 'rgb(230, 126, 34)',
@@ -1305,49 +1383,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         fill: false,
                         pointRadius: 0
                     });
-                } else {
-                    weightChart.data.datasets[1].data = expectedWeightData;
                 }
             } else {
-                // Remove the 'Peso Esperado' dataset if conditions are not met
                 if (weightChart.data.datasets.length > 1 && weightChart.data.datasets[1].label === 'Peso Esperado (Kg)') {
                     weightChart.data.datasets.splice(1, 1);
                 }
             }
-
-            const actualWeightData = weightHistory.map(entry => entry.weight);
-            const averageWeightData = calculateMovingAverage(actualWeightData, 7);
-            
-            // Determine correct index for Average Weight dataset
-            let avgDatasetIndex = 2; // Default if Expected Weight is present
-            if (weightChart.data.datasets.length < 2 || (weightChart.data.datasets.length >=2 && weightChart.data.datasets[1].label !== 'Peso Esperado (Kg)')) {
-                avgDatasetIndex = 1; // If Expected Weight is NOT present
-            }
-
-            if (weightChart.data.datasets.length <= avgDatasetIndex || weightChart.data.datasets[avgDatasetIndex].label !== 'Média de Peso (7 dias)') {
-                weightChart.data.datasets.splice(avgDatasetIndex, 0, { // Insert at determined index
-                    label: 'Média de Peso (7 dias)',
-                    data: averageWeightData,
-                    borderColor: 'rgba(150, 150, 150, 0.5)',
-                    backgroundColor: 'rgba(150, 150, 150, 0.1)',
-                    borderDash: [2, 2],
-                    tension: 0.1,
-                    fill: false,
-                    pointRadius: 0
-                });
-            } else {
-                weightChart.data.datasets[avgDatasetIndex].data = averageWeightData;
-            }
             
             weightChart.update();
         } else {
-            // If chart doesn't exist, create it. This can happen on first load of weight page.
             setupWeightChart();
         }
     }
 
-
-    // --- Interaction Functions ---
 
     function showPage(pageId) {
         document.querySelectorAll('.page-content').forEach(page => {
@@ -1365,7 +1413,7 @@ document.addEventListener('DOMContentLoaded', () => {
             newWeightDateInput.valueAsDate = new Date();
         }
         if (pageId === 'settings-page') {
-            renderUserProfile(); 
+            renderUserProfile();
             renderCustomFoodList();
         }
         if (pageId === 'meals-page') {
@@ -1381,7 +1429,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Navigation
     navButtons.forEach(button => {
         button.addEventListener('click', () => {
             const pageId = button.id.replace('nav-', '') + '-page';
@@ -1389,10 +1436,65 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Save profile settings
-    profileForm.addEventListener('submit', (event) => saveProfile(event, false, true)); // Pass true for fromSettingsPage
+    profileForm.addEventListener('submit', (event) => saveProfile(event, false, true));
 
-    // Add meal group
+    // Event listener para o novo botão de salvar metas manuais
+    if (saveManualTargetsBtn) { // Verifica se o elemento existe
+        saveManualTargetsBtn.addEventListener('click', saveManualTargets);
+    }
+
+    // Event listeners para recalcular Kcal ao mudar macros manualmente
+    if (manualTargetProteinInput) { manualTargetProteinInput.addEventListener('input', () => {
+        const protein = parseFloat(manualTargetProteinInput.value) || 0;
+        const carbs = parseFloat(manualTargetCarbsInput.value) || 0;
+        const fats = parseFloat(manualTargetFatsInput.value) || 0;
+        manualTargetCaloriesInput.value = Math.round((protein * 4) + (carbs * 4) + (fats * 9));
+    });}
+    if (manualTargetCarbsInput) { manualTargetCarbsInput.addEventListener('input', () => {
+        const protein = parseFloat(manualTargetProteinInput.value) || 0;
+        const carbs = parseFloat(manualTargetCarbsInput.value) || 0;
+        const fats = parseFloat(manualTargetFatsInput.value) || 0;
+        manualTargetCaloriesInput.value = Math.round((protein * 4) + (carbs * 4) + (fats * 9));
+    });}
+    if (manualTargetFatsInput) { manualTargetFatsInput.addEventListener('input', () => {
+        const protein = parseFloat(manualTargetProteinInput.value) || 0;
+        const carbs = parseFloat(manualTargetCarbsInput.value) || 0;
+        const fats = parseFloat(manualTargetFatsInput.value) || 0;
+        manualTargetCaloriesInput.value = Math.round((protein * 4) + (carbs * 4) + (fats * 9));
+    });}
+
+    // Event listeners para os botões de ocultar/mostrar
+    if (toggleAddCustomFoodBtn) {
+        toggleAddCustomFoodBtn.addEventListener('click', () => {
+            if (addCustomFoodSection.style.display === 'none') {
+                addCustomFoodSection.style.display = 'block';
+                toggleAddCustomFoodBtn.textContent = 'Esconder Formulário de Alimento';
+            } else {
+                addCustomFoodSection.style.display = 'none';
+                toggleAddCustomFoodBtn.textContent = 'Adicionar Novo Alimento';
+            }
+        });
+    }
+
+    if (toggleAdjustTargetsBtn) {
+        toggleAdjustTargetsBtn.addEventListener('click', () => {
+            if (adjustTargetsSection.style.display === 'none') {
+                adjustTargetsSection.style.display = 'block';
+                toggleAdjustTargetsBtn.textContent = 'Esconder Ajuste de Metas';
+                // Garante que os valores atuais do perfil sejam carregados ao abrir
+                if (userProfile) {
+                    manualTargetCaloriesInput.value = userProfile.targetCalories;
+                    manualTargetProteinInput.value = userProfile.targetProtein;
+                    manualTargetCarbsInput.value = userProfile.targetCarbs;
+                    manualTargetFatsInput.value = userProfile.targetFats;
+                }
+            } else {
+                adjustTargetsSection.style.display = 'none';
+                toggleAdjustTargetsBtn.textContent = 'Ajustar Metas Manualmente';
+            }
+        });
+    }
+
     addMealGroupBtn.addEventListener('click', () => {
         const mealGroupName = prompt('Qual o nome do grupo de refeição? (Ex: Café da Manhã)');
         if (mealGroupName) {
@@ -1470,15 +1572,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const foodToRemove = dailyData.mealGroups[groupIndex].foods[foodIndex];
 
-        // Se for um alimento padrão diário, remova-o apenas da lista de padrões, não da refeição atual
         if (foodToRemove.isDailyStandard) {
             const storedGroup = storedMealGroups.find(g => g.name === dailyData.mealGroups[groupIndex].name);
             if (storedGroup) {
-                storedGroup.foods = storedGroup.foods.filter(food =>
-                    !(food.name === foodToRemove.name && food.quantity === foodToRemove.quantity && food.kcal === foodToRemove.kcal)
+                const indexInStoredGroup = storedGroup.foods.findIndex(food =>
+                    food.name === foodToRemove.name &&
+                    food.quantity === foodToRemove.quantity &&
+                    food.kcal === foodToRemove.kcal &&
+                    food.protein === foodToRemove.protein &&
+                    food.carbs === foodToRemove.carbs &&
+                    food.fats === foodToRemove.fats
                 );
-                recalculateGroupTotals(storedGroup);
-                localStorage.setItem('storedMealGroups', JSON.stringify(storedMealGroups));
+                if (indexInStoredGroup !== -1) {
+                    storedGroup.foods.splice(indexInStoredGroup, 1);
+                    recalculateGroupTotals(storedGroup);
+                    localStorage.setItem('storedMealGroups', JSON.stringify(storedMealGroups));
+                }
             }
         }
 
@@ -1492,10 +1601,8 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyData.mealGroups[groupIndex].totalCarbs -= foodToRemove.carbs;
         dailyData.mealGroups[groupIndex].totalFats -= foodToRemove.fats;
 
-        dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1); // Remove o alimento da refeição diária
+        dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1);
 
-        // NÂO REMOVE O GRUPO SE FICAR VAZIO. APENAS ZERA OS TOTAIS.
-        // A remoção de grupos só deve ser feita explicitamente pelo botão "X" do grupo.
         if (dailyData.mealGroups[groupIndex].foods.length === 0) {
             dailyData.mealGroups[groupIndex].totalKcal = 0;
             dailyData.mealGroups[groupIndex].totalProtein = 0;
@@ -1509,7 +1616,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function removeMealGroup(event) {
-        const groupIndex = parseInt(event.target.dataset.groupIndex); 
+        const groupIndex = parseInt(event.target.dataset.groupIndex);
         const groupToRemoveName = dailyData.mealGroups[groupIndex].name;
 
         if (confirm(`Tem certeza que deseja remover o grupo de refeição "${groupToRemoveName}"? Todos os alimentos dentro dele também serão removidos permanentemente.`)) {
@@ -1522,7 +1629,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             dailyData.mealGroups.splice(groupIndex, 1);
 
-            // Garante que o grupo seja removido de storedMealGroups também
             storedMealGroups = storedMealGroups.filter(group => group.name !== groupToRemoveName);
 
             localStorage.setItem('dailyData', JSON.stringify(dailyData));
@@ -1541,21 +1647,26 @@ document.addEventListener('DOMContentLoaded', () => {
         foodItem.isDailyStandard = !foodItem.isDailyStandard;
 
         const storedGroup = storedMealGroups.find(g => g.name === dailyData.mealGroups[groupIndex].name);
+
         if (storedGroup) {
-            // Remove existing instance if it was a standard food
             storedGroup.foods = storedGroup.foods.filter(food =>
-                !(food.name === foodItem.name && food.quantity === foodItem.quantity && food.kcal === foodItem.kcal)
+                !(food.name === foodItem.name &&
+                  food.quantity === foodItem.quantity &&
+                  food.kcal === foodItem.kcal &&
+                  food.protein === foodItem.protein &&
+                  food.carbs === foodItem.carbs &&
+                  food.fats === foodItem.fats)
             );
+
             if (foodItem.isDailyStandard) {
-                // Add it back only if it's now marked as standard
-                storedGroup.foods.push(foodItem);
+                const clonedFood = JSON.parse(JSON.stringify(foodItem));
+                storedGroup.foods.push(clonedFood);
             }
             recalculateGroupTotals(storedGroup);
         } else {
-            console.error("Grupo não encontrado em storedMealGroups. Criando novo.");
             const newStoredGroup = {
                 name: dailyData.mealGroups[groupIndex].name,
-                foods: foodItem.isDailyStandard ? [foodItem] : [],
+                foods: foodItem.isDailyStandard ? [JSON.parse(JSON.stringify(foodItem))] : [],
                 totalKcal: foodItem.isDailyStandard ? foodItem.kcal : 0,
                 totalProtein: foodItem.isDailyStandard ? foodItem.protein : 0,
                 totalCarbs: foodItem.isDailyStandard ? foodItem.carbs : 0,
@@ -1566,7 +1677,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('dailyData', JSON.stringify(dailyData));
         localStorage.setItem('storedMealGroups', JSON.stringify(storedMealGroups));
-        renderMealGroups(); // Re-render to show updated "Padrão Diário" tag
+        renderMealGroups();
     }
 
     function recalculateGroupTotals(group) {
@@ -1595,7 +1706,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gender = userProfile.gender;
 
         checkinSleep.style.display = 'flex';
-        checkinDiet.style.display = 'flex';
+        checkinDiet.style.display = 'flex'; // Diet is always visible now for all modes
 
         if (mode === 'easy') {
             checkinWorkout.style.display = 'none';
@@ -1603,20 +1714,18 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (mode === 'hard') {
             checkinWorkout.style.display = 'flex';
             checkinNofap.style.display = 'none';
-        } else if (mode === 'god' && gender === 'male') { // Only allow God mode visibility if gender is male
+        } else if (mode === 'god' && gender === 'male') {
             checkinWorkout.style.display = 'flex';
             checkinNofap.style.display = 'flex';
-        } else { // Fallback if mode is 'god' but gender is female, or other invalid modes
-            checkinWorkout.style.display = 'none'; 
+        } else { // Fallback for 'god' mode with female or unexpected mode
+            checkinWorkout.style.display = 'none';
             checkinNofap.style.display = 'none';
         }
     }
 
 
-    // Save Check-in
     saveCheckinBtn.addEventListener('click', () => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = getDateOnly(new Date());
         const todayLocaleString = today.toLocaleDateString('pt-BR');
 
         const sleepChecked = document.getElementById('check-sleep').checked;
@@ -1639,70 +1748,68 @@ document.addEventListener('DOMContentLoaded', () => {
                 allRequiredChecked = sleepChecked && dietChecked;
             } else if (mode === 'hard') {
                 allRequiredChecked = sleepChecked && workoutChecked && dietChecked;
-            }
-            // Chefão, esta é a parte que você pediu para garantir que o NoFap só seja obrigatório para homens em modo God.
-            else if (mode === 'god' && gender === 'male') { 
+            } else if (mode === 'god' && gender === 'male') {
                 allRequiredChecked = sleepChecked && workoutChecked && dietChecked && nofapChecked;
-            } else if (mode === 'god' && gender === 'female') { // Para mulheres no modo God, NoFap não é obrigatório
-                allRequiredChecked = sleepChecked && workoutChecked && dietChecked;
-            }
-            else { // Fallback for other invalid modes or if profile not fully set up
-                allRequiredChecked = sleepChecked && dietChecked;
+            } else if (mode === 'god' && gender === 'female') {
+                allRequiredChecked = sleepChecked && workoutChecked && dietChecked; // NoFap not applicable for female
+            } else {
+                allRequiredChecked = sleepChecked && dietChecked; // Default to easy if mode is unknown
             }
         } else {
-            allRequiredChecked = sleepChecked && dietChecked;
+            allRequiredChecked = sleepChecked && dietChecked; // Default without profile
         }
 
         const existingCheckinEntryIndex = checkinHistory.findIndex(entry => entry.date === todayLocaleString);
-        let wasPreviouslyAllRequiredChecked = false;
-
-        if (existingCheckinEntryIndex !== -1) {
-            const previousState = checkinHistory[existingCheckinEntryIndex];
-            if (userProfile) {
-                const mode = userProfile.difficultyMode;
-                const gender = userProfile.gender;
-                if (mode === 'easy') {
-                    wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
-                } else if (mode === 'hard') {
-                    wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet;
-                }
-                 // Chefão, aqui também para verificar a consistência no God mode
-                else if (mode === 'god' && gender === 'male') {
-                    wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet && previousState.nofap;
-                } else if (mode === 'god' && gender === 'female') {
-                    wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet;
-                }
-                 else {
-                    wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
-                }
-            } else {
-                wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
-            }
+        
+        let lastSuccessfulCheckinDay = null;
+        if (lastSuccessfulCheckinDate) {
+            lastSuccessfulCheckinDay = getDateOnly(new Date(lastSuccessfulCheckinDate));
         }
-
-        const lastSuccessfulCheckinDayStart = lastSuccessfulCheckinDate ? new Date(lastSuccessfulCheckinDate) : null;
-        if (lastSuccessfulCheckinDayStart) {
-            lastSuccessfulCheckinDayStart.setHours(0, 0, 0, 0);
-        }
-
-        const diffDaysSinceLastSuccess = lastSuccessfulCheckinDayStart ?
-            Math.round((today.getTime() - lastSuccessfulCheckinDayStart.getTime()) / (1000 * 60 * 60 * 24)) :
-            Infinity;
 
         if (allRequiredChecked) {
-            if (diffDaysSinceLastSuccess === 0) {
-                // No increment needed if already completed today
-            } else if (diffDaysSinceLastSuccess === 1) {
-                currentStreak++;
-            } else if (diffDaysSinceLastSuccess > 1) {
+            if (lastSuccessfulCheckinDay) {
+                const diffDays = Math.round((today.getTime() - lastSuccessfulCheckinDay.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDays === 1) { // If last checkin was yesterday, increment streak
+                    currentStreak++;
+                } else if (diffDays > 1) { // If last checkin was more than 1 day ago, reset streak to 1
+                    currentStreak = 1;
+                } else { // If checkin on same day, just keep streak
+                    // currentStreak remains unchanged
+                }
+            } else { // First successful checkin ever or after a long break
                 currentStreak = 1;
-            } else {
-                 currentStreak = 1;
             }
             lastSuccessfulCheckinDate = today.toISOString();
         } else {
-            if (wasPreviouslyAllRequiredChecked || (diffDaysSinceLastSuccess === 1 && currentStreak > 0) || (diffDaysSinceLastSuccess === 0 && currentStreak > 0 && !allRequiredChecked)) {
+            // If not all required are checked, and there was a streak, break it
+            // Only break streak if it was previously successful for today, or if it's a new day and conditions aren't met
+            if (existingCheckinEntryIndex !== -1) {
+                const previousState = checkinHistory[existingCheckinEntryIndex];
+                let wasPreviouslyAllRequiredChecked = false;
+                 if (userProfile) {
+                    const mode = userProfile.difficultyMode;
+                    const gender = userProfile.gender;
+                    if (mode === 'easy') {
+                        wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
+                    } else if (mode === 'hard') {
+                        wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet;
+                    } else if (mode === 'god' && gender === 'male') {
+                        wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet && previousState.nofap;
+                    } else if (mode === 'god' && gender === 'female') {
+                        wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.workout && previousState.diet;
+                    }
+                } else {
+                    wasPreviouslyAllRequiredChecked = previousState.sleep && previousState.diet;
+                }
+
+                if (wasPreviouslyAllRequiredChecked && !allRequiredChecked) {
+                    currentStreak = 0;
+                    localStorage.removeItem('lastSuccessfulCheckinDate');
+                }
+            } else if (currentStreak > 0 && lastSuccessfulCheckinDay && Math.round((today.getTime() - lastSuccessfulCheckinDay.getTime()) / (1000 * 60 * 60 * 24)) === 0) {
+                // If trying to checkin on the same day but not meeting requirements, and there was a streak, break it
                 currentStreak = 0;
+                localStorage.removeItem('lastSuccessfulCheckinDate');
             }
         }
 
@@ -1712,19 +1819,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('currentStreak', currentStreak);
         localStorage.setItem('maxStreak', maxStreak);
-        if (allRequiredChecked) {
+        if (lastSuccessfulCheckinDate) {
             localStorage.setItem('lastSuccessfulCheckinDate', lastSuccessfulCheckinDate);
+        } else {
+            localStorage.removeItem('lastSuccessfulCheckinDate');
         }
+
 
         if (existingCheckinEntryIndex !== -1) {
             checkinHistory[existingCheckinEntryIndex] = { date: todayLocaleString, ...currentCheckinState };
         } else {
             checkinHistory.push({ date: todayLocaleString, ...currentCheckinState });
         }
-        checkinHistory = checkinHistory.sort((a,b) => { // Sort check-in history by date
-            const [dayA, monthA, yearA] = a.date.split('/').map(Number);
-            const [dayB, monthB, yearB] = b.date.split('/').map(Number);
-            return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+        checkinHistory.sort((a,b) => {
+            const dateA = parseDateString(a.date);
+            const dateB = parseDateString(b.date);
+            return dateA.getTime() - dateB.getTime();
         });
         localStorage.setItem('checkinHistory', JSON.stringify(checkinHistory));
         localStorage.setItem('currentDayCheckinState', JSON.stringify(currentCheckinState));
@@ -1736,7 +1846,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // Add weight entry
     addWeightEntryBtn.addEventListener('click', () => {
         const weight = parseFloat(newCurrentWeightInput.value);
         const date = newWeightDateInput.value;
@@ -1750,8 +1859,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('pt-BR');
-
+        const [year, month, day] = date.split('-');
+        const formattedDate = `${day}/${month}/${year}`;
+        
         addWeightEntry(weight, formattedDate, true);
         newCurrentWeightInput.value = '';
         newWeightDateInput.valueAsDate = new Date();
@@ -1764,9 +1874,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const oldWeight = weightHistory[existingEntryIndex].weight;
             weightHistory[existingEntryIndex].weight = parseFloat(weight.toFixed(1));
             weightHistory.sort((a, b) => {
-                const [dayA, monthA, yearA] = a.date.split('/').map(Number);
-                const [dayB, monthB, yearB] = b.date.split('/').map(Number);
-                return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+                const dateA = parseDateString(a.date);
+                const dateB = parseDateString(b.date);
+                return dateA.getTime() - dateB.getTime();
             });
             localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
@@ -1776,9 +1886,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             weightHistory.push({ date: date, weight: parseFloat(weight.toFixed(1)) });
             weightHistory.sort((a, b) => {
-                const [dayA, monthA, yearA] = a.date.split('/').map(Number);
-                const [dayB, monthB, yearB] = b.date.split('/').map(Number);
-                return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+                const dateA = parseDateString(a.date);
+                const dateB = parseDateString(b.date);
+                return dateA.getTime() - dateB.getTime();
             });
             localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
             if (showAlert) {
@@ -1786,14 +1896,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Always update userProfile.currentWeight with the most recent weight after any weight change
-        if (userProfile && weightHistory.length > 0) {
-            userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
-            localStorage.setItem('userProfile', JSON.stringify(userProfile));
-        }
-
-        renderWeightHistory(); 
-        updateProgressBars(); 
+        renderWeightHistory();
+        updateProgressBars();
         updateWeightPrediction();
         checkWeeklyWeightProgress();
     }
@@ -1834,20 +1938,15 @@ document.addEventListener('DOMContentLoaded', () => {
         entryToEdit.date = formattedNewDate;
 
         weightHistory.sort((a, b) => {
-            const [dayA, monthA, yearA] = a.date.split('/').map(Number);
-            const [dayB, monthB, yearB] = b.date.split('/').map(Number);
-            return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+            const dateA = parseDateString(a.date);
+            const dateB = parseDateString(b.date);
+            return dateA.getTime() - dateB.getTime();
         });
 
         localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
-        // Always update userProfile.currentWeight with the most recent weight after any weight change
-        if (userProfile) {
-            userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
-            localStorage.setItem('userProfile', JSON.stringify(userProfile));
-        }
-        renderWeightHistory(); 
-        updateProgressBars(); 
+        renderWeightHistory();
+        updateProgressBars();
         updateWeightPrediction();
         checkWeeklyWeightProgress();
         alert('Peso atualizado com sucesso!');
@@ -1859,13 +1958,8 @@ document.addEventListener('DOMContentLoaded', () => {
             weightHistory.splice(index, 1);
             localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
-            // Update userProfile.currentWeight to the new last entry, or 0 if history is empty
-            if (userProfile) {
-                userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
-                localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            }
-            renderWeightHistory(); 
-            updateProgressBars(); 
+            renderWeightHistory();
+            updateProgressBars();
             updateWeightPrediction();
             checkWeeklyWeightProgress();
             alert('Registro de peso excluído.');
@@ -1873,7 +1967,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Add custom food
     addCustomFoodForm.addEventListener('submit', (event) => {
         event.preventDefault();
         const customFoodName = document.getElementById('custom-food-name').value.trim();
@@ -1887,8 +1980,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const allFoods = defaultFoods.concat(foodDatabase.filter(food => food.isCustom));
-        const existingFood = allFoods.find(food => normalizeString(food.name) === normalizeString(customFoodName));
+        const existingFood = foodDatabase.find(food => normalizeString(food.name) === normalizeString(customFoodName));
         if (existingFood) {
             alert('Um alimento com este nome já existe no banco de dados. Use um nome diferente.');
             return;
@@ -1944,7 +2036,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCustomFoodList();
         renderMealGroups();
         alert(`Alimento "${foodToEdit.name}" atualizado com sucesso!`);
-    }
+    };
 
     function deleteCustomFood(event) {
         const index = parseInt(event.target.dataset.index);
@@ -1964,28 +2056,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // New: Handle "Create 20% Deficit" button click
-    createDeficitBtn.addEventListener('click', () => {
-        if (!userProfile) {
-            alert('Por favor, preencha seu perfil primeiro.');
-            return;
-        }
 
-        const confirmDeficit = confirm('Tem certeza que deseja aplicar um DÉFICIT ADICIONAL de 20% nas calorias, focado em carboidratos? Isso ajustará suas metas.');
-        if (confirmDeficit) {
-            // Criar um evento simulado para 'saveProfile' que indica que é o clique do botão de déficit
-            const customEvent = { type: 'deficit_button_click', preventDefault: () => {} };
-            saveProfile(customEvent, true, false); 
-            
-            alert('Déficit adicional de 20% aplicado com sucesso nas metas de carboidratos e calorias!');
-        }
-    });
-
-
-    // Check-in Animations
     checkinCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', (event) => {
-            // Updated selector to target the correct animation div
             const animationDiv = event.target.closest('.checkin-item').querySelector('.check-animation');
             if (event.target.checked) {
                 animationDiv.textContent = '🎉';
@@ -1999,7 +2072,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Toggle all ranks list visibility
     showAllRanksBtn.addEventListener('click', () => {
         allRanksList.classList.toggle('visible');
         if (allRanksList.classList.contains('visible')) {
@@ -2009,25 +2081,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Help button for difficulty mode
     helpDifficultyModeBtn.addEventListener('click', () => {
-        let helpText = 
+        let helpText =
             'O Modo de Dificuldade define quais itens do Check-in diário são obrigatórios para você manter ou avançar sua sequência de dias de foco:\n\n' +
             '💪 Fácil (Dieta): Você precisa apenas registrar que Dormiu bem e que fez a Dieta corretamente.\n\n' +
             '🏋️ Hard (Dieta e Treino): Além de Dormir bem e fazer a Dieta corretamente, você também precisa registrar que Fez o treino.\n\n';
         
-        // Only add God mode explanation if gender is male in userProfile or if userProfile is null (defaulting to male behavior)
-        if (!userProfile || userProfile.gender === 'male') {
+        // APENAS ADICIONA A EXPLICAÇÃO DO MODO GOD SE O GÊNERO ATUAL FOR MASCULINO
+        if (genderSelect.value === 'male') {
             helpText += '🧘 God (Dieta, Treino e NoFap): Para este modo, todos os itens (Dormiu bem, Fez o treino, Dieta corretamente e NoFap firme?) são obrigatórios para o avanço de nível. Escolha este modo para o desafio máximo!';
         }
         alert(helpText);
     });
 
+    // CORREÇÃO: Removido o par de parênteses extra e a vírgula antes do '=>'
+    helpManualRankBtn.addEventListener('click', () => {
+        alert('Aqui você pode ajustar manualmente o seu "Nível Atual" (dias de foco). Digite o número de dias que você já está focado para definir seu nível inicial ou corrigir sua sequência. Isso afetará seu progresso de rank.');
+    });
 
-    // Initialize the app
+    helpTargetDateBtn.addEventListener('click', () => {
+        alert('A "Data Final da Meta de Peso" é crucial! Ela é usada para projetar um gráfico de peso esperado que você deve seguir para atingir seu objetivo. Para um bom progresso, seu peso atual no gráfico deve sempre estar abaixo (para perda de peso) ou acima (para ganho de peso) da linha do peso esperado. É o seu guia visual para o sucesso!');
+    });
+
     initApp();
 
-    // Show home page by default, or settings if no profile
     if (!userProfile) {
         showPage('settings-page');
     } else {

@@ -138,8 +138,23 @@ form {
 
 .input-group {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Manter column para label e input/select normal */
 }
+
+/* Novo: Para agrupar label e input/select com help-button na mesma linha */
+.input-group-inline-label {
+    display: flex;
+    flex-direction: row; /* Colocar label e input-with-help lado a lado */
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap; /* Permitir quebra de linha em telas pequenas */
+}
+
+.input-group-inline-label label {
+    flex-shrink: 0; /* Impedir que o label encolha */
+    margin-bottom: 0; /* Remover margin-bottom quebra o alinhamento */
+}
+
 
 .input-group label {
     margin-bottom: 8px;
@@ -159,22 +174,47 @@ form {
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Adicionando estilos para inputs/selects DENTRO de input-with-help e difficulty-control */
+.input-with-help input,
+.input-with-help select,
+.difficulty-control select {
+    background-color: var(--accent-blue); /* Garante o background nos campos com help-button */
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1em;
+    color: var(--text-light);
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    flex-grow: 1; /* Ocupa o espaço restante */
+}
+
+
 .input-group input:focus,
-.input-group select:focus {
+.input-group select:focus,
+.input-with-help input:focus,
+.input-with-help select:focus,
+.difficulty-control select:focus {
     border-color: var(--vibrant-blue); /* Changed to vibrant blue */
     box-shadow: 0 0 10px rgba(0, 123, 255, 0.4); /* Adjusted shadow for vibrant blue */
 }
 
-/* New: Style for difficulty control and help button */
+/* Style for input-with-help and difficulty-control */
+.input-with-help {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-grow: 1; /* Ocupa o espaço restante */
+}
+
+/* Revertendo difficulty-control para ser como input-with-help */
 .difficulty-control {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-grow: 1; /* Ocupa o espaço restante */
 }
 
-.difficulty-control select {
-    flex-grow: 1;
-}
 
 .help-btn {
     background-color: var(--vibrant-blue);
@@ -189,7 +229,7 @@ form {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-shrink: 0;
+    flex-shrink: 0; /* Prevents shrinking */
     transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
@@ -330,12 +370,6 @@ form {
 .meal-item-details span {
     color: var(--text-gray);
     font-size: 0.8em;
-}
-
-.meal-item-actions {
-    display: flex;
-    gap: 5px;
-    flex-shrink: 0;
 }
 
 /* New: Daily Standard Tag */
@@ -902,5 +936,18 @@ footer {
     footer {
         padding: 15px 10px;
         font-size: 0.75em;
+    }
+
+    /* Ajuste para telas menores: inputs e help-buttons em input-group-inline-label */
+    .input-group-inline-label {
+        flex-direction: column; /* Em telas pequenas, empilha o label e o input-with-help */
+        align-items: flex-start;
+        gap: 5px;
+    }
+    .input-group-inline-label label {
+        margin-bottom: 0; /* Remover margem inferior para evitar espaçamento indesejado */
+    }
+    .input-group-inline-label .input-with-help {
+        width: 100%; /* Fazer o container do input e botão ocupar 100% da largura */
     }
 }

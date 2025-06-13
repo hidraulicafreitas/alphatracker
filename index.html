@@ -115,7 +115,6 @@
             <section id="weight-page" class="page-content">
                 <h2>Acompanhamento de Peso</h2>
                 <p id="weight-page-feedback-message" class="feedback-message"></p>
-                <button id="create-deficit-btn" class="main-btn small-btn" style="display: none; margin-bottom: 20px;">CRIAR DÉFICIT 20%</button>
                 <div class="input-group-inline">
                     <label for="new-current-weight">Registrar Peso (Kg):</label>
                     <input type="number" step="0.1" id="new-current-weight" placeholder="Insira seu peso atual">
@@ -189,16 +188,19 @@
                             </select>
                         </div>
                         <div class="input-group">
-                            <label for="current-weight-settings">Peso Atual (Kg):</label>
-                            <input type="number" step="0.1" id="current-weight-settings" required>
+                            <label for="initial-weight-settings">Peso Inicial (Kg):</label>
+                            <input type="number" step="0.1" id="initial-weight-settings" required>
                         </div>
                         <div class="input-group">
                             <label for="target-weight">Peso Objetivo (Kg):</label>
                             <input type="number" step="0.1" id="target-weight" required>
                         </div>
-                        <div class="input-group">
+                        <div class="input-group-inline-label">
                             <label for="target-date">Data Final da Meta de Peso:</label>
-                            <input type="date" id="target-date" required>
+                            <div class="input-with-help">
+                                <input type="date" id="target-date" required>
+                                <button type="button" id="help-target-date" class="help-btn">?</button>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label for="activity-factor">Nível de Atividade:</label>
@@ -210,9 +212,9 @@
                                 <option value="1.9">Extremamente Ativo (exercício diário/trabalho físico)</option>
                             </select>
                         </div>
-                        <div class="input-group">
+                        <div class="input-group-inline-label">
                             <label for="difficulty-mode">Modo de Dificuldade:</label>
-                            <div class="difficulty-control">
+                            <div class="input-with-help">
                                 <select id="difficulty-mode" required>
                                     <option value="easy">Fácil (Apenas Dieta)</option>
                                     <option value="hard">Hard (Dieta e Treino)</option>
@@ -221,12 +223,36 @@
                                 <button type="button" id="help-difficulty-mode" class="help-btn">?</button>
                             </div>
                         </div>
-                         <div class="input-group">
+                         <div class="input-group-inline-label">
                             <label for="manual-current-rank">Ajustar Nível Atual (Dias de Foco):</label>
-                            <input type="number" id="manual-current-rank" min="0" placeholder="Ex: 5" title="Insira o número de dias de foco para ajustar seu nível. Isso afetará sua sequência.">
+                            <div class="input-with-help">
+                                <input type="number" id="manual-current-rank" min="0" placeholder="Ex: 5" title="Insira o número de dias de foco para ajustar seu nível. Isso afetará sua sequência.">
+                                <button type="button" id="help-manual-rank" class="help-btn">?</button>
+                            </div>
                         </div>
                         <button type="submit" class="main-btn small-btn">Salvar Perfil</button>
                     </form>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Ajustar Metas Manualmente</h3>
+                    <div class="input-group">
+                        <label for="manual-target-protein">Proteína (g):</label>
+                        <input type="number" step="1" id="manual-target-protein" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="manual-target-carbs">Carboidratos (g):</label>
+                        <input type="number" step="1" id="manual-target-carbs" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="manual-target-fats">Gorduras (g):</label>
+                        <input type="number" step="1" id="manual-target-fats" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="manual-target-calories">Calorias Totais (Kcal):</label>
+                        <input type="number" step="1" id="manual-target-calories" readonly title="Calculado automaticamente com base nos macros.">
+                    </div>
+                    <button id="save-manual-targets-btn" class="main-btn small-btn">Salvar Metas Ajustadas</button>
                 </div>
 
                 <div class="settings-section">
