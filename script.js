@@ -21,9 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const caloriesProgressBar = document.getElementById('calories-progress');
     const caloriesNum = document.getElementById('calories-num');
     const proteinProgressBar = document.getElementById('protein-progress');
-    const proteinNum = document.getElementById('protein-num');
+    const proteinNum = document = document.getElementById('protein-num');
     const carbsProgressBar = document.getElementById('carbs-progress');
-    const carbsNum = document = document.getElementById('carbs-num');
+    const carbsNum = document.getElementById('carbs-num');
     const fatsProgressBar = document.getElementById('fats-progress');
     const fatsNum = document.getElementById('fats-num');
     const weightProgressBar = document.getElementById('weight-progress');
@@ -381,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('age').value = userProfile.age;
             document.getElementById('height').value = userProfile.height;
             document.getElementById('gender').value = userProfile.gender;
+            // Ensure current-weight-settings reflects userProfile.currentWeight
             document.getElementById('current-weight-settings').value = userProfile.currentWeight;
             document.getElementById('target-weight').value = userProfile.targetWeight;
             document.getElementById('activity-factor').value = userProfile.activityFactor;
@@ -391,9 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
             manualCurrentRankInput.value = currentStreak; // Display current streak in the manual input
         } else {
             userNameSpan.textContent = 'Guerreiro';
-            showPage('settings-page');
-            navButtons.forEach(btn => btn.classList.remove('active'));
-            document.getElementById('nav-settings').classList.add('active');
+            // Do NOT call showPage('settings-page') here to avoid recursion
+            // The initial app load will handle showing settings if no profile exists.
             difficultyModeSelect.value = 'easy';
             manualCurrentRankInput.value = 0;
         }
@@ -411,26 +411,35 @@ document.addEventListener('DOMContentLoaded', () => {
         return tmb * activityFactor;
     }
 
-    function saveProfile(event) {
+    function saveProfile(event, suppressAlert = false, fromSettingsPage = false) { 
         if (event) event.preventDefault();
 
         const name = document.getElementById('name').value;
         const age = parseInt(document.getElementById('age').value);
         const height = parseInt(document.getElementById('height').value);
         const gender = document.getElementById('gender').value;
-        const currentWeight = parseFloat(document.getElementById('current-weight-settings').value);
+        const currentWeightFromSettings = parseFloat(document.getElementById('current-weight-settings').value); 
         const targetWeight = parseFloat(document.getElementById('target-weight').value);
         const activityFactor = parseFloat(document.getElementById('activity-factor').value);
         const targetDate = document.getElementById('target-date').value;
         const difficultyMode = difficultyModeSelect.value;
         const manualRankValue = parseInt(manualCurrentRankInput.value);
 
-        if (!name || isNaN(age) || isNaN(height) || isNaN(currentWeight) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
+        // Determine the current weight for profile calculation
+        let weightForProfile = currentWeightFromSettings;
+        if (userProfile && !fromSettingsPage && weightHistory.length > 0) {
+            // If updating profile from somewhere other than settings form submit, and weight history exists,
+            // prioritize the latest weight from history for profile calculations.
+            weightForProfile = weightHistory[weightHistory.length - 1].weight;
+        }
+
+
+        if (!name || isNaN(age) || isNaN(height) || isNaN(weightForProfile) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
             alert('Por favor, preencha todos os campos do perfil corretamente, incluindo a data final da meta.');
             return;
         }
 
-        const initialDailyCaloricNeeds = calculateDailyCaloricNeeds(currentWeight, height, age, gender, activityFactor);
+        const initialDailyCaloricNeeds = calculateDailyCaloricNeeds(weightForProfile, height, age, gender, activityFactor);
         const initialCaloricDeficit = initialDailyCaloricNeeds * 0.20;
         const initialTargetCalories = Math.round(initialDailyCaloricNeeds - initialCaloricDeficit);
 
@@ -449,8 +458,10 @@ document.addEventListener('DOMContentLoaded', () => {
             currentTargetCalories = initialTargetCalories;
         }
 
+        const isNewProfile = !userProfile; // Check if profile is being created for the first time
+
         userProfile = {
-            name, age, height, gender, currentWeight, targetWeight, activityFactor, targetDate, difficultyMode,
+            name, age, height, gender, currentWeight: weightForProfile, targetWeight, activityFactor, targetDate, difficultyMode,
             dailyCaloricNeeds: Math.round(initialDailyCaloricNeeds),
             targetCalories: currentTargetCalories,
             targetProtein: currentTargetProtein,
@@ -461,8 +472,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
 
-        // Update currentStreak if manual input is provided and valid
-        if (!isNaN(manualRankValue) && manualRankValue >= 0) {
+        // If it's a new profile or the first time saving with a populated currentWeight,
+        // add this currentWeight to the weight history as the initial weight.
+        if (isNewProfile && userProfile.currentWeight > 0 && weightHistory.length === 0) {
+            addWeightEntry(userProfile.currentWeight, new Date().toLocaleDateString('pt-BR'), false); // Add as initial, suppress alert
+        }
+
+
+        // Update currentStreak if manual input is provided and valid AND called from settings page
+        if (fromSettingsPage && !isNaN(manualRankValue) && manualRankValue >= 0 && manualRankValue !== currentStreak) {
             currentStreak = manualRankValue;
             localStorage.setItem('currentStreak', currentStreak);
             if (currentStreak > maxStreak) {
@@ -471,21 +489,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             updateCheckinStreakDisplay();
             updateUserRank();
-            alert('Nível atual ajustado manualmente!');
+            if (!suppressAlert) alert('Nível atual ajustado manualmente!');
         }
 
-
-        if (weightHistory.length === 0 || weightHistory[weightHistory.length - 1].weight !== currentWeight) {
-            if (event && event.type === 'submit') {
-                addWeightEntry(currentWeight, new Date().toLocaleDateString('pt-BR'), false);
-            }
+        // Only re-render profile related displays, not the whole page
+        userNameSpan.textContent = userProfile.name;
+        document.getElementById('name').value = userProfile.name;
+        document.getElementById('age').value = userProfile.age;
+        document.getElementById('height').value = userProfile.height;
+        document.getElementById('gender').value = userProfile.gender;
+        document.getElementById('current-weight-settings').value = userProfile.currentWeight; // Ensure this is updated from userProfile
+        document.getElementById('target-weight').value = userProfile.targetWeight;
+        document.getElementById('activity-factor').value = userProfile.activityFactor;
+        if (userProfile.targetDate) {
+            targetDateInput.value = userProfile.targetDate;
         }
-
-        renderUserProfile();
+        difficultyModeSelect.value = userProfile.difficultyMode || 'easy';
+        manualCurrentRankInput.value = currentStreak;
+        
         updateProgressBars();
         updateWeightPrediction();
         updateCheckinVisibility();
-        if (event && event.type === 'submit') {
+        if (event && event.type === 'submit' && !suppressAlert) {
             alert('Perfil salvo e o app está pronto para uso!');
             showPage('home-page');
         }
@@ -569,6 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
             weightNum.textContent = `${lastRecordedWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
 
         } else {
+            // Use currentWeight from userProfile if weightHistory is empty
             weightNum.textContent = `${userProfile.currentWeight.toFixed(1)} Kg / ${targetWeight.toFixed(1)} Kg`;
             weightProgressBar.style.width = '0%';
             weightRemainingText.textContent = `Faltam ${Math.abs(userProfile.currentWeight - targetWeight).toFixed(1)} Kg para atingir sua meta.`;
@@ -668,13 +694,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Logic for "Criar Défit 20%" button
         if (weightHistory.length >= 2) {
-            const lastTwoWeights = weightHistory.slice(-2);
-            const weightChangeFromPrevious = Math.abs(lastTwoWeights[1].weight - lastTwoWeights[0].weight);
+            // Find weight entry from 7 days ago if available, otherwise use the first entry
+            let weight7DaysAgoEntry = null;
+            const todayDate = new Date();
+            todayDate.setHours(0,0,0,0);
 
-            if (weightChangeFromPrevious < 0.5) { // Less than 500g variation
-                createDeficitBtn.style.display = 'block';
-                weightPageFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Você perdeu menos de 500g, sugiro fazer o déficit nas metas. Se você não seguiu o plano 100%, sugiro melhorar o foco nos próximos 7 dias para melhorar os resultados.';
-                weightPageFeedbackMessage.style.color = 'var(--vibrant-orange)';
+            for (let i = weightHistory.length - 1; i >= 0; i--) {
+                const entryDateParts = weightHistory[i].date.split('/');
+                const entryDate = new Date(`${entryDateParts[2]}-${entryDateParts[1]}-${entryDateParts[0]}`);
+                entryDate.setHours(0,0,0,0);
+                const diffTime = todayDate.getTime() - entryDate.getTime();
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays >= 7) {
+                    weight7DaysAgoEntry = weightHistory[i];
+                    break;
+                }
+            }
+            
+            // If no entry 7 days ago, compare with the first recorded weight
+            if (!weight7DaysAgoEntry && weightHistory.length > 0) {
+                weight7DaysAgoEntry = weightHistory[0];
+            }
+
+            if (weight7DaysAgoEntry) {
+                const currentWeight = lastWeightEntry.weight;
+                const weight7DaysAgo = weight7DaysAgoEntry.weight;
+                const weightChange = currentWeight - weight7DaysAgo;
+
+                // Check for maintenance or insufficient progress based on target
+                if (userProfile.targetWeight < userProfile.currentWeight) { // User wants to lose weight
+                    if (weightChange >= -0.5) { // Lost less than 500g or gained
+                        createDeficitBtn.style.display = 'block';
+                        weightPageFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Você perdeu menos de 500g na última semana, sugiro fazer o déficit nas metas. Se você não seguiu o plano 100%, sugiro melhorar o foco nos próximos 7 dias para melhorar os resultados.';
+                        weightPageFeedbackMessage.style.color = 'var(--vibrant-orange)';
+                    } else {
+                        createDeficitBtn.style.display = 'none';
+                        weightPageFeedbackMessage.textContent = '';
+                    }
+                } else if (userProfile.targetWeight > userProfile.currentWeight) { // User wants to gain weight
+                    if (weightChange <= 0.5) { // Gained less than 500g or lost
+                        createDeficitBtn.style.display = 'block';
+                        weightPageFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Você ganhou menos de 500g na última semana, sugiro aumentar as calorias. Se você não seguiu o plano 100%, sugiro melhorar o foco nos próximos 7 dias para melhorar os resultados.';
+                        weightPageFeedbackMessage.style.color = 'var(--vibrant-orange)';
+                    } else {
+                        createDeficitBtn.style.display = 'none';
+                        weightPageFeedbackMessage.textContent = '';
+                    }
+                } else { // Maintenance
+                    if (Math.abs(weightChange) >= 0.5) { // Gained or lost more than 500g
+                        createDeficitBtn.style.display = 'block';
+                        weightPageFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Seu peso variou mais de 500g na última semana. Sugiro rever suas metas para manutenção.';
+                        weightPageFeedbackMessage.style.color = 'var(--vibrant-orange)';
+                    } else {
+                        createDeficitBtn.style.display = 'none';
+                        weightPageFeedbackMessage.textContent = '';
+                    }
+                }
             } else {
                 createDeficitBtn.style.display = 'none';
                 weightPageFeedbackMessage.textContent = '';
@@ -735,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     userProfile.carbDeficitApplied = true;
                     localStorage.setItem('userProfile', JSON.stringify(userProfile));
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    saveProfile(null);
+                    saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
                     dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um déficit de 20% nos carboidratos devido ao baixo progresso na perda de peso. Mantenha o foco!';
                     dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
 
@@ -744,7 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         userProfile.carbDeficitApplied = false;
                         localStorage.setItem('userProfile', JSON.stringify(userProfile));
                         localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                        saveProfile(null);
+                        saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
                         dietFeedbackMessage.textContent = 'Parabéns! Suas metas de carboidratos foram normalizadas após bom progresso.';
                         dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
                     } else {
@@ -759,7 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     userProfile.targetCalories = Math.round(userProfile.targetProtein * 4 + userProfile.targetCarbs * 4 + userProfile.targetFats * 9);
                     localStorage.setItem('userProfile', JSON.stringify(userProfile));
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    saveProfile(null);
+                    saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
                     dietFeedbackMessage.textContent = 'Ajuste de metas: Foi aplicado um aumento de 10% nos carboidratos para auxiliar no ganho de peso. Mantenha o foco!';
                     dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
                 } else { // Good progress on gaining weight
@@ -772,7 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     userProfile.carbDeficitApplied = false;
                     localStorage.setItem('userProfile', JSON.stringify(userProfile));
                     localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    saveProfile(null);
+                    saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
                     dietFeedbackMessage.textContent = 'Parabéns! Suas metas de carboidratos foram normalizadas.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
                 } else {
@@ -985,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
         weightHistoryList.querySelectorAll('.delete-weight-btn').forEach(button => {
             button.addEventListener('click', deleteWeightEntry);
         });
-        updateWeightChart();
+        updateWeightChart(); // Call updateWeightChart here
     }
 
     function renderPastMealsSummaries() {
@@ -1188,8 +1263,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const currentDate = new Date(`${labelDateParts[2]}-${labelDateParts[1]}-${labelDateParts[0]}T00:00:00`);
                     expectedWeightData.push(calculateExpectedWeight(initialWeight, targetWeight, initialDate, targetDate, currentDate));
                 });
-                if (weightChart.data.datasets.length < 2) {
-                    weightChart.data.datasets.push({
+                // Find or add the Expected Weight dataset at index 1
+                if (weightChart.data.datasets.length < 2 || weightChart.data.datasets[1].label !== 'Peso Esperado (Kg)') {
+                    weightChart.data.datasets.splice(1, 0, { // Insert at index 1
                         label: 'Peso Esperado (Kg)',
                         data: expectedWeightData,
                         borderColor: 'rgb(230, 126, 34)',
@@ -1203,15 +1279,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     weightChart.data.datasets[1].data = expectedWeightData;
                 }
             } else {
-                if (weightChart.data.datasets.length > 1) {
+                // Remove the 'Peso Esperado' dataset if conditions are not met
+                if (weightChart.data.datasets.length > 1 && weightChart.data.datasets[1].label === 'Peso Esperado (Kg)') {
                     weightChart.data.datasets.splice(1, 1);
                 }
             }
 
             const actualWeightData = weightHistory.map(entry => entry.weight);
             const averageWeightData = calculateMovingAverage(actualWeightData, 7);
-            if (weightChart.data.datasets.length < 3) {
-                weightChart.data.datasets.push({
+            
+            // Determine correct index for Average Weight dataset
+            let avgDatasetIndex = 2; // Default if Expected Weight is present
+            if (weightChart.data.datasets.length < 2 || weightChart.data.datasets[1].label !== 'Peso Esperado (Kg)') {
+                avgDatasetIndex = 1; // If Expected Weight is NOT present
+            }
+
+            if (weightChart.data.datasets.length <= avgDatasetIndex || weightChart.data.datasets[avgDatasetIndex].label !== 'Média de Peso (7 dias)') {
+                weightChart.data.datasets.splice(avgDatasetIndex, 0, { // Insert at determined index
                     label: 'Média de Peso (7 dias)',
                     data: averageWeightData,
                     borderColor: 'rgba(150, 150, 150, 0.5)',
@@ -1222,10 +1306,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     pointRadius: 0
                 });
             } else {
-                weightChart.data.datasets[2].data = averageWeightData;
+                weightChart.data.datasets[avgDatasetIndex].data = averageWeightData;
             }
-
+            
             weightChart.update();
+        } else {
+            // If chart doesn't exist, create it. This can happen on first load of weight page.
+            setupWeightChart();
         }
     }
 
@@ -1248,7 +1335,7 @@ document.addEventListener('DOMContentLoaded', () => {
             newWeightDateInput.valueAsDate = new Date();
         }
         if (pageId === 'settings-page') {
-            renderUserProfile();
+            renderUserProfile(); 
             renderCustomFoodList();
         }
         if (pageId === 'meals-page') {
@@ -1273,7 +1360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Save profile settings
-    profileForm.addEventListener('submit', saveProfile);
+    profileForm.addEventListener('submit', (event) => saveProfile(event, false, true)); // Pass true for fromSettingsPage
 
     // Add meal group
     addMealGroupBtn.addEventListener('click', () => {
@@ -1642,15 +1729,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Always update userProfile.currentWeight with the most recent weight after any weight change
         if (userProfile && weightHistory.length > 0) {
             userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            saveProfile(null);
+            // Trigger a re-render of components that depend on userProfile, but without alerts.
+            // Directly call updateProgressBars and updateWeightPrediction.
+            updateProgressBars();
+            updateWeightPrediction();
         }
 
-        renderWeightHistory();
-        updateProgressBars();
-        updateWeightPrediction();
+        renderWeightHistory(); // This will also call updateWeightChart
         checkWeeklyWeightProgress();
     }
 
@@ -1697,14 +1786,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
+        // Always update userProfile.currentWeight with the most recent weight after any weight change
         if (userProfile && weightHistory.length > 0) {
             userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            saveProfile(null);
+            // Directly call updateProgressBars and updateWeightPrediction.
+            updateProgressBars();
+            updateWeightPrediction();
         }
-        renderWeightHistory();
-        updateProgressBars();
-        updateWeightPrediction();
+        renderWeightHistory(); // This will also call updateWeightChart
         checkWeeklyWeightProgress();
         alert('Peso atualizado com sucesso!');
     }
@@ -1715,14 +1805,15 @@ document.addEventListener('DOMContentLoaded', () => {
             weightHistory.splice(index, 1);
             localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
+            // Update userProfile.currentWeight to the new last entry, or 0 if history is empty
             if (userProfile) {
                 userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
                 localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                saveProfile(null);
+                // Directly call updateProgressBars and updateWeightPrediction.
+                updateProgressBars();
+                updateWeightPrediction();
             }
-            renderWeightHistory();
-            updateProgressBars();
-            updateWeightPrediction();
+            renderWeightHistory(); // This will also call updateWeightChart
             checkWeeklyWeightProgress();
             alert('Registro de peso excluído.');
         }
@@ -1834,7 +1925,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
 
-            saveProfile(null);
+            saveProfile(null, true, false); // Suppress alert when called internally, explicitly not from settings page
             
             alert('Déficit adicional de 20% aplicado com sucesso nas metas de carboidratos!');
         }
@@ -1844,7 +1935,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check-in Animations
     checkinCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', (event) => {
-            const animationDiv = event.target.nextElementSibling.nextElementSibling;
+            // Updated selector to target the correct animation div
+            const animationDiv = event.target.closest('.checkin-item').querySelector('.check-animation');
             if (event.target.checked) {
                 animationDiv.textContent = '🎉';
                 animationDiv.style.opacity = '1';
