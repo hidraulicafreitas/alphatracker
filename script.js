@@ -392,8 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
             manualCurrentRankInput.value = currentStreak; // Display current streak in the manual input
         } else {
             userNameSpan.textContent = 'Guerreiro';
-            // Do NOT call showPage('settings-page') here to avoid recursion
-            // The initial app load will handle showing settings if no profile exists.
             difficultyModeSelect.value = 'easy';
             manualCurrentRankInput.value = 0;
         }
@@ -427,10 +425,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Determine the current weight for profile calculation
         let weightForProfile = currentWeightFromSettings;
-        if (userProfile && !fromSettingsPage && weightHistory.length > 0) {
-            // If updating profile from somewhere other than settings form submit, and weight history exists,
-            // prioritize the latest weight from history for profile calculations.
-            weightForProfile = weightHistory[weightHistory.length - 1].weight;
+        if (userProfile && weightHistory.length > 0) { // If profile exists and weight history is not empty
+            weightForProfile = weightHistory[weightHistory.length - 1].weight; // Use the latest weight from history
         }
 
 
@@ -458,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentTargetCalories = initialTargetCalories;
         }
 
-        const isNewProfile = !userProfile; // Check if profile is being created for the first time
+        const isCreatingNewProfile = !userProfile; // Check if profile is being created for the first time
 
         userProfile = {
             name, age, height, gender, currentWeight: weightForProfile, targetWeight, activityFactor, targetDate, difficultyMode,
@@ -472,9 +468,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
 
-        // If it's a new profile or the first time saving with a populated currentWeight,
-        // add this currentWeight to the weight history as the initial weight.
-        if (isNewProfile && userProfile.currentWeight > 0 && weightHistory.length === 0) {
+        // If it's a new profile and currentWeight is set, add this to weight history as initial.
+        // This only happens on the *first* successful profile save if history is empty.
+        if (isCreatingNewProfile && userProfile.currentWeight > 0 && weightHistory.length === 0) {
             addWeightEntry(userProfile.currentWeight, new Date().toLocaleDateString('pt-BR'), false); // Add as initial, suppress alert
         }
 
@@ -492,13 +488,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!suppressAlert) alert('Nível atual ajustado manualmente!');
         }
 
-        // Only re-render profile related displays, not the whole page
+        // Re-render profile-dependent displays
         userNameSpan.textContent = userProfile.name;
         document.getElementById('name').value = userProfile.name;
         document.getElementById('age').value = userProfile.age;
         document.getElementById('height').value = userProfile.height;
         document.getElementById('gender').value = userProfile.gender;
-        document.getElementById('current-weight-settings').value = userProfile.currentWeight; // Ensure this is updated from userProfile
+        document.getElementById('current-weight-settings').value = userProfile.currentWeight; 
         document.getElementById('target-weight').value = userProfile.targetWeight;
         document.getElementById('activity-factor').value = userProfile.activityFactor;
         if (userProfile.targetDate) {
@@ -1290,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Determine correct index for Average Weight dataset
             let avgDatasetIndex = 2; // Default if Expected Weight is present
-            if (weightChart.data.datasets.length < 2 || weightChart.data.datasets[1].label !== 'Peso Esperado (Kg)') {
+            if (weightChart.data.datasets.length < 2 || (weightChart.data.datasets.length >=2 && weightChart.data.datasets[1].label !== 'Peso Esperado (Kg)')) {
                 avgDatasetIndex = 1; // If Expected Weight is NOT present
             }
 
@@ -1441,6 +1437,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const foodToRemove = dailyData.mealGroups[groupIndex].foods[foodIndex];
 
         // Se for um alimento padrão diário, remova-o também do storedMealGroups
+        // Apenas remova da lista de padrões, não remova o alimento da lista principal dailyData.mealGroups[groupIndex].foods
         if (foodToRemove.isDailyStandard) {
             const storedGroup = storedMealGroups.find(g => g.name === dailyData.mealGroups[groupIndex].name);
             if (storedGroup) {
@@ -1462,7 +1459,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyData.mealGroups[groupIndex].totalCarbs -= foodToRemove.carbs;
         dailyData.mealGroups[groupIndex].totalFats -= foodToRemove.fats;
 
-        dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1);
+        dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1); // Remove the food from the daily group
 
         // NÂO REMOVE O GRUPO SE FICAR VAZIO. APENAS ZERA OS TOTAIS.
         // A remoção de grupos só deve ser feita explicitamente pelo botão "X" do grupo.
@@ -1479,7 +1476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function removeMealGroup(event) {
-        const groupIndex = parseInt(event.target.dataset.groupIndex); // Acessa corretamente o data-group-index
+        const groupIndex = parseInt(event.target.dataset.groupIndex); 
         const groupToRemoveName = dailyData.mealGroups[groupIndex].name;
 
         if (confirm(`Tem certeza que deseja remover o grupo de refeição "${groupToRemoveName}"? Todos os alimentos dentro dele também serão removidos permanentemente.`)) {
@@ -1512,10 +1509,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const storedGroup = storedMealGroups.find(g => g.name === dailyData.mealGroups[groupIndex].name);
         if (storedGroup) {
+            // Remove existing instance if it was a standard food
             storedGroup.foods = storedGroup.foods.filter(food =>
                 !(food.name === foodItem.name && food.quantity === foodItem.quantity && food.kcal === foodItem.kcal)
             );
             if (foodItem.isDailyStandard) {
+                // Add it back only if it's now marked as standard
                 storedGroup.foods.push(foodItem);
             }
             recalculateGroupTotals(storedGroup);
@@ -1534,7 +1533,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('dailyData', JSON.stringify(dailyData));
         localStorage.setItem('storedMealGroups', JSON.stringify(storedMealGroups));
-        renderMealGroups();
+        renderMealGroups(); // Re-render to show updated "Padrão Diário" tag
     }
 
     function recalculateGroupTotals(group) {
@@ -1733,13 +1732,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userProfile && weightHistory.length > 0) {
             userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            // Trigger a re-render of components that depend on userProfile, but without alerts.
-            // Directly call updateProgressBars and updateWeightPrediction.
-            updateProgressBars();
-            updateWeightPrediction();
         }
 
         renderWeightHistory(); // This will also call updateWeightChart
+        updateProgressBars(); // Ensure progress bars reflect the latest weight in userProfile
+        updateWeightPrediction();
         checkWeeklyWeightProgress();
     }
 
@@ -1790,11 +1787,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userProfile && weightHistory.length > 0) {
             userProfile.currentWeight = weightHistory[weightHistory.length - 1].weight;
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            // Directly call updateProgressBars and updateWeightPrediction.
-            updateProgressBars();
-            updateWeightPrediction();
         }
         renderWeightHistory(); // This will also call updateWeightChart
+        updateProgressBars(); // Ensure progress bars reflect the latest weight in userProfile
+        updateWeightPrediction();
         checkWeeklyWeightProgress();
         alert('Peso atualizado com sucesso!');
     }
@@ -1809,11 +1805,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userProfile) {
                 userProfile.currentWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight : 0;
                 localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                // Directly call updateProgressBars and updateWeightPrediction.
-                updateProgressBars();
-                updateWeightPrediction();
             }
             renderWeightHistory(); // This will also call updateWeightChart
+            updateProgressBars(); // Ensure progress bars reflect the latest weight in userProfile
+            updateWeightPrediction();
             checkWeeklyWeightProgress();
             alert('Registro de peso excluído.');
         }
