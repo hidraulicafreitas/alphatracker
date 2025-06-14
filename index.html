@@ -234,7 +234,8 @@
                     </form>
                 </div>
 
-                <div class="settings-section">
+                <button id="toggle-adjust-targets-btn" class="main-btn small-btn">Ajustar Metas Manualmente</button>
+                <div id="adjust-targets-section" class="settings-section hidden-section">
                     <h3>Ajustar Metas Manualmente</h3>
                     <div class="input-group">
                         <label for="manual-target-protein">Proteína (g):</label>
@@ -255,7 +256,8 @@
                     <button id="save-manual-targets-btn" class="main-btn small-btn">Salvar Metas Ajustadas</button>
                 </div>
 
-                <div class="settings-section">
+                <button id="toggle-custom-food-section-btn" class="main-btn small-btn">Alimentos Personalizados</button>
+                <div id="add-custom-food-section" class="settings-section hidden-section">
                     <h3>Adicionar Novo Alimento</h3>
                     <form id="add-custom-food-form" class="settings-form">
                         <div class="input-group">
@@ -280,18 +282,124 @@
                         </div>
                         <button type="submit" class="main-btn small-btn">Adicionar Alimento Personalizado</button>
                     </form>
-                </div>
 
-                <div class="settings-section">
-                    <h3>Meus Alimentos Personalizados</h3>
-                    <ul id="custom-food-list">
-                    </ul>
+                    <div class="settings-section" style="margin-top: 20px;">
+                        <h3>Meus Alimentos Personalizados</h3>
+                        <ul id="custom-food-list">
+                        </ul>
+                    </div>
                 </div>
             </section>
         </main>
         <footer>
             <p>App desenvolvido por Leonardo Freitas - Todos os direitos reservados.</p>
         </footer>
+    </div>
+
+    <div id="onboarding-screen" class="onboarding-overlay">
+        <div class="onboarding-container">
+            <div id="welcome-step" class="onboarding-step active">
+                <h2>Bem-vindo ao ALPHA TRACKER!</h2>
+                <p>Seu parceiro para dominar a dieta e o treino. Aqui, vamos direto ao ponto para você alcançar seus objetivos. 💪</p>
+                <p>Para começar com o pé direito, precisamos de algumas informações. É rapidinho, prometemos! 😉</p>
+                </div>
+
+            <div id="step-name" class="onboarding-step">
+                <h2>Qual o seu nome?</h2>
+                <p>Queremos te chamar pelo nome e personalizar sua experiência! Assim, você se sentirá mais à vontade. ✨</p>
+                <div class="input-group">
+                    <label for="onboarding-name">Nome:</label>
+                    <input type="text" id="onboarding-name" required>
+                </div>
+            </div>
+
+            <div id="step-gender-theme" class="onboarding-step">
+                <h2>Qual o seu sexo?</h2>
+                <p>O sexo é fundamental para ajustarmos os cálculos de calorias e macronutrientes de forma precisa para você. O tema de cores do aplicativo mudará automaticamente para combinar com sua escolha. 😉</p>
+                <div class="input-group">
+                    <label for="onboarding-gender">Sexo:</label>
+                    <select id="onboarding-gender" required>
+                        <option value="male">Masculino</option>
+                        <option value="female">Feminino</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="step-age" class="onboarding-step">
+                <h2>Qual a sua idade?</h2>
+                <p>Sua idade é crucial para um cálculo preciso do seu gasto calórico diário. Quanto mais exato, melhores serão seus resultados! 🎯</p>
+                <div class="input-group">
+                    <label for="onboarding-age">Idade:</label>
+                    <input type="number" id="onboarding-age" required>
+                </div>
+            </div>
+
+            <div id="step-weight-height" class="onboarding-step">
+                <h2>Qual o seu peso atual e altura?</h2>
+                <p>Esses dados são a base para calcularmos suas metas de calorias e te ajudarmos a acompanhar o progresso de perto! 📈</p>
+                <div class="input-group">
+                    <label for="onboarding-current-weight">Peso Atual (Kg):</label>
+                    <input type="number" step="0.1" id="onboarding-current-weight" required>
+                </div>
+                <div class="input-group">
+                    <label for="onboarding-height">Altura (cm):</label>
+                    <input type="number" id="onboarding-height" required>
+                </div>
+            </div>
+
+            <div id="step-target-weight-date" class="onboarding-step">
+                <h2>Qual o seu peso objetivo e quando você quer alcançá-lo?</h2>
+                <p>Defina sua meta para que possamos traçar o melhor caminho para você. Juntos, vamos alcançar esse objetivo! 🛤️</p>
+                <div class="input-group">
+                    <label for="onboarding-target-weight">Peso Objetivo (Kg):</label>
+                    <input type="number" step="0.1" id="onboarding-target-weight" required>
+                </div>
+                <div class="input-group">
+                    <label for="onboarding-target-date">Data Final da Meta:</label>
+                    <input type="date" id="onboarding-target-date" required>
+                </div>
+            </div>
+
+            <div id="step-activity-difficulty" class="onboarding-step">
+                <h2>Qual seu nível de atividade e dificuldade?</h2>
+                <p>O nível de atividade ajuda a refinar ainda mais seus cálculos de calorias. A dificuldade define o desafio diário do check-in. Escolha com sabedoria! 🧠</p>
+                <div class="input-group">
+                    <label for="onboarding-activity-factor">Nível de Atividade:</label>
+                    <select id="onboarding-activity-factor" required>
+                        <option value="1.2">Sedentário (pouco ou nenhum exercício)</option>
+                        <option value="1.375">Levemente Ativo (exercício 1-3 dias/semana)</option>
+                        <option value="1.55">Moderadamente Ativo (exercício 3-5 dias/semana)</option>
+                        <option value="1.725">Muito Ativo (exercício 6-7 dias/semana)</option>
+                        <option value="1.9">Extremamente Ativo (exercício diário/trabalho físico)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="onboarding-difficulty-mode">Modo de Dificuldade:</label>
+                    <select id="onboarding-difficulty-mode" required>
+                        <option value="easy">Fácil (Apenas Dieta)</option>
+                        <option value="hard">Hard (Dieta e Treino)</option>
+                        <option value="god">God (Dieta, Treino e NoFap)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="step-final-info" class="onboarding-step">
+                <h2>Tudo pronto, <span id="final-onboarding-name-display"></span>! 🚀</h2>
+                <p>Agora que te conhecemos melhor, o Alpha Tracker está pronto para te ajudar!</p>
+                <h3>Como o aplicativo funciona:</h3>
+                <ul>
+                    <li>**Pesagem Semanal:** ⚖️ É fundamental te pesar **1 vez por semana**, sempre no mesmo dia, **em jejum e sem roupa**. Isso nos ajuda a acompanhar teu progresso e ajustar as metas, se precisar.</li>
+                    <li>**Registro Diário de Alimentos:** 🍎 Registra tudo que tu come! É importante se manter dentro das metas de calorias e macronutrientes (proteínas, carboidratos e gorduras) que calculamos para você. Assim, tu emagrece com saúde, mantendo a massa muscular! 💪</li>
+                    <li>**Dias de Foco e Níveis:** 🔥 O Check-in diário é a chave! Cada dia que tu cumpre as tarefas do teu modo de dificuldade, tu ganha um "Dia no Foco". Acumular esses dias aumenta o teu nível no aplicativo, como um jogo! É um incentivo para te manter firme e forte na jornada! 🏆</li>
+                </ul>
+                <p>Bora pra cima! O sucesso te espera! 🤩</p>
+            </div>
+
+            <div class="onboarding-navigation">
+                <button id="prev-step-btn" class="main-btn small-btn">Voltar</button>
+                <button id="next-step-btn" class="main-btn small-btn">Próximo</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>

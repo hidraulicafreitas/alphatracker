@@ -293,6 +293,16 @@ form {
     transition: width 0.5s ease-out;
 }
 
+/* New: Progress Bar Colors based on performance */
+.progress-bar.red-bar {
+    background-color: var(--vibrant-red);
+}
+
+.progress-bar.blue-bar {
+    background-color: var(--vibrant-blue);
+}
+
+
 /* Meal Groups */
 .meal-group {
     background-color: var(--accent-blue);
@@ -637,6 +647,19 @@ form {
     margin: 0;
 }
 
+/* Para as seções que vão ser ocultadas/mostradas */
+.hidden-section {
+    display: none; /* Inicia oculto por padrão */
+    margin-top: 20px; /* Adiciona um espaço entre o botão e a seção */
+}
+
+/* Style for invalid inputs */
+input.invalid, select.invalid {
+    border-color: var(--vibrant-red) !important;
+    box-shadow: 0 0 5px rgba(231, 76, 60, 0.7) !important;
+}
+
+
 /* Weight Page - New Current Weight Input */
 .input-group-inline {
     display: flex;
@@ -665,10 +688,11 @@ form {
 
 
 /* Custom Food List */
+/* A lista de alimentos personalizados agora está dentro de add-custom-food-section */
 #custom-food-list {
     list-style: none;
     padding: 0;
-    margin-top: 15px;
+    margin-top: 15px; /* Manter margem para separar do formulário */
 }
 
 #custom-food-list li {
@@ -875,6 +899,77 @@ footer {
     box-sizing: border-box;
 }
 
+/* Onboarding Styles */
+.onboarding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Escurece o fundo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Garante que fique por cima de tudo */
+    backdrop-filter: blur(5px); /* Efeito de desfoque */
+}
+
+.onboarding-container {
+    background-color: var(--secondary-dark);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    width: 90%;
+    max-width: 600px;
+    padding: 30px;
+    box-sizing: border-box;
+    text-align: center;
+    position: relative; /* Para posicionar os botões de navegação */
+    display: flex;
+    flex-direction: column;
+    min-height: 400px; /* Altura mínima para o container */
+}
+
+.onboarding-container h2 {
+    color: var(--vibrant-orange);
+    font-size: 1.8em;
+    margin-bottom: 20px;
+}
+
+.onboarding-container p {
+    color: var(--text-light);
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.onboarding-step {
+    display: none;
+    flex-grow: 1; /* Permite que o conteúdo da etapa ocupe o espaço */
+    flex-direction: column;
+    justify-content: center; /* Centraliza o conteúdo verticalmente */
+    align-items: center; /* Centraliza o conteúdo horizontalmente */
+    padding-bottom: 60px; /* Espaço para os botões de navegação */
+}
+
+.onboarding-step.active {
+    display: flex;
+}
+
+.onboarding-step .input-group {
+    width: 80%; /* Ocupa mais espaço nos passos do onboarding */
+    margin: 10px auto;
+}
+
+.onboarding-navigation {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
 /* Responsiveness */
 @media (max-width: 600px) {
     body {
@@ -906,7 +1001,9 @@ footer {
 
     .input-group input,
     .input-group select,
-    .add-food-form input {
+    .add-food-form input,
+    .onboarding-step input,
+    .onboarding-step select {
         font-size: 0.9em;
         padding: 10px;
     }
@@ -949,5 +1046,22 @@ footer {
     }
     .input-group-inline-label .input-with-help {
         width: 100%; /* Fazer o container do input e botão ocupar 100% da largura */
+    }
+
+    .onboarding-container {
+        padding: 20px;
+        min-height: 350px;
+    }
+    .onboarding-container h2 {
+        font-size: 1.5em;
+    }
+    .onboarding-container p {
+        font-size: 0.9em;
+    }
+    .onboarding-step .input-group {
+        width: 95%;
+    }
+    .onboarding-navigation {
+        padding: 0 10px;
     }
 }
