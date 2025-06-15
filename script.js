@@ -77,11 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Onboarding Elements
     const onboardingScreen = document.getElementById('onboarding-screen');
-    const onboardingSteps = document.querySelectorAll('.onboarding-step');
-    const nextStepBtn = document.getElementById('next-step-btn');
-    const prevStepBtn = document.getElementById('prev-step-btn');
-    const onboardingWelcomeScreen = document.getElementById('welcome-step');
-    let currentStepIndex = 0;
+    const onboardingWelcomeScreen = document.getElementById('welcome-step'); // A primeira tela de boas-vindas
+    const onboardingFormSteps = Array.from(document.querySelectorAll('.onboarding-container .onboarding-step:not(#welcome-step)')); // Apenas os passos de formulário
+    const nextStepBtn = document.getElementById('next-step-btn'); // Declarar no topo
+    const prevStepBtn = document.getElementById('prev-step-btn'); // Declarar no topo
+
+    let currentStepIndex = -1; // -1 para a tela de boas-vindas inicial
 
     // Onboarding Form Inputs
     const onboardingNameInput = document.getElementById('onboarding-name');
@@ -603,7 +604,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const calculatedDailyCaloricNeeds = calculateDailyCaloricNeeds(initialWeight, height, age, gender, activityFactor);
 
-        // Sempre recalcula as metas com base no perfil atualizado
         const baseTargetCalories = Math.round(calculatedDailyCaloricNeeds);
         const newTargetCalories = Math.round(baseTargetCalories * 0.80); 
         const newTargetProtein = Math.round((newTargetCalories * 0.40) / 4); 
@@ -1021,9 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dietFeedbackMessage.textContent = 'Você ganhou menos de 500g na última semana. Considere aumentar as calorias se necessário.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
                 } else {
-                    localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    dietFeedbackMessage.textContent = 'Ótimo progresso! Continue assim.';
-                    dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
+                    dietFeedbackMessage.textContent = '';
                 }
             } else {
                 if (Math.abs(weightChange) >= 0.5) {
@@ -1031,9 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dietFeedbackMessage.textContent = 'Seu peso variou mais de 500g na última semana. Sugiro rever suas metas para manutenção.';
                     dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
                 } else {
-                    localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    dietFeedbackMessage.textContent = 'Mantenha o bom trabalho!';
-                    dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
+                    dietFeedbackMessage.textContent = '';
                 }
             }
         }
@@ -1278,7 +1274,6 @@ document.addEventListener('DOMContentLoaded', () => {
         customFoodList.querySelectorAll('.edit-custom-food-btn').forEach(button => {
             button.addEventListener('click', editCustomFood);
         });
-
         customFoodList.querySelectorAll('.delete-custom-food-btn').forEach(button => {
             button.addEventListener('click', deleteCustomFood);
         });
@@ -2127,17 +2122,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     nextStepBtn.addEventListener('click', () => {
+        // Se estiver na tela de boas-vindas inicial (-1), avança para a primeira etapa do formulário (índice 0 do onboardingFormSteps).
+        if (currentStepIndex === -1) {
+            currentStepIndex = 0; 
+            showOnboardingStep(onboardingFormSteps[currentStepIndex].id); // Passa o ID da primeira etapa de formulário
+            return; 
+        }
+
+        // Validação da etapa atual antes de avançar para as próximas etapas de formulário.
+        // currentStepIndex refere-se ao índice dentro de onboardingFormSteps
         if (!validateOnboardingStep(currentStepIndex)) {
             return;
         }
-
-        if (currentStepIndex === -1) { // Se estiver na tela de boas-vindas
-            currentStepIndex = 0; // Vai para a primeira etapa do formulário
-            showOnboardingStep(currentStepIndex);
-        } else if (currentStepIndex < onboardingSteps.length - 1) {
+        
+        // Verifica se ainda há etapas de formulário para avançar
+        if (currentStepIndex < onboardingFormSteps.length - 1) {
             currentStepIndex++;
-            showOnboardingStep(currentStepIndex);
+            showOnboardingStep(onboardingFormSteps[currentStepIndex].id);
         } else {
+            // Última etapa de formulário: salvar perfil e finalizar onboarding
             if (saveProfile(null, false, false, true)) { 
                 localStorage.setItem('isFirstTimeUser', 'false'); 
                 onboardingScreen.style.display = 'none'; 
@@ -2151,60 +2154,55 @@ document.addEventListener('DOMContentLoaded', () => {
     prevStepBtn.addEventListener('click', () => {
         if (currentStepIndex > 0) {
             currentStepIndex--;
-            showOnboardingStep(currentStepIndex);
+            showOnboardingStep(onboardingFormSteps[currentStepIndex].id);
         } else if (currentStepIndex === 0) { 
+            // Se estiver na primeira etapa de formulário (índice 0), volta para a tela de boas-vindas
+            currentStepIndex = -1; // Define o índice para a tela de boas-vindas
             showOnboardingStep('welcome'); 
         }
+        // Se currentStepIndex for -1 (na tela de welcome), não faz nada ao clicar em "Voltar"
     });
 
-    function showOnboardingStep(stepIdentifier) {
-        if (stepIdentifier === 'welcome') {
-            onboardingWelcomeScreen.classList.add('active'); 
-            onboardingSteps.forEach(step => {
-                if (step.id !== 'welcome-step') {
-                    step.classList.remove('active');
-                }
-            });
-            prevStepBtn.style.display = 'none'; 
-            nextStepBtn.textContent = 'Próximo'; 
-            currentStepIndex = -1; 
-            return;
-        }
-
-        let index = typeof stepIdentifier === 'number' ? stepIdentifier : 0; 
-        
-        onboardingSteps.forEach((step, idx) => {
-            step.classList.remove('active'); 
-            if (idx === index) {
-                step.classList.add('active'); 
-            }
+    function showOnboardingStep(stepId) {
+        // Esconde todas as etapas de formulário
+        onboardingFormSteps.forEach(step => {
+            step.classList.remove('active');
         });
-        currentStepIndex = index;
+        // Esconde a tela de boas-vindas (a menos que seja ela que será mostrada)
+        onboardingWelcomeScreen.classList.remove('active');
 
-        prevStepBtn.style.display = (currentStepIndex === 0) ? 'none' : 'block';
-        nextStepBtn.textContent = (currentStepIndex === onboardingSteps.length - 1) ? 'Finalizar' : 'Próximo';
-        
-        if (currentStepIndex !== -1) { 
-            onboardingWelcomeScreen.classList.remove('active');
-        }
-
-        if (currentStepIndex === onboardingSteps.length -1) {
-            const finalOnboardingNameDisplay = document.getElementById('final-onboarding-name-display');
-            if (finalOnboardingNameDisplay && onboardingNameInput.value) {
-                finalOnboardingNameDisplay.textContent = onboardingNameInput.value;
+        if (stepId === 'welcome') {
+            onboardingWelcomeScreen.classList.add('active');
+            prevStepBtn.style.display = 'none'; // Esconde o botão "Voltar" na tela de boas-vindas
+            nextStepBtn.textContent = 'Próximo'; // Garante o texto correto para o botão
+            currentStepIndex = -1; // Atualiza o índice para refletir a tela de boas-vindas
+        } else {
+            // Encontra a etapa de formulário correta pelo ID e a ativa
+            const targetStep = document.getElementById(stepId);
+            if (targetStep) {
+                targetStep.classList.add('active');
             }
+
+            // Atualiza o índice global para o índice DENTRO do array de etapas de formulário
+            currentStepIndex = onboardingFormSteps.findIndex(step => step.id === stepId);
+
+            // Gerencia a visibilidade dos botões de navegação e seus textos
+            prevStepBtn.style.display = 'block'; // O botão "Voltar" é visível nas etapas de formulário
+            nextStepBtn.textContent = (currentStepIndex === onboardingFormSteps.length - 1) ? 'Finalizar' : 'Próximo';
         }
     }
+
 
     function validateOnboardingStep(stepIndex) {
         let isValid = true;
         
+        // Não valida a tela de boas-vindas
         if (stepIndex === -1) { 
             return true;
         }
 
-        const currentStep = onboardingSteps[stepIndex];
-        const inputs = currentStep.querySelectorAll('input[required], select[required]');
+        const currentStepElement = onboardingFormSteps[stepIndex]; // Pega o elemento da etapa de formulário correta
+        const inputs = currentStepElement.querySelectorAll('input[required], select[required]');
 
         inputs.forEach(input => {
             if (input.type === 'number' && (isNaN(parseFloat(input.value)) || parseFloat(input.value) <= 0)) {
