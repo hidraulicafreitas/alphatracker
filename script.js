@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let appContent = null; // Inicializa como null, será preenchido em initApp
+    let appContent = null; 
 
     const navButtons = document.querySelectorAll('nav button');
     const profileForm = document.getElementById('profile-form');
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveManualTargetsBtn = document.getElementById('save-manual-targets-btn'); 
     
     // Elementos para ocultar/mostrar seções de ajuste
-    const toggleAddCustomFoodBtn = document.getElementById('toggle-custom-food-section-btn'); // ID atualizado
+    const toggleAddCustomFoodBtn = document.getElementById('toggle-custom-food-section-btn'); 
     const addCustomFoodSection = document.getElementById('add-custom-food-section');
     const toggleAdjustTargetsBtn = document.getElementById('toggle-adjust-targets-btn');
     const adjustTargetsSection = document.getElementById('adjust-targets-section');
@@ -276,58 +276,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initApp() {
         appContent = document.getElementById('app-container');
-        checkDailyReset();
-        // applyTheme() será chamado dentro do onboarding ou no showPage('home-page')
-        renderUserProfile();
-        updateProgressBars();
-        renderMealGroups();
-        renderCheckinHistory();
-        renderWeightHistory();
-        renderCustomFoodList();
-        updateWeightPrediction();
-        renderPastMealsSummaries();
-        checkWeeklyWeightProgress();
-        setupWeightChart();
-        updateCheckinStreakDisplay();
-        updateUserRank();
-        updateHighestRankDisplay();
-        updateCheckinVisibility();
+        
+        const isFirstTimeUser = localStorage.getItem('isFirstTimeUser') === null;
 
-        // Inicializa as seções ocultas, verificando se os elementos existem
+        if (isFirstTimeUser) {
+            onboardingScreen.style.display = 'flex';
+            showOnboardingStep('welcome'); 
+            applyTheme('male'); 
+        } else {
+            onboardingScreen.style.display = 'none'; 
+            checkDailyReset(); 
+            applyTheme(userProfile ? userProfile.gender : 'male'); 
+            renderUserProfile();
+            updateProgressBars();
+            renderMealGroups();
+            renderCheckinHistory();
+            renderWeightHistory();
+            renderCustomFoodList();
+            updateWeightPrediction();
+            renderPastMealsSummaries();
+            checkWeeklyWeightProgress();
+            setupWeightChart();
+            updateCheckinStreakDisplay();
+            updateUserRank();
+            updateHighestRankDisplay();
+            updateCheckinVisibility();
+            if (!userProfile) { 
+                showPage('settings-page');
+            } else {
+                showPage('home-page');
+            }
+        }
+
         if (addCustomFoodSection) {
             addCustomFoodSection.style.display = 'none';
         }
         if (adjustTargetsSection) {
             adjustTargetsSection.style.display = 'none';
         }
-
-        const isFirstTimeUser = localStorage.getItem('isFirstTimeUser') === null;
-
-        if (isFirstTimeUser) {
-            onboardingScreen.style.display = 'flex';
-            showOnboardingStep('welcome'); // Mostra a tela de boas-vindas
-        } else {
-            onboardingScreen.style.display = 'none';
-            if (!userProfile) {
-                showPage('settings-page');
-            } else {
-                showPage('home-page');
-            }
-        }
     }
 
-    function applyTheme() {
-        // Atualiza userProfile antes de aplicar o tema para garantir que o gênero mais recente seja usado
-        let currentGenderForTheme = 'male'; // Default
-
-        // Se estiver no onboarding, pega o gênero da seleção do onboarding
-        if (onboardingScreen.style.display === 'flex' && onboardingGenderSelect) {
-            currentGenderForTheme = onboardingGenderSelect.value;
-        } else if (userProfile) { // Se o perfil já existe, usa o gênero do perfil
-            currentGenderForTheme = userProfile.gender;
-        } else if (genderSelect) { // Fallback para a tela de configurações (se não houver perfil ainda)
-            currentGenderForTheme = genderSelect.value;
-        }
+    function applyTheme(genderPreference) {
+        let currentGenderForTheme = genderPreference;
 
         if (currentGenderForTheme === 'female') {
             document.documentElement.style.setProperty('--vibrant-blue', '#ff69b4');
@@ -345,7 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.style.setProperty('--border-color', '#3f4a6b');
         }
 
-        // Força o navegador a recalcular os estilos e a renderizar novamente
         if (appContent) {
             appContent.classList.add('temp-restyle');
             void appContent.offsetWidth; 
@@ -520,7 +509,6 @@ document.addEventListener('DOMContentLoaded', () => {
             difficultyModeSelect.value = userProfile.difficultyMode || 'easy';
             manualCurrentRankInput.value = currentStreak;
 
-            // Preenche os campos de ajuste manual de metas
             manualTargetCaloriesInput.value = userProfile.targetCalories || '';
             manualTargetProteinInput.value = userProfile.targetProtein || '';
             manualTargetCarbsInput.value = userProfile.targetCarbs || '';
@@ -532,7 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
             difficultyModeSelect.value = 'easy';
             manualCurrentRankInput.value = 0;
             initialWeightSettingsInput.value = '';
-            // Limpa os campos de ajuste manual de metas se não houver perfil
             manualTargetCaloriesInput.value = '';
             manualTargetProteinInput.value = '';
             manualTargetCarbsInput.value = '';
@@ -543,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function populateDifficultyModeOptions(gender) {
         difficultyModeSelect.innerHTML = '';
-        onboardingDifficultyModeSelect.innerHTML = ''; // Também atualiza no onboarding
+        onboardingDifficultyModeSelect.innerHTML = ''; 
 
         const options = [
             { value: 'easy', text: 'Fácil (Apenas Dieta)' },
@@ -574,17 +561,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.value === 'female' && difficultyModeSelect.value === 'god') {
             difficultyModeSelect.value = 'hard';
         }
-        applyTheme(); 
+        applyTheme(event.target.value); 
     });
 
-    // Listener para mudança de gênero no onboarding
     onboardingGenderSelect.addEventListener('change', (event) => {
-        populateDifficultyModeOptions(event.target.value); // Atualiza opções de dificuldade
-        // Ajusta o modo de dificuldade se 'God' foi selecionado para feminino
+        populateDifficultyModeOptions(event.target.value); 
         if (event.target.value === 'female' && onboardingDifficultyModeSelect.value === 'god') {
             onboardingDifficultyModeSelect.value = 'hard';
         }
-        applyTheme(); // Aplica o tema imediatamente com base na seleção
+        applyTheme(event.target.value); 
     });
 
     function calculateDailyCaloricNeeds(weight, height, age, gender, activityFactor) {
@@ -609,33 +594,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const activityFactor = isFromOnboarding ? parseFloat(onboardingActivityFactorSelect.value) : parseFloat(document.getElementById('activity-factor').value);
         const targetDate = isFromOnboarding ? onboardingTargetDateInput.value : document.getElementById('target-date').value;
         const difficultyMode = isFromOnboarding ? onboardingDifficultyModeSelect.value : difficultyModeSelect.value;
-        const manualRankValue = isFromOnboarding ? 0 : parseInt(manualCurrentRankInput.value); // No onboarding, rank é 0
+        const manualRankValue = isFromOnboarding ? 0 : parseInt(manualCurrentRankInput.value); 
 
         if (!name || isNaN(age) || isNaN(height) || isNaN(initialWeight) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
             if (!suppressAlert) alert('Ops! 🤠 Parece que tu esqueceu de preencher algo ou preencheu errado. Dá uma olhada nos campos destacados!');
-            return false; // Retorna falso para indicar que o salvamento falhou
+            return false; 
         }
 
         const calculatedDailyCaloricNeeds = calculateDailyCaloricNeeds(initialWeight, height, age, gender, activityFactor);
 
-        let newTargetCalories, newTargetProtein, newTargetCarbs, newTargetFats;
-        
-        // Se já existe userProfile, mantém as metas manuais se elas foram definidas
-        if (userProfile && userProfile.targetCalories && userProfile.targetProtein && userProfile.targetCarbs && userProfile.targetFats && !isFromOnboarding) {
-            newTargetCalories = userProfile.targetCalories;
-            newTargetProtein = userProfile.targetProtein;
-            newTargetCarbs = userProfile.targetCarbs;
-            newTargetFats = userProfile.targetFats;
-        } else {
-            // Caso contrário, calcula as metas iniciais com 20% de déficit de calorias, sem afetar a distribuição macro
-            const baseTargetCalories = Math.round(calculatedDailyCaloricNeeds);
-            newTargetCalories = Math.round(baseTargetCalories * 0.80); // 20% de déficit
-
-            // Distribuição padrão de macros (exemplo: 40% Proteína, 40% Carboidrato, 20% Gordura)
-            newTargetProtein = Math.round((newTargetCalories * 0.40) / 4); // 4 Kcal por grama de proteína
-            newTargetCarbs = Math.round((newTargetCalories * 0.40) / 4);   // 4 Kcal por grama de carboidrato
-            newTargetFats = Math.round((newTargetCalories * 0.20) / 9);     // 9 Kcal por grama de gordura
-        }
+        // Sempre recalcula as metas com base no perfil atualizado
+        const baseTargetCalories = Math.round(calculatedDailyCaloricNeeds);
+        const newTargetCalories = Math.round(baseTargetCalories * 0.80); 
+        const newTargetProtein = Math.round((newTargetCalories * 0.40) / 4); 
+        const newTargetCarbs = Math.round((newTargetCalories * 0.40) / 4);   
+        const newTargetFats = Math.round((newTargetCalories * 0.20) / 9);     
 
 
         userProfile = {
@@ -666,7 +639,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         recalculateDailyDataFromProfileAndStandards(); 
 
-        // Atualiza campos da página de configurações (se não estiver no onboarding)
         if (!isFromOnboarding) {
             userNameSpan.textContent = userProfile.name;
             document.getElementById('name').value = userProfile.name;
@@ -683,14 +655,12 @@ document.addEventListener('DOMContentLoaded', () => {
             difficultyModeSelect.value = userProfile.difficultyMode || 'easy';
             manualCurrentRankInput.value = currentStreak;
 
-            // Atualiza os campos de ajuste manual de metas após salvar o perfil
             manualTargetCaloriesInput.value = userProfile.targetCalories;
             manualTargetProteinInput.value = userProfile.targetProtein;
             manualTargetCarbsInput.value = userProfile.targetCarbs;
             manualTargetFatsInput.value = userProfile.targetFats;
         }
         
-        // Atualiza o nome no título da tela final do onboarding
         const finalOnboardingNameDisplay = document.getElementById('final-onboarding-name-display');
         if (finalOnboardingNameDisplay) {
             finalOnboardingNameDisplay.textContent = name;
@@ -703,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Perfil salvo e o app está pronto para uso!');
             showPage('home-page');
         } 
-        return true; // Retorna verdadeiro para indicar que o salvamento foi bem-sucedido
+        return true; 
     }
 
     function saveManualTargets() {
@@ -726,14 +696,13 @@ document.addEventListener('DOMContentLoaded', () => {
         userProfile.targetProtein = protein;
         userProfile.targetCarbs = carbs;
         userProfile.targetFats = fats;
-        userProfile.targetCalories = calculatedKcal; // Atualiza KCAL com base nos macros
+        userProfile.targetCalories = calculatedKcal; 
 
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
         
         updateProgressBars();
         alert('Metas ajustadas manualmente e Kcal recalculadas!');
 
-        // Garante que os campos de calorias reflitam o cálculo
         manualTargetCaloriesInput.value = calculatedKcal;
     }
 
@@ -755,7 +724,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Garante que dailyData esteja sincronizado com as metas do userProfile antes de atualizar as barras
         const todayLocaleString = getDateOnly(new Date()).toLocaleDateString('pt-BR');
         if (dailyData.date !== todayLocaleString) {
              recalculateDailyDataFromProfileAndStandards();
@@ -764,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let caloriesPercentage = (dailyData.consumedCalories / userProfile.targetCalories) * 100;
         caloriesPercentage = Math.min(caloriesPercentage, 100);
         caloriesProgressBar.style.width = `${caloriesPercentage}%`;
-        caloriesProgressBar.classList.remove('red-bar', 'blue-bar'); // Remove classes antigas
+        caloriesProgressBar.classList.remove('red-bar', 'blue-bar'); 
         if (dailyData.consumedCalories > userProfile.targetCalories) {
             caloriesProgressBar.classList.add('red-bar');
         } else {
@@ -1503,12 +1471,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     profileForm.addEventListener('submit', (event) => saveProfile(event, false, true));
 
-    // Event listener para o novo botão de salvar metas manuais
-    if (saveManualTargetsBtn) { // Verifica se o elemento existe
+    if (saveManualTargetsBtn) { 
         saveManualTargetsBtn.addEventListener('click', saveManualTargets);
     }
 
-    // Event listeners para recalcular Kcal ao mudar macros manualmente
     if (manualTargetProteinInput) { manualTargetProteinInput.addEventListener('input', () => {
         const protein = parseFloat(manualTargetProteinInput.value) || 0;
         const carbs = parseFloat(manualTargetCarbsInput.value) || 0;
@@ -1528,7 +1494,6 @@ document.addEventListener('DOMContentLoaded', () => {
         manualTargetCaloriesInput.value = Math.round((protein * 4) + (carbs * 4) + (fats * 9));
     });}
 
-    // Event listeners para os botões de ocultar/mostrar
     if (toggleAddCustomFoodBtn) {
         toggleAddCustomFoodBtn.addEventListener('click', () => {
             if (addCustomFoodSection.style.display === 'none' || addCustomFoodSection.style.display === '') {
@@ -1546,7 +1511,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (adjustTargetsSection.style.display === 'none' || adjustTargetsSection.style.display === '') {
                 adjustTargetsSection.style.display = 'block';
                 toggleAdjustTargetsBtn.textContent = 'Esconder Ajuste de Metas';
-                // Garante que os valores atuais do perfil sejam carregados ao abrir
                 if (userProfile) {
                     manualTargetCaloriesInput.value = userProfile.targetCalories;
                     manualTargetProteinInput.value = userProfile.targetProtein;
@@ -1771,7 +1735,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gender = userProfile.gender;
 
         checkinSleep.style.display = 'flex';
-        checkinDiet.style.display = 'flex'; // Diet is always visible now for all modes
+        checkinDiet.style.display = 'flex'; 
 
         if (mode === 'easy') {
             checkinWorkout.style.display = 'none';
@@ -1782,7 +1746,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (mode === 'god' && gender === 'male') {
             checkinWorkout.style.display = 'flex';
             checkinNofap.style.display = 'flex';
-        } else { // Fallback for 'god' mode with female or unexpected mode
+        } else { 
             checkinWorkout.style.display = 'none';
             checkinNofap.style.display = 'none';
         }
@@ -1816,12 +1780,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (mode === 'god' && gender === 'male') {
                 allRequiredChecked = sleepChecked && workoutChecked && dietChecked && nofapChecked;
             } else if (mode === 'god' && gender === 'female') {
-                allRequiredChecked = sleepChecked && workoutChecked && dietChecked; // NoFap not applicable for female
+                allRequiredChecked = sleepChecked && workoutChecked && dietChecked; 
             } else {
-                allRequiredChecked = sleepChecked && dietChecked; // Default to easy if mode is unknown
+                allRequiredChecked = sleepChecked && dietChecked; 
             }
         } else {
-            allRequiredChecked = sleepChecked && dietChecked; // Default without profile
+            allRequiredChecked = sleepChecked && dietChecked; 
         }
 
         const existingCheckinEntryIndex = checkinHistory.findIndex(entry => entry.date === todayLocaleString);
@@ -1834,20 +1798,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (allRequiredChecked) {
             if (lastSuccessfulCheckinDay) {
                 const diffDays = Math.round((today.getTime() - lastSuccessfulCheckinDay.getTime()) / (1000 * 60 * 60 * 24));
-                if (diffDays === 1) { // If last checkin was yesterday, increment streak
+                if (diffDays === 1) { 
                     currentStreak++;
-                } else if (diffDays > 1) { // If last checkin was more than 1 day ago, reset streak to 1
+                } else if (diffDays > 1) { 
                     currentStreak = 1;
-                } else { // If checkin on same day, just keep streak
-                    // currentStreak remains unchanged
+                } else { 
                 }
-            } else { // First successful checkin ever or after a long break
+            } else { 
                 currentStreak = 1;
             }
             lastSuccessfulCheckinDate = today.toISOString();
         } else {
-            // If not all required are checked, and there was a streak, break it
-            // Only break streak if it was previously successful for today, or if it's a new day and conditions aren't met
             if (existingCheckinEntryIndex !== -1) {
                 const previousState = checkinHistory[existingCheckinEntryIndex];
                 let wasPreviouslyAllRequiredChecked = false;
@@ -1872,7 +1833,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.removeItem('lastSuccessfulCheckinDate');
                 }
             } else if (currentStreak > 0 && lastSuccessfulCheckinDay && Math.round((today.getTime() - lastSuccessfulCheckinDay.getTime()) / (1000 * 60 * 60 * 24)) === 0) {
-                // If trying to checkin on the same day but not meeting requirements, and there was a streak, break it
                 currentStreak = 0;
                 localStorage.removeItem('lastSuccessfulCheckinDate');
             }
@@ -2152,7 +2112,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'Fácil (Dieta): Você precisa apenas registrar que Dormiu bem e que fez a Dieta corretamente.\n\n' +
             'Hard (Dieta e Treino): Além de Dormir bem e fazer a Dieta corretamente, você também precisa registrar que Fez o treino.\n\n';
         
-        // APENAS ADICIONA A EXPLICAÇÃO DO MODO GOD SE O GÊNERO ATUAL FOR MASCULINO
         if (onboardingGenderSelect.value === 'male' || (userProfile && userProfile.gender === 'male')) { 
             helpText += 'God (Dieta, Treino e NoFap): Para este modo, todos os itens (Dormiu bem, Fez o treino, Dieta corretamente e NoFap firme?) são obrigatórios para o avanço de nível. Escolha este modo para o desafio máximo!';
         }
@@ -2167,25 +2126,22 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('A "Data Final da Meta de Peso" é crucial! Ela é usada para projetar um gráfico de peso esperado que você deve seguir para atingir seu objetivo. Para um bom progresso, seu peso atual no gráfico deve sempre estar abaixo (para perda de peso) ou acima (para ganho de peso) da linha do peso esperado. É o seu guia visual para o sucesso!');
     });
 
-    // --- Onboarding Logic ---
-    // Removido o event listener do onboardingStartBtn, pois ele não existirá mais.
-
     nextStepBtn.addEventListener('click', () => {
-        // Validação da etapa atual antes de avançar
         if (!validateOnboardingStep(currentStepIndex)) {
             return;
         }
 
-        if (currentStepIndex < onboardingSteps.length - 1) {
+        if (currentStepIndex === -1) { // Se estiver na tela de boas-vindas
+            currentStepIndex = 0; // Vai para a primeira etapa do formulário
+            showOnboardingStep(currentStepIndex);
+        } else if (currentStepIndex < onboardingSteps.length - 1) {
             currentStepIndex++;
             showOnboardingStep(currentStepIndex);
         } else {
-            // Última etapa: salvar perfil e finalizar onboarding
-            if (saveProfile(null, false, false, true)) { // Passar isFromOnboarding como true
-                localStorage.setItem('isFirstTimeUser', 'false'); // Marca que o usuário já fez o onboarding
-                onboardingScreen.style.display = 'none';
+            if (saveProfile(null, false, false, true)) { 
+                localStorage.setItem('isFirstTimeUser', 'false'); 
+                onboardingScreen.style.display = 'none'; 
                 showPage('home-page');
-                // Adiciona o nome do usuário na mensagem final
                 const userName = userProfile ? userProfile.name : 'Campeão';
                 alert(`Tudo pronto, ${userName}! Agora você está pronto para dominar o jogo!`);
             }
@@ -2196,52 +2152,42 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentStepIndex > 0) {
             currentStepIndex--;
             showOnboardingStep(currentStepIndex);
-        } else {
-            // Se estiver na primeira etapa (nome), não faz nada ou esconde o botão,
-            // ou redireciona de volta para a tela de boas-vindas se ela fosse reutilizada (mas não é mais, pois o start foi removido)
-             onboardingScreen.style.display = 'none'; // Esconde o onboarding se voltar da primeira tela
-             localStorage.setItem('isFirstTimeUser', 'false'); // Para não mostrar de novo se o usuário desistir no meio
-             showPage('settings-page'); // Ou para a página de configurações para preencher manualmente
+        } else if (currentStepIndex === 0) { 
+            showOnboardingStep('welcome'); 
         }
     });
 
     function showOnboardingStep(stepIdentifier) {
         if (stepIdentifier === 'welcome') {
-            onboardingWelcomeScreen.style.display = 'block';
-            onboardingSteps.forEach(step => step.classList.remove('active'));
-            prevStepBtn.style.display = 'none';
-            // O botão "Próximo" já está visível por padrão e funcionará como o "Começar"
-            nextStepBtn.textContent = 'Avançar'; // Garante que o texto seja "Avançar"
-            currentStepIndex = -1; // Indica que está na tela de boas-vindas (fora do array de steps)
+            onboardingWelcomeScreen.classList.add('active'); 
+            onboardingSteps.forEach(step => {
+                if (step.id !== 'welcome-step') {
+                    step.classList.remove('active');
+                }
+            });
+            prevStepBtn.style.display = 'none'; 
+            nextStepBtn.textContent = 'Próximo'; 
+            currentStepIndex = -1; 
             return;
         }
 
-        // Se o identificador for um índice, trata como tal
         let index = typeof stepIdentifier === 'number' ? stepIdentifier : 0; 
-        if (stepIdentifier === 'welcome') { // Caso ainda seja chamado com 'welcome' após o primeiro clique
-            index = 0; // Vai para o primeiro passo real (Nome)
-        }
-
+        
         onboardingSteps.forEach((step, idx) => {
-            step.classList.remove('active');
+            step.classList.remove('active'); 
             if (idx === index) {
-                step.classList.add('active');
+                step.classList.add('active'); 
             }
         });
         currentStepIndex = index;
 
-        // Gerencia a visibilidade dos botões de navegação
-        prevStepBtn.style.display = (currentStepIndex === 0) ? 'none' : 'block'; // Oculta "Voltar" na primeira etapa de input
+        prevStepBtn.style.display = (currentStepIndex === 0) ? 'none' : 'block';
         nextStepBtn.textContent = (currentStepIndex === onboardingSteps.length - 1) ? 'Finalizar' : 'Próximo';
         
-        // Se a primeira etapa for a de nome, o botão "Voltar" deve ir para a welcome screen
-        // Mas como 'welcome' agora é o 'currentStepIndex = -1', o prevStepBtn já cuida disso.
-        // Se o currentStepIndex é 0 (primeira etapa de formulário), o botão 'Voltar' volta para a tela de boas-vindas
-        if (currentStepIndex === 0) {
-             prevStepBtn.style.display = 'block'; // Mostra o botão "Voltar" para a primeira etapa de input
+        if (currentStepIndex !== -1) { 
+            onboardingWelcomeScreen.classList.remove('active');
         }
 
-        // Se for a última tela (final-info), atualiza o nome do usuário
         if (currentStepIndex === onboardingSteps.length -1) {
             const finalOnboardingNameDisplay = document.getElementById('final-onboarding-name-display');
             if (finalOnboardingNameDisplay && onboardingNameInput.value) {
@@ -2253,7 +2199,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function validateOnboardingStep(stepIndex) {
         let isValid = true;
         
-        // Se for a tela de boas-vindas, não há validação de input
         if (stepIndex === -1) { 
             return true;
         }
@@ -2279,16 +2224,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return isValid;
     }
 
-    // Inicializa a data final da meta com uma data futura (ex: 3 meses a partir de hoje)
     const initialTargetDate = new Date();
     initialTargetDate.setMonth(initialTargetDate.getMonth() + 3);
     const formattedInitialTargetDate = initialTargetDate.toISOString().split('T')[0];
     onboardingTargetDateInput.value = formattedInitialTargetDate;
 
-    // Garante que o onboardingGenderSelect esteja preenchido e mude o tema ao iniciar
     if (onboardingGenderSelect) {
-        onboardingGenderSelect.value = 'male'; // Default para masculino
-        populateDifficultyModeOptions('male'); // Popula as opções de dificuldade
-        applyTheme(); // Aplica o tema inicial
+        onboardingGenderSelect.value = 'male'; 
+        populateDifficultyModeOptions('male'); 
     }
+
+    initApp(); 
 });
