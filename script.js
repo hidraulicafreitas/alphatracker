@@ -403,9 +403,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentStreak = 0;
                 localStorage.removeItem('lastSuccessfulCheckinDate');
             }
-        } else {
+        } else if (currentStreak > 0) {
+            // Se tem uma sequência mas não tem data, algo está errado, reseta.
             currentStreak = 0;
         }
+        
         localStorage.setItem('currentStreak', currentStreak);
 
 
@@ -584,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveProfile(event, suppressAlert = false, fromSettingsPage = false, isFromOnboarding = false) {
         if (event) event.preventDefault();
-
+    
         const name = isFromOnboarding ? onboardingNameInput.value : document.getElementById('name').value;
         const age = isFromOnboarding ? parseInt(onboardingAgeInput.value) : parseInt(document.getElementById('age').value);
         const height = isFromOnboarding ? parseInt(onboardingHeightInput.value) : parseInt(document.getElementById('height').value);
@@ -595,21 +597,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetDate = isFromOnboarding ? onboardingTargetDateInput.value : document.getElementById('target-date').value;
         const difficultyMode = isFromOnboarding ? onboardingDifficultyModeSelect.value : difficultyModeSelect.value;
         const manualRankValue = isFromOnboarding ? 0 : parseInt(manualCurrentRankInput.value); 
-
-        if (!name || isNaN(age) || isNaN(height) || isNaN(initialWeight) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
-            if (!suppressAlert) alert('Ops! 🤠 Parece que tu esqueceu de preencher algo ou preencheu errado. Dá uma olhada nos campos destacados!');
+    
+        if (!name || isNaN(age) || isNaN(height) || height < 100 || height > 999 || isNaN(initialWeight) || isNaN(targetWeight) || isNaN(activityFactor) || !targetDate) {
+            if (!suppressAlert) alert('Ops! 🤠 Parece que tu esqueceu de preencher algo ou preencheu errado. A altura deve ser um número de 3 dígitos (em cm). Dá uma olhada!');
             return false; 
         }
-
+    
         const calculatedDailyCaloricNeeds = calculateDailyCaloricNeeds(initialWeight, height, age, gender, activityFactor);
-
+    
         const baseTargetCalories = Math.round(calculatedDailyCaloricNeeds);
         const newTargetCalories = Math.round(baseTargetCalories * 0.80); 
         const newTargetProtein = Math.round((newTargetCalories * 0.40) / 4); 
         const newTargetCarbs = Math.round((newTargetCalories * 0.40) / 4);   
         const newTargetFats = Math.round((newTargetCalories * 0.20) / 9);     
-
-
+    
         userProfile = {
             name, age, height, gender, initialWeight, targetWeight, activityFactor, targetDate, difficultyMode,
             dailyCaloricNeeds: Math.round(calculatedDailyCaloricNeeds), 
@@ -618,26 +619,41 @@ document.addEventListener('DOMContentLoaded', () => {
             targetCarbs: newTargetCarbs,
             targetFats: newTargetFats
         };
-
+    
         localStorage.setItem('userProfile', JSON.stringify(userProfile)); 
         
         if (weightHistory.length === 0) {
             addWeightEntry(initialWeight, getDateOnly(new Date()).toLocaleDateString('pt-BR'), false);
         }
-
-        if (!isFromOnboarding && fromSettingsPage && !isNaN(manualRankValue) && manualRankValue >= 0 && manualRankValue !== currentStreak) {
+    
+        if (!isFromOnboarding && fromSettingsPage && !isNaN(manualRankValue) && manualRankValue >= 0) {
             currentStreak = manualRankValue;
             localStorage.setItem('currentStreak', currentStreak);
+    
             if (currentStreak > maxStreak) {
                 maxStreak = currentStreak;
+                localStorage.setItem('maxStreak', maxStreak);
             }
+    
+            // *** FIX: Validate the manual streak with a corresponding date ***
+            if (currentStreak > 0) {
+                const today = getDateOnly(new Date());
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+                lastSuccessfulCheckinDate = yesterday.toISOString();
+                localStorage.setItem('lastSuccessfulCheckinDate', lastSuccessfulCheckinDate);
+            } else {
+                lastSuccessfulCheckinDate = null;
+                localStorage.removeItem('lastSuccessfulCheckinDate');
+            }
+    
             updateCheckinStreakDisplay();
             updateUserRank();
             if (!suppressAlert) alert('Nível atual ajustado manualmente!');
         }
-
+    
         recalculateDailyDataFromProfileAndStandards(); 
-
+    
         if (!isFromOnboarding) {
             userNameSpan.textContent = userProfile.name;
             document.getElementById('name').value = userProfile.name;
@@ -653,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
             populateDifficultyModeOptions(userProfile.gender);
             difficultyModeSelect.value = userProfile.difficultyMode || 'easy';
             manualCurrentRankInput.value = currentStreak;
-
+    
             manualTargetCaloriesInput.value = userProfile.targetCalories;
             manualTargetProteinInput.value = userProfile.targetProtein;
             manualTargetCarbsInput.value = userProfile.targetCarbs;
@@ -663,7 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (finalOnboardingNameDisplay) {
             finalOnboardingNameDisplay.textContent = name;
         }
-
+    
         updateProgressBars(); 
         updateWeightPrediction(); 
         updateCheckinVisibility();
@@ -673,6 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } 
         return true; 
     }
+    
 
     function saveManualTargets() {
         if (!userProfile) {
@@ -2125,20 +2142,32 @@ document.addEventListener('DOMContentLoaded', () => {
         let isValid = true;
         const currentStepElement = onboardingSteps[stepIndex];
         const inputs = currentStepElement.querySelectorAll('input[required], select[required]');
-
+    
         inputs.forEach(input => {
             input.classList.remove('invalid');
-            if (input.type === 'number' && (isNaN(parseFloat(input.value)) || parseFloat(input.value) <= 0)) {
-                isValid = false;
-                input.classList.add('invalid');
+            let isStepValid = true;
+    
+            if (input.id === 'onboarding-height') {
+                const heightValue = parseInt(input.value);
+                if (isNaN(heightValue) || heightValue < 100 || heightValue > 999) {
+                    isStepValid = false;
+                }
+            } else if (input.type === 'number') {
+                if (isNaN(parseFloat(input.value)) || parseFloat(input.value) <= 0) {
+                    isStepValid = false;
+                }
             } else if (!input.value.trim()) {
+                isStepValid = false;
+            }
+    
+            if (!isStepValid) {
                 isValid = false;
                 input.classList.add('invalid');
             }
         });
-
+    
         if (!isValid) {
-            alert('Ops! 🤠 Parece que tu esqueceu de preencher algo ou preencheu errado. Dá uma olhada nos campos destacados!');
+            alert('Ops! 🤠 Parece que tu esqueceu de preencher algo ou preencheu errado. A altura deve ser um número de 3 dígitos (em cm). Dá uma olhada nos campos destacados!');
         }
         return isValid;
     }
