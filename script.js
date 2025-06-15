@@ -22,10 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const caloriesProgressBar = document.getElementById('calories-progress');
     const caloriesNum = document.getElementById('calories-num');
     const proteinProgressBar = document.getElementById('protein-progress');
-    const proteinNum = document = document.getElementById('protein-num');
+    const proteinNum = document.getElementById('protein-num'); // Corrigido aqui
     const carbsProgressBar = document.getElementById('carbs-progress');
     const carbsNum = document.getElementById('carbs-num');
-    const fatsProgressBar = document = document.getElementById('fats-progress');
+    const fatsProgressBar = document.getElementById('fats-progress'); // Corrigido aqui
     const fatsNum = document.getElementById('fats-num');
     const weightProgressBar = document.getElementById('weight-progress');
     const weightNum = document.getElementById('weight-num');
@@ -77,12 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Onboarding Elements
     const onboardingScreen = document.getElementById('onboarding-screen');
-    const onboardingWelcomeScreen = document.getElementById('welcome-step'); // A primeira tela de boas-vindas
-    const onboardingFormSteps = Array.from(document.querySelectorAll('.onboarding-container .onboarding-step:not(#welcome-step)')); // Apenas os passos de formulário
-    const nextStepBtn = document.getElementById('next-step-btn'); // Declarar no topo
-    const prevStepBtn = document.getElementById('prev-step-btn'); // Declarar no topo
-
-    let currentStepIndex = -1; // -1 para a tela de boas-vindas inicial
+    const onboardingSteps = Array.from(document.querySelectorAll('.onboarding-container .onboarding-step'));
+    const nextStepBtn = document.getElementById('next-step-btn');
+    const prevStepBtn = document.getElementById('prev-step-btn');
+    let currentStepIndex = 0;
 
     // Onboarding Form Inputs
     const onboardingNameInput = document.getElementById('onboarding-name');
@@ -94,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const onboardingTargetDateInput = document.getElementById('onboarding-target-date');
     const onboardingActivityFactorSelect = document.getElementById('onboarding-activity-factor');
     const onboardingDifficultyModeSelect = document.getElementById('onboarding-difficulty-mode');
+    const finalOnboardingNameDisplay = document.getElementById('final-onboarding-name-display');
 
 
     // --- Application Data (simulating a "database" with LocalStorage) ---
@@ -282,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isFirstTimeUser) {
             onboardingScreen.style.display = 'flex';
-            showOnboardingStep('welcome'); 
+            showOnboardingStep(0); 
             applyTheme('male'); 
         } else {
             onboardingScreen.style.display = 'none'; 
@@ -661,7 +660,6 @@ document.addEventListener('DOMContentLoaded', () => {
             manualTargetFatsInput.value = userProfile.targetFats;
         }
         
-        const finalOnboardingNameDisplay = document.getElementById('final-onboarding-name-display');
         if (finalOnboardingNameDisplay) {
             finalOnboardingNameDisplay.textContent = name;
         }
@@ -738,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             caloriesProgressBar.classList.add('blue-bar');
         }
-        caloriesNum.textContent = `${dailyData.consumedCalories} / ${userProfile.targetCalories} Kcal`;
+        caloriesNum.textContent = `${Math.round(dailyData.consumedCalories)} / ${userProfile.targetCalories} Kcal`;
 
 
         let proteinPercentage = (dailyData.consumedProtein / userProfile.targetProtein) * 100;
@@ -1037,6 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function normalizeString(str) {
+        if (!str) return '';
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     }
 
@@ -1054,7 +1053,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mealGroupDiv.innerHTML = `
                 <h4>
                     ${group.name}
-                    <span class="meal-total-macros">Total: ${group.totalKcal} Kcal | P: ${group.totalProtein.toFixed(1)}g | C: ${group.totalCarbs.toFixed(1)}g | G: ${group.totalFats.toFixed(1)}g</span>
+                    <span class="meal-total-macros">Total: ${Math.round(group.totalKcal)} Kcal | P: ${group.totalProtein.toFixed(1)}g | C: ${group.totalCarbs.toFixed(1)}g | G: ${group.totalFats.toFixed(1)}g</span>
                     <button class="remove-meal-group-btn" data-group-index="${groupIndex}">X</button>
                 </h4>
                 <ul class="meal-items-list" id="meal-list-${groupIndex}">
@@ -1062,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <li class="meal-item">
                             <div class="meal-item-details">
                                 ${food.name} (${food.quantity}g) ${food.isDailyStandard ? '<span class="daily-standard-tag">(Padrão Diário)</span>' : ''}
-                                <span>${food.kcal} Kcal | P: ${food.protein.toFixed(1)}g | C: ${food.carbs.toFixed(1)}g | G: ${food.fats.toFixed(1)}g</span>
+                                <span>${Math.round(food.kcal)} Kcal | P: ${food.protein.toFixed(1)}g | C: ${food.carbs.toFixed(1)}g | G: ${food.fats.toFixed(1)}g</span>
                             </div>
                             <div class="meal-item-actions">
                                 <button class="toggle-daily-standard-btn" data-group-index="${groupIndex}" data-food-index="${foodIndex}">
@@ -1101,12 +1100,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataList = form.querySelector(`datalist#food-suggestions-${form.dataset.groupIndex}`);
 
             searchInput.addEventListener('input', () => handleFoodSearch(searchInput, dataList));
-            searchInput.addEventListener('change', (e) => {
-                const isValidFood = foodDatabase.some(food => normalizeString(food.name) === normalizeString(e.target.value));
-                if (!isValidFood) {
-                    e.target.value = '';
-                }
-            });
         });
     }
 
@@ -1240,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pastDailySummaries.forEach(summary => {
             const listItem = document.createElement('li');
             listItem.innerHTML = `
-                <strong>${summary.date}:</strong> Kcal: ${summary.calories} | P: ${summary.protein.toFixed(1)}g | C: ${summary.carbs.toFixed(1)}g | G: ${summary.fats.toFixed(1)}g
+                <strong>${summary.date}:</strong> Kcal: ${Math.round(summary.calories)} | P: ${summary.protein.toFixed(1)}g | C: ${summary.carbs.toFixed(1)}g | G: ${summary.fats.toFixed(1)}g
             `;
             pastMealsList.appendChild(listItem);
         });
@@ -1258,14 +1251,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         customFoods.forEach((food, index) => {
             const listItem = document.createElement('li');
+            const originalIndex = foodDatabase.findIndex(dbFood => dbFood.name === food.name);
             listItem.innerHTML = `
                 <div class="food-details">
                     <strong>${food.name}</strong>
                     <span>${food.kcalPer100g} Kcal | P: ${food.proteinPer100g}g | C: ${food.carbsPer100g}g | G: ${food.fatsPer100g}g</span>
                 </div>
                 <div class="food-actions">
-                    <button class="edit-custom-food-btn" data-index="${foodDatabase.indexOf(food)}">Editar</button>
-                    <button class="delete-custom-food-btn" data-index="${foodDatabase.indexOf(food)}">Excluir</button>
+                    <button class="edit-custom-food-btn" data-index="${originalIndex}">Editar</button>
+                    <button class="delete-custom-food-btn" data-index="${originalIndex}">Excluir</button>
                 </div>
             `;
             customFoodList.appendChild(listItem);
@@ -1401,16 +1395,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (weightChart.data.datasets.length > 1 && weightChart.data.datasets[1].label === 'Peso Esperado (Kg)') {
                     weightChart.data.datasets[1].data = expectedWeightData;
                 } else {
-                    weightChart.data.datasets.push({
-                        label: 'Peso Esperado (Kg)',
-                        data: expectedWeightData,
-                        borderColor: 'rgb(230, 126, 34)',
-                        backgroundColor: 'rgba(230, 126, 34, 0.1)',
-                        borderDash: [5, 5],
-                        tension: 0.1,
-                        fill: false,
-                        pointRadius: 0
-                    });
+                    if (weightChart.data.datasets.length <= 1) {
+                        weightChart.data.datasets.push({
+                            label: 'Peso Esperado (Kg)',
+                            data: expectedWeightData,
+                            borderColor: 'rgb(230, 126, 34)',
+                            backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                            borderDash: [5, 5],
+                            tension: 0.1,
+                            fill: false,
+                            pointRadius: 0
+                        });
+                    }
                 }
             } else {
                 if (weightChart.data.datasets.length > 1 && weightChart.data.datasets[1].label === 'Peso Esperado (Kg)') {
@@ -1432,7 +1428,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(pageId).classList.add('active');
 
         navButtons.forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`nav-${pageId.replace('-page', '')}`).classList.add('active');
+        const navButton = document.getElementById(`nav-${pageId.replace('-page', '')}`);
+        if (navButton) {
+            navButton.classList.add('active');
+        }
 
         if (pageId === 'weight-page') {
             renderWeightHistory();
@@ -1470,24 +1469,17 @@ document.addEventListener('DOMContentLoaded', () => {
         saveManualTargetsBtn.addEventListener('click', saveManualTargets);
     }
 
-    if (manualTargetProteinInput) { manualTargetProteinInput.addEventListener('input', () => {
-        const protein = parseFloat(manualTargetProteinInput.value) || 0;
-        const carbs = parseFloat(manualTargetCarbsInput.value) || 0;
-        const fats = parseFloat(manualTargetFatsInput.value) || 0;
-        manualTargetCaloriesInput.value = Math.round((protein * 4) + (carbs * 4) + (fats * 9));
-    });}
-    if (manualTargetCarbsInput) { manualTargetCarbsInput.addEventListener('input', () => {
-        const protein = parseFloat(manualTargetProteinInput.value) || 0;
-        const carbs = parseFloat(manualTargetCarbsInput.value) || 0;
-        const fats = parseFloat(manualTargetFatsInput.value) || 0;
-        manualTargetCaloriesInput.value = Math.round((protein * 4) + (carbs * 4) + (fats * 9));
-    });}
-    if (manualTargetFatsInput) { manualTargetFatsInput.addEventListener('input', () => {
-        const protein = parseFloat(manualTargetProteinInput.value) || 0;
-        const carbs = parseFloat(manualTargetCarbsInput.value) || 0;
-        const fats = parseFloat(manualTargetFatsInput.value) || 0;
-        manualTargetCaloriesInput.value = Math.round((protein * 4) + (carbs * 4) + (fats * 9));
-    });}
+    const macroInputs = [manualTargetProteinInput, manualTargetCarbsInput, manualTargetFatsInput];
+    macroInputs.forEach(input => {
+        if(input) {
+            input.addEventListener('input', () => {
+                const protein = parseFloat(manualTargetProteinInput.value) || 0;
+                const carbs = parseFloat(manualTargetCarbsInput.value) || 0;
+                const fats = parseFloat(manualTargetFatsInput.value) || 0;
+                manualTargetCaloriesInput.value = Math.round((protein * 4) + (carbs * 4) + (fats * 9));
+            });
+        }
+    });
 
     if (toggleAddCustomFoodBtn) {
         toggleAddCustomFoodBtn.addEventListener('click', () => {
@@ -1521,9 +1513,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addMealGroupBtn.addEventListener('click', () => {
         const mealGroupName = prompt('Qual o nome do grupo de refeição? (Ex: Café da Manhã)');
-        if (mealGroupName) {
+        if (mealGroupName && mealGroupName.trim() !== "") {
             const newGroup = {
-                name: mealGroupName,
+                name: mealGroupName.trim(),
                 foods: [],
                 totalKcal: 0,
                 totalProtein: 0,
@@ -1531,10 +1523,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalFats: 0
             };
             dailyData.mealGroups.push(newGroup);
-            storedMealGroups.push(newGroup);
+            
+            const storedGroupExists = storedMealGroups.some(g => g.name === newGroup.name);
+            if (!storedGroupExists) {
+                storedMealGroups.push(JSON.parse(JSON.stringify(newGroup)));
+                localStorage.setItem('storedMealGroups', JSON.stringify(storedMealGroups));
+            }
 
             localStorage.setItem('dailyData', JSON.stringify(dailyData));
-            localStorage.setItem('storedMealGroups', JSON.stringify(storedMealGroups));
             renderMealGroups();
         }
     });
@@ -1554,10 +1550,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const foodInfo = foodDatabase.find(food => normalizeString(food.name) === normalizeString(foodName));
         if (foodInfo) {
             const factor = quantity / 100;
-            const kcal = Math.round(foodInfo.kcalPer100g * factor);
-            const protein = parseFloat((foodInfo.proteinPer100g * factor).toFixed(1));
-            const carbs = parseFloat((foodInfo.carbsPer100g * factor).toFixed(1));
-            const fats = parseFloat((foodInfo.fatsPer100g * factor).toFixed(1));
+            const kcal = foodInfo.kcalPer100g * factor;
+            const protein = foodInfo.proteinPer100g * factor;
+            const carbs = foodInfo.carbsPer100g * factor;
+            const fats = foodInfo.fatsPer100g * factor;
 
             const newFoodItem = {
                 name: foodInfo.name,
@@ -1601,11 +1597,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (storedGroup) {
                 const indexInStoredGroup = storedGroup.foods.findIndex(food =>
                     food.name === foodToRemove.name &&
-                    food.quantity === foodToRemove.quantity &&
-                    food.kcal === foodToRemove.kcal &&
-                    food.protein === foodToRemove.protein &&
-                    food.carbs === foodToRemove.carbs &&
-                    food.fats === foodToRemove.fats
+                    food.quantity === foodToRemove.quantity
                 );
                 if (indexInStoredGroup !== -1) {
                     storedGroup.foods.splice(indexInStoredGroup, 1);
@@ -1620,19 +1612,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyData.consumedCarbs -= foodToRemove.carbs;
         dailyData.consumedFats -= foodToRemove.fats;
 
-        dailyData.mealGroups[groupIndex].totalKcal -= foodToRemove.kcal;
-        dailyData.mealGroups[groupIndex].totalProtein -= foodToRemove.protein;
-        dailyData.mealGroups[groupIndex].totalCarbs -= foodToRemove.carbs;
-        dailyData.mealGroups[groupIndex].totalFats -= foodToRemove.fats;
-
+        recalculateGroupTotals(dailyData.mealGroups[groupIndex]);
         dailyData.mealGroups[groupIndex].foods.splice(foodIndex, 1);
-
-        if (dailyData.mealGroups[groupIndex].foods.length === 0) {
-            dailyData.mealGroups[groupIndex].totalKcal = 0;
-            dailyData.mealGroups[groupIndex].totalProtein = 0;
-            dailyData.mealGroups[groupIndex].totalCarbs = 0;
-            dailyData.mealGroups[groupIndex].totalFats = 0;
-        }
+        recalculateGroupTotals(dailyData.mealGroups[groupIndex]);
 
         localStorage.setItem('dailyData', JSON.stringify(dailyData));
         renderMealGroups();
@@ -1652,7 +1634,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dailyData.consumedFats -= groupToRemove.totalFats;
 
             dailyData.mealGroups.splice(groupIndex, 1);
-
             storedMealGroups = storedMealGroups.filter(group => group.name !== groupToRemoveName);
 
             localStorage.setItem('dailyData', JSON.stringify(dailyData));
@@ -1666,43 +1647,35 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleDailyStandard(event) {
         const groupIndex = parseInt(event.target.dataset.groupIndex);
         const foodIndex = parseInt(event.target.dataset.foodIndex);
-
-        const foodItem = dailyData.mealGroups[groupIndex].foods[foodIndex];
+        const dailyGroup = dailyData.mealGroups[groupIndex];
+        const foodItem = dailyGroup.foods[foodIndex];
         foodItem.isDailyStandard = !foodItem.isDailyStandard;
 
-        const storedGroup = storedMealGroups.find(g => g.name === dailyData.mealGroups[groupIndex].name);
+        let storedGroup = storedMealGroups.find(g => g.name === dailyGroup.name);
 
-        if (storedGroup) {
-            storedGroup.foods = storedGroup.foods.filter(food =>
-                !(food.name === foodItem.name &&
-                  food.quantity === foodItem.quantity &&
-                  food.kcal === foodItem.kcal &&
-                  food.protein === foodItem.protein &&
-                  food.carbs === foodItem.carbs &&
-                  food.fats === foodItem.fats)
-            );
-
-            if (foodItem.isDailyStandard) {
-                const clonedFood = JSON.parse(JSON.stringify(foodItem));
-                storedGroup.foods.push(clonedFood);
-            }
-            recalculateGroupTotals(storedGroup);
-        } else {
-            const newStoredGroup = {
-                name: dailyData.mealGroups[groupIndex].name,
-                foods: foodItem.isDailyStandard ? [JSON.parse(JSON.stringify(foodItem))] : [],
-                totalKcal: foodItem.isDailyStandard ? foodItem.kcal : 0,
-                totalProtein: foodItem.isDailyStandard ? foodItem.protein : 0,
-                totalCarbs: foodItem.isDailyStandard ? foodItem.carbs : 0,
-                totalFats: foodItem.isDailyStandard ? foodItem.fats : 0,
-            };
-            storedMealGroups.push(newStoredGroup);
+        if (!storedGroup) {
+            storedGroup = { name: dailyGroup.name, foods: [] };
+            storedMealGroups.push(storedGroup);
         }
 
-        localStorage.setItem('dailyData', JSON.stringify(dailyData));
+        const indexInStored = storedGroup.foods.findIndex(f => f.name === foodItem.name && f.quantity === foodItem.quantity);
+
+        if (foodItem.isDailyStandard) {
+            if (indexInStored === -1) {
+                storedGroup.foods.push(JSON.parse(JSON.stringify(foodItem)));
+            }
+        } else {
+            if (indexInStored !== -1) {
+                storedGroup.foods.splice(indexInStored, 1);
+            }
+        }
+        
+        recalculateGroupTotals(storedGroup);
         localStorage.setItem('storedMealGroups', JSON.stringify(storedMealGroups));
+        localStorage.setItem('dailyData', JSON.stringify(dailyData));
         renderMealGroups();
     }
+
 
     function recalculateGroupTotals(group) {
         group.totalKcal = 0;
@@ -1797,7 +1770,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentStreak++;
                 } else if (diffDays > 1) { 
                     currentStreak = 1;
-                } else { 
                 }
             } else { 
                 currentStreak = 1;
@@ -1893,27 +1865,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (existingEntryIndex !== -1) {
             const oldWeight = weightHistory[existingEntryIndex].weight;
             weightHistory[existingEntryIndex].weight = parseFloat(weight.toFixed(1));
-            weightHistory.sort((a, b) => {
-                const dateA = parseDateString(a.date);
-                const dateB = parseDateString(b.date);
-                return dateA.getTime() - dateB.getTime();
-            });
-            localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
-
-            if (showAlert) {
-                alert(`Registro de peso para ${date} atualizado de ${oldWeight.toFixed(1)} Kg para ${weight.toFixed(1)} Kg.`);
-            }
         } else {
             weightHistory.push({ date: date, weight: parseFloat(weight.toFixed(1)) });
-            weightHistory.sort((a, b) => {
-                const dateA = parseDateString(a.date);
-                const dateB = parseDateString(b.date);
-                return dateA.getTime() - dateB.getTime();
-            });
-            localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
-            if (showAlert) {
-                alert('Peso registrado com sucesso!');
-            }
+        }
+        
+        weightHistory.sort((a, b) => parseDateString(a.date) - parseDateString(b.date));
+        localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+        
+        if (showAlert) {
+            alert(existingEntryIndex !== -1 ? `Registro de peso para ${date} atualizado.` : 'Peso registrado com sucesso!');
         }
 
         renderWeightHistory();
@@ -1946,23 +1906,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         const duplicateIndex = weightHistory.findIndex((entry, i) =>
-            i !== index && entry.date === formattedNewDate && entry.weight === parseFloat(parsedNewWeight.toFixed(1))
+            i !== index && entry.date === formattedNewDate
         );
         if (duplicateIndex !== -1) {
-            alert('Já existe um registro de peso com essa data e peso. Por favor, ajuste os valores.');
+            alert('Já existe um registro de peso com essa data. Por favor, edite o registro existente ou escolha outra data.');
             return;
         }
-
 
         entryToEdit.weight = parseFloat(parsedNewWeight.toFixed(1));
         entryToEdit.date = formattedNewDate;
 
-        weightHistory.sort((a, b) => {
-            const dateA = parseDateString(a.date);
-            const dateB = parseDateString(b.date);
-            return dateA.getTime() - dateB.getTime();
-        });
-
+        weightHistory.sort((a, b) => parseDateString(a.date) - parseDateString(b.date));
         localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
 
         renderWeightHistory();
@@ -2015,7 +1969,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isCustom: true
         });
         localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
-        renderMealGroups();
         renderCustomFoodList();
         addCustomFoodForm.reset();
         alert(`Alimento "${customFoodName}" adicionado com sucesso!`);
@@ -2024,6 +1977,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function editCustomFood(event) {
         const index = parseInt(event.target.dataset.index);
         const foodToEdit = foodDatabase[index];
+        if (!foodToEdit.isCustom) {
+            alert('Você não pode editar alimentos padrão do sistema.');
+            return;
+        }
 
         const newName = prompt(`Editar nome de "${foodToEdit.name}". Novo nome:`, foodToEdit.name);
         if (newName === null || newName.trim() === '') return;
@@ -2054,7 +2011,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
         renderCustomFoodList();
-        renderMealGroups();
+        renderMealGroups(); // Update meal groups in case the food was used there
         alert(`Alimento "${foodToEdit.name}" atualizado com sucesso!`);
     };
 
@@ -2107,7 +2064,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'Fácil (Dieta): Você precisa apenas registrar que Dormiu bem e que fez a Dieta corretamente.\n\n' +
             'Hard (Dieta e Treino): Além de Dormir bem e fazer a Dieta corretamente, você também precisa registrar que Fez o treino.\n\n';
         
-        if (onboardingGenderSelect.value === 'male' || (userProfile && userProfile.gender === 'male')) { 
+        const genderToCheck = userProfile ? userProfile.gender : onboardingGenderSelect.value;
+        if (genderToCheck === 'male') { 
             helpText += 'God (Dieta, Treino e NoFap): Para este modo, todos os itens (Dormiu bem, Fez o treino, Dieta corretamente e NoFap firme?) são obrigatórios para o avanço de nível. Escolha este modo para o desafio máximo!';
         }
         alert(helpText);
@@ -2122,29 +2080,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     nextStepBtn.addEventListener('click', () => {
-        // Se estiver na tela de boas-vindas inicial (-1), avança para a primeira etapa do formulário (índice 0 do onboardingFormSteps).
-        if (currentStepIndex === -1) {
-            currentStepIndex = 0; 
-            showOnboardingStep(onboardingFormSteps[currentStepIndex].id); // Passa o ID da primeira etapa de formulário
-            return; 
-        }
-
-        // Validação da etapa atual antes de avançar para as próximas etapas de formulário.
-        // currentStepIndex refere-se ao índice dentro de onboardingFormSteps
         if (!validateOnboardingStep(currentStepIndex)) {
             return;
         }
-        
-        // Verifica se ainda há etapas de formulário para avançar
-        if (currentStepIndex < onboardingFormSteps.length - 1) {
+
+        if (currentStepIndex < onboardingSteps.length - 1) {
             currentStepIndex++;
-            showOnboardingStep(onboardingFormSteps[currentStepIndex].id);
+            showOnboardingStep(currentStepIndex);
         } else {
-            // Última etapa de formulário: salvar perfil e finalizar onboarding
-            if (saveProfile(null, false, false, true)) { 
-                localStorage.setItem('isFirstTimeUser', 'false'); 
-                onboardingScreen.style.display = 'none'; 
-                showPage('home-page');
+            if (saveProfile(null, true, false, true)) {
+                localStorage.setItem('isFirstTimeUser', 'false');
+                onboardingScreen.style.display = 'none';
+                initApp();
                 const userName = userProfile ? userProfile.name : 'Campeão';
                 alert(`Tudo pronto, ${userName}! Agora você está pronto para dominar o jogo!`);
             }
@@ -2154,65 +2101,39 @@ document.addEventListener('DOMContentLoaded', () => {
     prevStepBtn.addEventListener('click', () => {
         if (currentStepIndex > 0) {
             currentStepIndex--;
-            showOnboardingStep(onboardingFormSteps[currentStepIndex].id);
-        } else if (currentStepIndex === 0) { 
-            // Se estiver na primeira etapa de formulário (índice 0), volta para a tela de boas-vindas
-            currentStepIndex = -1; // Define o índice para a tela de boas-vindas
-            showOnboardingStep('welcome'); 
+            showOnboardingStep(currentStepIndex);
         }
-        // Se currentStepIndex for -1 (na tela de welcome), não faz nada ao clicar em "Voltar"
     });
 
-    function showOnboardingStep(stepId) {
-        // Esconde todas as etapas de formulário
-        onboardingFormSteps.forEach(step => {
-            step.classList.remove('active');
+    function showOnboardingStep(index) {
+        onboardingSteps.forEach((step, i) => {
+            step.classList.toggle('active', i === index);
         });
-        // Esconde a tela de boas-vindas (a menos que seja ela que será mostrada)
-        onboardingWelcomeScreen.classList.remove('active');
 
-        if (stepId === 'welcome') {
-            onboardingWelcomeScreen.classList.add('active');
-            prevStepBtn.style.display = 'none'; // Esconde o botão "Voltar" na tela de boas-vindas
-            nextStepBtn.textContent = 'Próximo'; // Garante o texto correto para o botão
-            currentStepIndex = -1; // Atualiza o índice para refletir a tela de boas-vindas
-        } else {
-            // Encontra a etapa de formulário correta pelo ID e a ativa
-            const targetStep = document.getElementById(stepId);
-            if (targetStep) {
-                targetStep.classList.add('active');
-            }
+        prevStepBtn.style.display = index === 0 ? 'none' : 'block';
+        nextStepBtn.textContent = index === onboardingSteps.length - 1 ? 'Finalizar' : 'Próximo';
 
-            // Atualiza o índice global para o índice DENTRO do array de etapas de formulário
-            currentStepIndex = onboardingFormSteps.findIndex(step => step.id === stepId);
-
-            // Gerencia a visibilidade dos botões de navegação e seus textos
-            prevStepBtn.style.display = 'block'; // O botão "Voltar" é visível nas etapas de formulário
-            nextStepBtn.textContent = (currentStepIndex === onboardingFormSteps.length - 1) ? 'Finalizar' : 'Próximo';
+        // Atualiza o nome na tela final assim que ela é exibida
+        if (onboardingSteps[index].id === 'step-final-info') {
+            const userName = onboardingNameInput.value || 'Guerreiro';
+            finalOnboardingNameDisplay.textContent = userName;
         }
     }
 
 
     function validateOnboardingStep(stepIndex) {
         let isValid = true;
-        
-        // Não valida a tela de boas-vindas
-        if (stepIndex === -1) { 
-            return true;
-        }
-
-        const currentStepElement = onboardingFormSteps[stepIndex]; // Pega o elemento da etapa de formulário correta
+        const currentStepElement = onboardingSteps[stepIndex];
         const inputs = currentStepElement.querySelectorAll('input[required], select[required]');
 
         inputs.forEach(input => {
+            input.classList.remove('invalid');
             if (input.type === 'number' && (isNaN(parseFloat(input.value)) || parseFloat(input.value) <= 0)) {
                 isValid = false;
                 input.classList.add('invalid');
             } else if (!input.value.trim()) {
                 isValid = false;
                 input.classList.add('invalid');
-            } else {
-                input.classList.remove('invalid');
             }
         });
 
@@ -2222,11 +2143,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return isValid;
     }
 
+    // Define uma data alvo inicial para o onboarding
     const initialTargetDate = new Date();
     initialTargetDate.setMonth(initialTargetDate.getMonth() + 3);
     const formattedInitialTargetDate = initialTargetDate.toISOString().split('T')[0];
     onboardingTargetDateInput.value = formattedInitialTargetDate;
 
+    // Garante que o modo de dificuldade do onboarding esteja populado
     if (onboardingGenderSelect) {
         onboardingGenderSelect.value = 'male'; 
         populateDifficultyModeOptions('male'); 
