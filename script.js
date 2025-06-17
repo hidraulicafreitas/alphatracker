@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const customFoodList = document.getElementById('custom-food-list');
     const pastMealsList = document.getElementById('past-meals-list');
     const dietFeedbackMessage = document.getElementById('diet-feedback-message');
+    const weightPageFeedbackMessage = document.getElementById('weight-page-feedback-message');
+    const deficitSuggestionContainer = document.getElementById('deficit-suggestion-container');
+    const createDeficitBtn = document.getElementById('create-deficit-btn');
+    const keepTargetsBtn = document.getElementById('keep-targets-btn');
 
     // Home Page Progress Elements
     const userNameSpan = document.getElementById('user-name');
@@ -265,6 +269,12 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Bolacha Maria', kcalPer100g: 420, proteinPer100g: 7, carbsPer100g: 75, fatsPer100g: 10, isCustom: false },
         { name: 'Doce de Leite', kcalPer100g: 320, proteinPer100g: 6, carbsPer100g: 55, fatsPer100g: 8, isCustom: false },
         { name: 'Brigadeiro', kcalPer100g: 450, proteinPer100g: 5, carbsPer100g: 60, fatsPer100g: 20, isCustom: false },
+        { name: 'Carne Moída Bovina de Segunda (Cozida)', kcalPer100g: 215, proteinPer100g: 26, carbsPer100g: 0, fatsPer100g: 12, isCustom: false },
+        { name: 'Paleta Bovina (Cozida)', kcalPer100g: 200, proteinPer100g: 28, carbsPer100g: 0, fatsPer100g: 9, isCustom: false },
+        { name: 'Agulha Bovina (Cozida)', kcalPer100g: 230, proteinPer100g: 25, carbsPer100g: 0, fatsPer100g: 14, isCustom: false },
+        { name: 'Músculo Bovino (Cozido)', kcalPer100g: 190, proteinPer100g: 30, carbsPer100g: 0, fatsPer100g: 7, isCustom: false },
+        { name: 'Tapioca (Goma Hidratada)', kcalPer100g: 230, proteinPer100g: 0, carbsPer100g: 55, fatsPer100g: 0, isCustom: false },
+        { name: 'Massinha Lisa (Pão)', kcalPer100g: 290, proteinPer100g: 9, carbsPer100g: 58, fatsPer100g: 2.5, isCustom: false },
     ];
     defaultFoods.forEach(defaultFood => {
         if (!foodDatabase.some(food => normalizeString(food.name) === normalizeString(defaultFood.name))) {
@@ -982,71 +992,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function checkWeeklyWeightProgress() {
-        dietFeedbackMessage.textContent = '';
-
+        deficitSuggestionContainer.style.display = 'none';
+        weightPageFeedbackMessage.textContent = '';
+    
         if (!userProfile || weightHistory.length < 2) {
             return;
         }
-
-        const today = getDateOnly(new Date());
-        const lastRecordedWeightDate = parseDateString(weightHistory[weightHistory.length - 1].date);
-
-        const daysSinceLastCheck = lastWeightCheckDate ?
-            Math.floor((today.getTime() - getDateOnly(lastWeightCheckDate).getTime()) / (1000 * 60 * 60 * 24)) :
-            7;
-
-        if (daysSinceLastCheck >= 7) {
-            let weight7DaysAgoEntry = null;
-            const sevenDaysBeforeLastEntry = new Date(lastRecordedWeightDate);
-            sevenDaysBeforeLastEntry.setDate(lastRecordedWeightDate.getDate() - 7);
-            
-            for (let i = weightHistory.length - 1; i >= 0; i--) {
-                const entryDate = parseDateString(weightHistory[i].date);
-                if (entryDate <= sevenDaysBeforeLastEntry) {
-                    weight7DaysAgoEntry = weightHistory[i];
-                    break;
-                }
+    
+        const lastActionDateStr = localStorage.getItem('deficitSuggestionActionTakenDate');
+        const lastWeightEntry = weightHistory[weightHistory.length - 1];
+        const lastWeightDate = parseDateString(lastWeightEntry.date);
+    
+        if (lastActionDateStr) {
+            const lastActionDate = new Date(lastActionDateStr);
+            if (lastActionDate.getTime() >= lastWeightDate.getTime()) {
+                console.log("Ação de déficit já tomada para esta pesagem. Não mostrar novamente.");
+                return; 
             }
-
-            if (!weight7DaysAgoEntry) {
-                weight7DaysAgoEntry = weightHistory[0];
+        }
+    
+        let previousWeightEntry = null;
+        for (let i = weightHistory.length - 2; i >= 0; i--) {
+            const entryDate = parseDateString(weightHistory[i].date);
+            const daysDiff = (lastWeightDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysDiff >= 7) {
+                previousWeightEntry = weightHistory[i];
+                break;
             }
-
-            if (!weight7DaysAgoEntry) {
-                return;
-            }
-
-            const currentWeight = weightHistory[weightHistory.length - 1].weight;
-            const weight7DaysAgo = weight7DaysAgoEntry.weight;
-            const weightChange = currentWeight - weight7DaysAgo;
-
-            if (userProfile.targetWeight < initialWeight) {
-                if (weightChange >= -0.5) {
-                    localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    dietFeedbackMessage.textContent = 'Você registrou seu peso com sucesso. Você perdeu menos de 500g na última semana, sugiro melhorar o foco nos próximos 7 dias para melhorar os resultados.';
-                    dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
-                } else {
-                    localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    dietFeedbackMessage.textContent = 'Ótimo progresso! Continue assim.';
-                    dietFeedbackMessage.style.color = 'var(--vibrant-blue)';
-                }
-            } else if (userProfile.targetWeight > initialWeight) {
-                if (weightChange <= 0.5) {
-                    localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    dietFeedbackMessage.textContent = 'Você ganhou menos de 500g na última semana. Considere aumentar as calorias se necessário.';
-                    dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
-                } else {
-                    dietFeedbackMessage.textContent = '';
-                }
+        }
+    
+        if (!previousWeightEntry) {
+            previousWeightEntry = weightHistory.length > 1 ? weightHistory[0] : null;
+        }
+    
+        if (!previousWeightEntry) {
+            return;
+        }
+        
+        const currentWeight = lastWeightEntry.weight;
+        const previousWeight = previousWeightEntry.weight;
+        const weightChange = currentWeight - previousWeight;
+    
+        if (userProfile.targetWeight < userProfile.initialWeight) { // Apenas para perda de peso
+            if (weightChange >= -0.5) { // Perdeu menos de 500g ou ganhou
+                weightPageFeedbackMessage.textContent = 'Notamos que você perdeu menos de 500g desde a última pesagem. Você seguiu a dieta 100%? Se sim, sugerimos criar um déficit de 10% para acelerar os resultados. Se não, sugerimos manter as metas e focar nos próximos 7 dias.';
+                deficitSuggestionContainer.style.display = 'block';
             } else {
-                if (Math.abs(weightChange) >= 0.5) {
-                    localStorage.setItem('lastWeightCheckDate', today.toISOString());
-                    dietFeedbackMessage.textContent = 'Seu peso variou mais de 500g na última semana. Sugiro rever suas metas para manutenção.';
-                    dietFeedbackMessage.style.color = 'var(--vibrant-orange)';
-                } else {
-                    dietFeedbackMessage.textContent = '';
-                }
+                deficitSuggestionContainer.style.display = 'none';
             }
+        } else {
+            deficitSuggestionContainer.style.display = 'none';
         }
     }
 
@@ -1470,6 +1465,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (pageId !== 'home-page') {
             dietFeedbackMessage.textContent = '';
+        }
+         if (pageId !== 'weight-page') {
+            deficitSuggestionContainer.style.display = 'none';
         }
     }
 
@@ -2094,6 +2092,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     helpTargetDateBtn.addEventListener('click', () => {
         alert('A "Data Final da Meta de Peso" é crucial! Ela é usada para projetar um gráfico de peso esperado que você deve seguir para atingir seu objetivo. Para um bom progresso, seu peso atual no gráfico deve sempre estar abaixo (para perda de peso) ou acima (para ganho de peso) da linha do peso esperado. É o seu guia visual para o sucesso!');
+    });
+
+    createDeficitBtn.addEventListener('click', () => {
+        if (!userProfile) return;
+    
+        const caloriesToCut = userProfile.targetCalories * 0.10; // Mudei pra 10%
+        const carbsToCutInGrams = caloriesToCut / 4;
+    
+        const newCarbs = Math.max(0, userProfile.targetCarbs - carbsToCutInGrams);
+        
+        // Mantém proteína e gordura, recalcula calorias totais
+        const newCalories = Math.round((userProfile.targetProtein * 4) + (newCarbs * 4) + (userProfile.targetFats * 9));
+    
+        userProfile.targetCalories = newCalories;
+        userProfile.targetCarbs = Math.round(newCarbs);
+    
+        localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        localStorage.setItem('deficitSuggestionActionTakenDate', new Date().toISOString());
+    
+        updateProgressBars();
+        renderUserProfile();
+        deficitSuggestionContainer.style.display = 'none';
+        alert('Feito, Chefão! Déficit de 10% aplicado nos carboidratos. Proteína mantida!');
+    });
+    
+    keepTargetsBtn.addEventListener('click', () => {
+        localStorage.setItem('deficitSuggestionActionTakenDate', new Date().toISOString());
+        deficitSuggestionContainer.style.display = 'none';
+        alert('Certinho! Metas mantidas. Foco total nos próximos 7 dias!');
     });
 
     nextStepBtn.addEventListener('click', () => {

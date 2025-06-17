@@ -114,7 +114,6 @@
 
             <section id="weight-page" class="page-content">
                 <h2>Acompanhamento de Peso</h2>
-                <p id="weight-page-feedback-message" class="feedback-message"></p>
                 <div class="input-group-inline">
                     <label for="new-current-weight">Registrar Peso (Kg):</label>
                     <input type="number" step="0.1" id="new-current-weight" placeholder="Insira seu peso atual">
@@ -122,6 +121,15 @@
                     <input type="date" id="new-weight-date">
                     <button id="add-weight-entry-btn" class="main-btn small-btn">Registrar</button>
                 </div>
+
+                <div id="deficit-suggestion-container" style="display: none;">
+                    <p id="weight-page-feedback-message" class="feedback-message"></p>
+                    <div id="deficit-buttons-container">
+                        <button id="create-deficit-btn" class="main-btn small-btn deficit-btn">Criar Déficit de 20%</button>
+                        <button id="keep-targets-btn" class="main-btn small-btn keep-btn">Manter Metas</button>
+                    </div>
+                </div>
+                
                 <div id="weight-history-chart">
                     <h3>Sua Evolução de Peso</h3>
                     <canvas id="weightChart"></canvas>

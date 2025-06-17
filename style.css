@@ -686,6 +686,42 @@ input.invalid, select.invalid {
     flex-shrink: 0;
 }
 
+/* Deficit Suggestion Section */
+#deficit-suggestion-container {
+    background-color: var(--accent-blue);
+    border: 1px solid var(--vibrant-orange);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+#weight-page-feedback-message {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+#deficit-buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.deficit-btn {
+    background-color: var(--vibrant-red);
+}
+.deficit-btn:hover {
+    background-color: #c0392b;
+}
+
+.keep-btn {
+    background-color: var(--vibrant-blue);
+}
+.keep-btn:hover {
+    background-color: #0056b3;
+}
+
 
 /* Custom Food List */
 /* A lista de alimentos personalizados agora está dentro de add-custom-food-section */
